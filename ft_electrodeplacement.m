@@ -684,6 +684,25 @@ switch cfg.method
       rpa = rpa + tolerance*randn(1,3);
     end
 
+    % try to ensure the mesh to be simple and topologically correct
+    % this is needed for meshes generated in Fusion, which have npos=3*ntri
+    [headshape.pos, headshape.tri] = remove_double_vertices(headshape.pos, headshape.tri);
+    [headshape.pos, headshape.tri] = remove_unused_vertices(headshape.pos, headshape.tri);
+    orientation = surface_orientation(headshape.pos, headshape.tri);
+
+    if strcmp(orientation, 'inward')
+      % flip the mesh inside-out
+      headshape.tri = fliplr(headshape.tri);
+    elseif strcmp(orientation, 'unknown')
+      ft_warning('the headshape is not topologically equivalent to a sphere');
+    end
+
+    npos = size(headshape.pos,1);
+    ntri = size(headshape.tri,1);
+    if ntri~=2*(npos-2)
+      ft_warning('the headshape is not topologically equivalent to a sphere');
+    end
+
     % place the electrodes automatically on the headshape according to the fiducials
     [pos, lab] = elec1020_locate(headshape.pos, headshape.tri, nas, ini, lpa, rpa, istrue(cfg.feedback));
     % construct the output
