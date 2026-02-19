@@ -93,7 +93,7 @@ elseif ischar(x)
   if isequal(x, 'skin')
     msgId = 'FieldTrip:plotting:private:standardcolors';
     ft_notice('once', msgId);
-    ft_notice(msgId, 'standardcolors(''skin'') returns a light skin, you can also explicitly specify ''skin_light'','' skin_medium_light'', ''skin_medium'', ''skin_medium_dark'', or ''skin_dark''');
+    ft_notice(msgId, 'The color ''skin'' by default results in a light skin, you can also explicitly specify ''skin_light'','' skin_medium_light'', ''skin_medium'', ''skin_medium_dark'', or ''skin_dark''');
   end
   % look up the corresponding RGB values
   sel = strcmp(mapping(:,1), x);
