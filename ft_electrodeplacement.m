@@ -660,30 +660,6 @@ switch cfg.method
     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     % this is an automatic method without figure
 
-    % the placement procedure fails if the fiducials coincide with vertices
-    dist = @(x, y) sqrt(sum(bsxfun(@minus, x, y).^2,2));
-    tolerance = 0.1 * ft_scalingfactor('mm', headshape.unit);  % 0.1 mm
-    nas = cfg.fiducial.nas;
-    ini = cfg.fiducial.ini;
-    lpa = cfg.fiducial.lpa;
-    rpa = cfg.fiducial.rpa;
-    if any(dist(headshape.pos, nas)<tolerance)
-      ft_warning('Nasion coincides with headshape vertex, adding random displacement of about %f %s', tolerance, headshape.unit);
-      nas = nas + tolerance*randn(1,3);
-    end
-    if any(dist(headshape.pos, ini)<tolerance)
-      ft_warning('Inion coincides with headshape vertex, adding random displacement of about %f %s', tolerance, headshape.unit);
-      ini = ini + tolerance*randn(1,3);
-    end
-    if any(dist(headshape.pos, lpa)<tolerance)
-      ft_warning('LPA coincides with headshape vertex, adding random displacement of about %f %s', tolerance, headshape.unit);
-      lpa = lpa + tolerance*randn(1,3);
-    end
-    if any(dist(headshape.pos, rpa)<tolerance)
-      ft_warning('RPA coincides with headshape vertex, adding random displacement of about %f %s', tolerance, headshape.unit);
-      rpa = rpa + tolerance*randn(1,3);
-    end
-
     % try to ensure the mesh to be simple and topologically correct
     % this is needed for meshes generated in Fusion, which have npos=3*ntri
     [headshape.pos, headshape.tri] = remove_double_vertices(headshape.pos, headshape.tri);
@@ -702,6 +678,11 @@ switch cfg.method
     if ntri~=2*(npos-2)
       ft_warning('the headshape is not topologically equivalent to a sphere');
     end
+
+    nas = cfg.fiducial.nas;
+    ini = cfg.fiducial.ini;
+    lpa = cfg.fiducial.lpa;
+    rpa = cfg.fiducial.rpa;
 
     % place the electrodes automatically on the headshape according to the fiducials
     [pos, lab] = elec1020_locate(headshape.pos, headshape.tri, nas, ini, lpa, rpa, istrue(cfg.feedback));
