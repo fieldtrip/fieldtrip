@@ -19,7 +19,7 @@ function [sensor] = ft_sensorplacement(cfg, headshape)
 %   cfg.outwardshift  = number, amount to shift the sensor sensors outward from the surface
 %   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.channel       = cell-array, selection of electrode locations at which to place an sensor sensor
-%   cfg.rotation      = string, how to determe the cylindrical rotation of the sensor sensor
+%   cfg.rotate        = Nx1 vector, with the cylindrical rotation of each sensor (default = 0)
 %   cfg.write         = 'no' or 'yes', write the sensor sensors to STL files
 %
 % See also FT_ELECTRODEPLACEMENT, FT_PREPARE_MESH, FT_MESHREALIGN, FT_DEFACEMESH
@@ -66,7 +66,7 @@ cfg = ft_checkconfig(cfg, 'required', {'elec', 'template'});
 cfg.outwardshift  = ft_getopt(cfg, 'outwardshift', 0);
 cfg.channel       = ft_getopt(cfg, 'channel', 'all');
 cfg.write         = ft_getopt(cfg, 'write', 'no');
-cfg.rotation      = ft_getopt(cfg, 'rotation'); % FIXME
+cfg.rotate        = ft_getopt(cfg, 'rotate', 0);
 
 % select the channels/electrodes
 elec = keepfields(cfg.elec, {'elecpos', 'elecori', 'label'});
@@ -79,8 +79,14 @@ if isfield(elec, 'elecori')
 end
 nsens = length(elec.label);
 
-% read the template STL model
-template = ft_read_headshape(cfg.template);
+if isscalar(cfg.rotate)
+  % same rotation for each channel
+  cfg.rotate = ones(nsens,1) * cfg.rotate;
+end
+
+% read the template STL model, assume them to be in milimeter
+template = ft_read_headshape(cfg.template, 'unit', 'unknown');
+template.unit = 'mm';
 
 % project the electrodes onto the headshape surface
 [dum, elec.elecpos] = project_elec(elec.elecpos, headshape.pos, headshape.tri);
@@ -91,24 +97,51 @@ if ~isfield(elec, 'elecori')
 end % if not elecori
 
 [m, i] = max(headshape.pos(:,3));
-reference = headshape.pos(i, :); % approximately the vertex
-reference = [0 0 100]; % towards the z-axis
 
 for i=1:nsens
-  % shift away from the surface
+  % first shift it away from the surface
   t1 = translate([0, 0, cfg.outwardshift]);
 
-  % determine the rotational homogenous matrix
-  dirz = elec.elecori(i,:);
-  dirz = dirz / norm(dirz);
-  dirx = (elec.elecpos(i,:) - reference); % approximate x direction, together with z this defines a plane
-  diry = cross(dirz, dirx);
-  diry = diry / norm(diry);
-  dirx = cross(diry, dirz); % update the actual x direction
-  r = [dirx(:) diry(:) dirz(:)];
+  % determine the rotation
+  x = elec.elecori(i,1);
+  y = elec.elecori(i,2);
+  z = elec.elecori(i,3);
+
+  if x==0 && z==0 && y==1
+    alpha = -pi/2;
+    beta  = 0;
+  elseif x==0 && z==0 && y==-1
+    alpha = +pi/2;
+    beta  = 0;
+  else
+    alpha = atan2(-y, sqrt(x^2 + z^2));
+    beta  = atan2(x, z);
+  end
+  gamma = cfg.rotate(i) * pi/180; % convert from degrees to radians
+
+  rx = [
+    1  0           0
+    0 +cos(alpha) -sin(alpha)
+    0 +sin(alpha) +cos(alpha)
+    ];
+
+  ry = [
+    +cos(beta) 0 +sin(beta)
+     0         1  0
+    -sin(beta) 0 +cos(beta)
+    ];
+
+  rz = [
+    +cos(gamma) -sin(gamma) 0 
+    +sin(gamma) +cos(gamma) 0 
+     0           0          1
+     ];
+
+  % first rotate around z, then around x, then around y
+  r = ry * rx * rz;
   r(4,4) = 1;
 
-  % determine the translational homogenous matrix
+  % determine the final translation towards the electrode position
   t2 = translate(elec.elecpos(i,:));
 
   % first rotate, then translate
