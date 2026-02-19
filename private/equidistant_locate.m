@@ -294,10 +294,22 @@ elc = [
 % sanity check
 assert(size(elc,1)==numelec);
 
-% sort them according to the azimuth and elevation
-[az,el,r] = cart2sph(elc(:,1), elc(:,2), elc(:,3));
-[dum, indx] = sortrows([az el], [2 1], 'descend');
-elc = elc(indx,:);
+% FIXME this is currently hard-coded
+sortorder = 'lrfb';
+
+switch sortorder
+  case 'azel'
+    % sort them according to the azimuth and elevation
+    [az,el] = cart2sph(elc(:,1), elc(:,2), elc(:,3));
+    [dum, indx] = sortrows([az el], [2 1], 'descend');
+    elc = elc(indx,:);
+  case 'lrfb'
+    % sort from left-to-right, then from front-to-back
+    lr = elc(:,2);
+    fb = elc(:,1);
+    [dum, indx] = sortrows([az el], [2 1], 'descend');
+    elc = elc(indx,:);
+end
 
 % construct electrode labels
 lab = cell(numelec, 1);

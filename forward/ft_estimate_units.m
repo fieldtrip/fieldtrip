@@ -13,6 +13,7 @@ function unit = ft_estimate_units(size)
 %
 % This function will return one of the following strings
 %   'm'
+%   'dm'
 %   'cm'
 %   'mm'
 %

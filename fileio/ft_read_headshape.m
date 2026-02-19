@@ -1616,14 +1616,21 @@ if isfield(shape, 'fid') && isfield(shape.fid, 'label')
   shape.fid.label = shape.fid.label(:);
 end
 
-% this will add the units to the head shape and optionally convert
-if ~isempty(unit)
-  shape = ft_convert_units(shape, unit);
-else
+if isempty(unit)
+  % estimate the units in case they are not yet known
   try
-    % ft_determine_units will fail for triangle-only gifties.
+    % this will fail for triangle-only gifti meshes
     shape = ft_determine_units(shape);
+  catch
+    shape.unit = 'unknown';
   end
+elseif strcmp(unit, 'unknown')
+  % specify the units as unknown
+  shape.unit = 'unknown';
+else
+  % estimate the units in case they are not yet known
+  % and convert to the desired units
+  shape = ft_convert_units(shape, unit);
 end
 
 % ensure that vertex positions are given in pos, not in pnt
