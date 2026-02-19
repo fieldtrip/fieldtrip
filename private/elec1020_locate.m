@@ -45,11 +45,20 @@ if isempty(pleasecite)
   pleasecite = true;
 end
 
+% ensure that these ly on the surface
+[el, nas] = project_elec(nas, pos, tri);
+[el, ini] = project_elec(ini, pos, tri);
+[el, lpa] = project_elec(lpa, pos, tri);
+[el, rpa] = project_elec(rpa, pos, tri);
+
 % determine the approximate location of the vertex
 ori = (lpa+rpa+nas+ini)/4;      % center of head
 ver =  cross(rpa-lpa, nas-ini); % orientation
 ver = ver /sqrt(norm(ver));     % make correct length
 ver = ori + 0.7*ver;            % location from center of head
+
+% ensure that this lies on the surface
+[el, ver] = project_elec(ver, pos, tri);
 
 % the fiducials should not be exactly aligned with a vertex of the mesh
 nas = fix_perfection(nas, pos);
