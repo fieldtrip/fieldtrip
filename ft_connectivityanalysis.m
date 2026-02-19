@@ -941,15 +941,34 @@ switch cfg.method
         nref = numel(cfg.refindx);
       end
 
-      datout = zeros(nchan, nref, nfreq, ntime);
-      % loop over all time binds
+      [nrpttap, ~] = size(data.fourierspctrm);
+      ntap  = data.cumtapcnt(:,1);
+      tapers = nrpttap/sum(ntap);
+
+      datout = zeros(nchan, nref, nfreq, ntime, tapers);
+      % loop over all time bins
       for j = 1:ntime
         % loop over all frequency bins
         for i = 1:nfreq
           dat       = data.fourierspctrm(:,:,i,j).';
-          datout(:,:,i,j) = ft_connectivity_powcorr_ortho(dat, optarg{:});
+          % powcorr_ortho will be computed per taper, tapers are assumed to
+          % be non time dependent with each other hence this should be
+          % allowed
+          taper_order = repmat(1:tapers, 1, ceil(nrpttap/tapers));
+          taper_order = taper_order(1:nrpttap);
+          for t = 1:tapers
+              idx = find(taper_order == t);
+              dat_t = dat(:,squeeze(idx));
+
+              datout(:,:,i,j,t) = ft_connectivity_powcorr_ortho(dat_t, optarg{:});
+          end
         end
       end
+
+      % now we can average connectivity results between the two tapers
+      % perhaps it may be safer to average the tapers earlier?
+      datout = mean(datout, 5);
+
       data.dimord = 'chan_chan_freq';
       if isfield(data, 'time')
         data.dimord = [data.dimord '_time'];
