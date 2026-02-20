@@ -100,6 +100,14 @@ else
   transform = feval(method, transform);
 end
 
+% convert the set of points into a structure
+if ~isstruct(input) && size(input, 2)==3
+  ispointcloud = true;
+  input = struct('pos', input);
+else
+  ispointcloud = false;
+end
+
 % determine the rotation matrix
 rotation = eye(4);
 rotation(1:3,1:3) = transform(1:3,1:3);
@@ -193,8 +201,12 @@ for k = 1:numel(fnames)
     end
   end
 end
-output = input;
 
+if ispointcloud
+  output = input.pos;
+else
+  output = input;
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION that applies the homogeneous transformation
