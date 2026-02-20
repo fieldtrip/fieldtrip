@@ -621,7 +621,7 @@ if istrue(axes_)
   ft_plot_axes(sens);
 end
 
-if isfield(sens, 'coordsys')
+if isfield(sens, 'coordsys') && ~isempty(sens.coordsys) && ~strcmp(sens.coordsys, 'unknown')
   % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
   menu_viewpoint(gca, sens.coordsys)
 end

@@ -162,7 +162,7 @@ if istrue(axes_)
   ft_plot_axes(mesh);
 end
 
-if isfield(headshape, 'coordsys') && ~isempty(headshape.coordsys)
+if isfield(headshape, 'coordsys') && ~isempty(headshape.coordsys) && ~strcmp(headshape.coordsys, 'unknown')
   % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
   menu_viewpoint(gca, headshape.coordsys)
 end

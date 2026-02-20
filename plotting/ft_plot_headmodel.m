@@ -191,7 +191,7 @@ for i=1:length(mesh)
     'surfaceonly', surfaceonly, 'axes', axes_);
 end
 
-if isfield(headmodel, 'coordsys')
+if isfield(headmodel, 'coordsys') && ~isempty(headmodel.coordsys) && ~strcmp(headmodel.coordsys, 'unknown')
   % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
   menu_viewpoint(gca, headmodel.coordsys)
 end

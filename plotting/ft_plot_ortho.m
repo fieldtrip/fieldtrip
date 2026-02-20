@@ -215,7 +215,7 @@ switch style
       hold off
     end
 
-    if ~isempty(coordsys)
+    if ~isempty(coordsys) && ~strcmp(coordsys, 'unknown')
       % add a context sensitive menu to change the 3d viewpoint to top|bottom|left|right|front|back
       menu_viewpoint(gca, coordsys)
     end
