@@ -194,9 +194,13 @@ switch format
       headerfile = filename;
       datafile = filename;
     end
-  case {'spikeglx_bin'}
+  case 'spikeglx_bin'
     [p, f, x] = fileparts(filename);
     headerfile = fullfile(p, [f '.meta']);
+    datafile   = fullfile(p, [f '.bin']);
+  case 'opm_fil'
+    [p, f, x] = fileparts(filename);
+    headerfile = fullfile(p, [f '.json']);
     datafile   = fullfile(p, [f '.bin']);
   otherwise
     % convert filename into filenames, assume that the header and data are the same
