@@ -31,7 +31,7 @@ function [stat] = ft_connectivityanalysis(cfg, data)
 %     'plv',       phase-locking value, support for freq and freqmvar data
 %     'powcorr',   power correlation, support for freq and source data
 %     'powcorr_ortho', power correlation with single trial
-%                  orthogonalisation, support for source data
+%                  orthogonalisation, support for freq and source data
 %     'ppc'        pairwise phase consistency
 %     'psi',       phaseslope index, support for freq and freqmvar data
 %     'wpli',      weighted phase lag index (signed one, still have to
@@ -369,8 +369,7 @@ switch cfg.method
     
   case {'powcorr_ortho'}
     data = ft_checkdata(data, 'datatype', {'source', 'freq'});
-    % inparam = 'avg.mom';
-    inparam  = 'mom';
+    inparam  = 'mom'; % 'fourierspctrm';
     outparam = 'powcorrspctrm';
 
   case {'mi' 'di' 'dfi'}
@@ -897,11 +896,11 @@ switch cfg.method
     [datout, varout, nrpt] = ft_connectivity_psi(data.(inparam), optarg{:});
     
   case 'powcorr_ortho'
-    % Joerg Hipp's power correlation method
-    optarg = {'refindx', cfg.refindx, 'tapvec', data.cumtapcnt};
+    % Joerg Hipp's power correlation method, originally designed for source-recontructed data, but can also be 
+    % applied to a data structure that has the univariate fourierspctrm -> FIXME in this case it would make sense to support cfg.channelcmb as option
+    optarg = {'refindx', cfg.refindx, 'tapvec', data.cumtapcnt(:,1)};
     if isfield(data, 'mom')
       % this is expected to be a single frequency
-      %dat    = cat(2, data.mom{data.inside}).';
       
       % HACK
       dimord = getdimord(data, 'mom');
@@ -915,8 +914,7 @@ switch cfg.method
       
       datout = ft_connectivity_powcorr_ortho(dat, optarg{:});
       
-      % HACK continued: format the output according to the inside and
-      % refindx specifications
+      % HACK continued: format the output according to the inside and refindx specifications
       if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
         % create all-to-all output
         tmp = zeros(numel(data.inside));
@@ -934,19 +932,47 @@ switch cfg.method
         
         outdimord = 'pos_pos_freq';
       end
-    elseif strcmp(data.dimord, 'rpttap_chan_freq')
-      % loop over all frequencies
-      [nrpttap, nchan, nfreq] = size(data.fourierspctrm);
-      datout = cell(1, nfreq);
-      for i=1:length(data.freq)
-        dat       = data.fourierspctrm(:,:,i).';
-        datout{i} = ft_connectivity_powcorr_ortho(dat, optarg{:});
+    elseif isfield(data, 'fourierspctrm')
+      % sensor level, or source parcellated data
+      [nrpttap, nchan, nfreq, ntime] = size(data.fourierspctrm);
+      if ischar(cfg.refindx) && strcmp(cfg.refindx, 'all')
+        nref = nchan;
+      else
+        nref = numel(cfg.refindx);
       end
-      datout = cat(3, datout{:});
-      % HACK otherwise I don't know how to inform the code further down about the dimord
-      data.dimord = 'rpttap_chan_chan_freq';
+
+      [nrpttap, ~] = size(data.fourierspctrm);
+      ntap  = data.cumtapcnt(:,1);
+      tapers = nrpttap/sum(ntap);
+
+      datout = zeros(nchan, nref, nfreq, ntime, tapers);
+      % loop over all time bins
+      for j = 1:ntime
+        % loop over all frequency bins
+        for i = 1:nfreq
+          dat = data.fourierspctrm(:,:,i,j).';
+          % powcorr_ortho will be computed per taper
+          taper_order = repmat(1:tapers, 1, ceil(nrpttap/tapers));
+          taper_order = taper_order(1:nrpttap);
+          for t = 1:tapers
+              idx = find(taper_order == t);
+              dat_t = dat(:,squeeze(idx));
+
+              datout(:,:,i,j,t) = ft_connectivity_powcorr_ortho(dat_t, optarg{:});
+          end
+        end
+      end
+
+      % now we can average connectivity results between the two tapers
+      % perhaps it may be safer to average the tapers earlier?
+      datout = mean(datout, 5);
+
+      data.dimord = 'chan_chan_freq';
+      if isfield(data, 'time')
+        data.dimord = [data.dimord '_time'];
+      end
     else
-      ft_error('unsupported data representation');
+      ft_error('unsupported data representation, the data should either contain a ''mom'' or ''fourierspctrm'' field');
     end
     varout = [];
     nrpt = numel(data.cumtapcnt);
