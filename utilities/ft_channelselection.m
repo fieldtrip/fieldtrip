@@ -366,7 +366,7 @@ switch senstype
     % all itab MEG channels start with MAG
     labelmeg = datachannel(strncmp('MAG', datachannel, length('MAG')));
 
-  case{'qzfm_gen2'}
+  case 'qzfm_gen2'
     % This is for use with QZFM_Gen2 Optically Pumped Magnetometers manufactured by QuSpin Inc.
     % SPECS: https://quspin.com/qzfm-gen-2-update/
 
@@ -381,6 +381,16 @@ switch senstype
     labelmegtan = labelmeg(~cellfun(@isempty, regexp(labelmeg, '.*TAN$')));
     labelmegrad = labelmeg(~cellfun(@isempty, regexp(labelmeg, '.*RAD$')));
 
+  case 'fieldline_v3'
+    bz_meg = ~cellfun(@isempty, regexp(datachannel, '.*_bz$'));
+    by_meg = ~cellfun(@isempty, regexp(datachannel, '.*_by$'));
+    bx_meg = ~cellfun(@isempty, regexp(datachannel, '.*_bx$'));
+    
+    labelmeg    = datachannel(bz_meg|by_meg|bx_meg);
+    labelmegmag = labelmeg;
+    labelmegrad = datachannel(bz_meg);
+    labelmegtan = datachannel(by_meg|bx_meg);
+    
   otherwise
     if ~isempty(datachantype)
       labelmeg = datachannel(strncmp('meg', datachantype, 3));
