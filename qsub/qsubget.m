@@ -149,9 +149,9 @@ if completed
     if ischar(err)
       errmsg = err;
     elseif isstruct(err)
-      errmsg = sprintf('%s:%s', err.identifier, err.message);
+      errmsg = sprintf('%s: %s', err.identifier, err.message);
     else
-      errmsg = sprintf('%s:%s', err.identifier, err.message);
+      errmsg = sprintf('%s: %s', err.identifier, err.message);
       % convert the MEexception object into a structure to allow a rethrow further down in the code
       ws = warning('off', 'MATLAB:structOnObject');
       err = struct(err);

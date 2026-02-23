@@ -255,5 +255,5 @@ function warnmsg = lastwarnmsg()
 
 [warnmsg, warnid] = lastwarn;
 if ~isempty(warnmsg)
-  warnmsg = sprintf('%s:%s', warnid, warnmsg);
+  warnmsg = sprintf('%s: %s', warnid, warnmsg);
 end
