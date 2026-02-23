@@ -12,7 +12,9 @@ function [Zi, h] = ft_plot_topo(chanX, chanY, dat, varargin)
 %   'mask'          = cell-array with line segments that forms the mask (see FT_PREPARE_LAYOUT)
 %   'outline'       = cell-array with line segments that for the outline (see  FT_PREPARE_LAYOUT)
 %   'isolines'      = vector with values for isocontour lines (default = [])
-%   'interplim'     = string, 'sensors' or 'mask' (default = 'sensors')
+%   'interplim'     = string, 'mask', 'mask_individual', 'square', 'convex' (default = automatic)
+%                      if the input contains a mask, then interplim='mask',
+%                      otherwise it defaults to 'convex'
 %   'interpmethod'  = string, 'nearest', 'linear', 'natural', 'cubic' or 'v4' (default = 'v4')
 %   'style'         = can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 %   'clim'          = [min max], limits for color scaling
@@ -61,7 +63,7 @@ width         = ft_getopt(varargin, 'width',        []);
 height        = ft_getopt(varargin, 'height',       []);
 gridscale     = ft_getopt(varargin, 'gridscale',    67); % 67 in original
 shading       = ft_getopt(varargin, 'shading',      'flat');
-interplim     = ft_getopt(varargin, 'interplim',    'sensors');
+interplim     = ft_getopt(varargin, 'interplim',    '');
 interpmethod  = ft_getopt(varargin, 'interpmethod', 'v4');
 style         = ft_getopt(varargin, 'style',        'surfiso'); % can be 'surf', 'iso', 'isofill', 'surfiso', 'imsat', 'imsatiso', 'colormix'
 tag           = ft_getopt(varargin, 'tag',          '');
@@ -72,6 +74,15 @@ outline       = ft_getopt(varargin, 'outline');
 clim          = ft_getopt(varargin, 'clim', []);
 parent        = ft_getopt(varargin, 'parent', []);
 box           = ft_getopt(varargin, 'box', false);
+
+% set the input dependent default for interplim
+if isempty(interplim)
+  if isempty(mask)
+    interplim = 'convex';
+  else
+    interplim = 'mask';
+  end
+end
 
 % convert the yes/no strings into boolean values
 box = istrue(box);
@@ -90,10 +101,8 @@ if ~holdflag
   hold on
 end
 
-% layout units can be arbitrary (e.g. pixels for .mat files)
-% so we need to compute the right scaling factor
-% create a matrix with all coordinates
-% from positions, mask, and outline
+% layout units can be arbitrary (e.g. pixels for .mat files) so we need to compute the 
+% right scaling factor create a matrix with all coordinates from positions, mask, and outline
 allCoords = [chanX(:) chanY(:)];
 if ~isempty(mask)
   for k = 1:numel(mask)
@@ -132,24 +141,26 @@ chanYorg = chanY;
 chanX = chanX(:) * xScaling + hpos;
 chanY = chanY(:) * yScaling + vpos;
 
-if strcmp(interplim, 'sensors')
-  hlim = [min(chanX) max(chanX)];
-  vlim = [min(chanY) max(chanY)];
-elseif (strcmp(interplim, 'mask') || strcmp(interplim, 'mask_individual')) && ~isempty(mask)
-  hlim = [inf -inf];
-  vlim = [inf -inf];
-  for i=1:length(mask)
-    hlim = [min([hlim(1); mask{i}(:, 1)*xScaling+hpos]) max([hlim(2); mask{i}(:, 1)*xScaling+hpos])];
-    vlim = [min([vlim(1); mask{i}(:, 2)*yScaling+vpos]) max([vlim(2); mask{i}(:, 2)*yScaling+vpos])];
-  end
-else
-  hlim = [min(chanX) max(chanX)];
-  vlim = [min(chanY) max(chanY)];
+switch interplim
+  case {'mask' 'mask_indivdual'}
+    hlim = [inf -inf];
+    vlim = [inf -inf];
+    for i=1:length(mask)
+      hlim = [min([hlim(1); mask{i}(:, 1)*xScaling+hpos]) max([hlim(2); mask{i}(:, 1)*xScaling+hpos])];
+      vlim = [min([vlim(1); mask{i}(:, 2)*yScaling+vpos]) max([vlim(2); mask{i}(:, 2)*yScaling+vpos])];
+    end
+  case {'square' 'convex'}
+    hlim = [min(chanX) max(chanX)];
+    vlim = [min(chanY) max(chanY)];
+    mask = outline_shape([chanX chanY], interplim);
+  otherwise
+    hlim = [min(chanX) max(chanX)];
+    vlim = [min(chanY) max(chanY)];
 end
 
 % check if all mask point are inside the limits otherwise redefine mask
 newpoints = [];
-if length(mask)==1
+if isscalar(mask)
   % which channels are outside
   inside  = inside_contour([chanX chanY], mask{1});
   outside = ~inside;
