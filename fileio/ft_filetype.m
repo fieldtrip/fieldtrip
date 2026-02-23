@@ -1651,6 +1651,21 @@ elseif filetype_check_extension(filename, '.lvm') && filetype_check_header(filen
   type = 'quspin_lvm'; % technically it is a https://www.ni.com/docs/en-US/bundle/labview/page/labview-measurement-files.html
   manufacturer = 'QuSpin';
   content = 'OPM MEG data';
+elseif (filetype_check_extension(filename, '.bin') && exist(fullfile(p, [f '.json']), 'file')) || ...
+    (filetype_check_extension(filename, '.json') && exist(fullfile(p, [f '.bin']), 'file'))
+  % this could be a opm_fil dataset, in BIDS-like folder organisation, with also a channel tsv file. 
+  % If of a later date, the channels.tsv has the same f-stem as the datafile, but this is not a guarantee,
+  % so FIXME this is a bit of a HACK here
+  if exist(fullfile(p, [strrep(f, '_meg', '_channels') '.tsv']), 'file')
+    type = 'opm_fil';
+    manufacturer = 'QuSpin';
+    content = 'OPM MEG data';
+  elseif ~isempty(dir(fullfile(p, '*channels.tsv')))
+    % old style representation, e.g. as per the getting started opm_fil data on the fieldtrip website
+    type = 'opm_fil';
+    manufacturer = 'QuSpin';
+    content = 'OPM MEG data';
+  end  
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
