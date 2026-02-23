@@ -88,7 +88,7 @@ cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 3);
 cfg.channel      = ft_getopt(cfg, 'channel', 'all');
 cfg.refchannel   = ft_getopt(cfg, 'channel', 'MEG');
 
-if numel(varargin)==1
+if isscalar(varargin)
   data    = varargin{1};
   refdata = [];
 elseif numel(varargin) == 2
@@ -131,7 +131,7 @@ gradorig = data.grad;
 if ~isempty(refdata)
   ft_info('computing the "ssp" projector\n');
   % compute numcomponent principal components in the reference data
-  [coeff,dum,dum,dum,dum] = pca(cell2mat(refdata.trial)','NumComponents',cfg.numcomponent);
+  coeff = pca(cell2mat(refdata.trial)','NumComponents',cfg.numcomponent);
   % compute projector and define montage
   data.grad.balance.ssp.tra = eye(size(coeff,1))-coeff*transpose(coeff);
   data.grad.balance.ssp.labelold = refdata.label;
