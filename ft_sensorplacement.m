@@ -1,26 +1,33 @@
-function [sensor] = ft_sensorplacement(cfg, headshape)
+function [cfg, sensor] = ft_sensorplacement(cfg, headshape)
 
 % FT_SENSORPLACEMENT positions sensor sensor holders over the surface of the scalp (when
-% wearing a flexible cap) or over the surface of a rigid 3D-printed helmet. It uses 
-% a model of the sensor sensor and sensor holder, copies this repeatedly, and positions 
+% wearing a flexible cap) or over the surface of a rigid 3D-printed helmet. It uses
+% a model of the sensor sensor and sensor holder, copies this repeatedly, and positions
 % and orients it for each desired sensor position. The sensor positions are automatically
 % determined based on a template distribution, for example the 10-20 electrode placement
 % scheme or a equidistant placement scheme, but you can also provide your own sensor
 % positions.
 %
 % Use as
-%   [sensors] = ft_sensorplacement(cfg, headshape)
+%   [cfg, sensors] = ft_sensorplacement(cfg, headshape)
 % where the headshape represents the scalp surface from FT_PREPARE_MESH or
-% FT_MESHREALIGN. This function returns a structure array with a number of 
+% FT_MESHREALIGN. This function returns a structure array with a number of
 % meshes representing the sensor sensors or sensor holders that can be plotted.
 %
-% The configuration structure can contain the following
+% The input configuration structure can contain the following
 %   cfg.template      = string, filename with the STL model of the sensor sensor or sensor sensor holder
-%   cfg.outwardshift  = number, amount to shift the sensor sensors outward from the surface
+%   cfg.write         = 'no' or 'yes', write the sensor sensors to STL files
 %   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.channel       = cell-array, selection of electrode locations at which to place an sensor sensor
-%   cfg.rotate        = Nx1 vector, with the cylindrical rotation of each sensor (default = 0)
-%   cfg.write         = 'no' or 'yes', write the sensor sensors to STL files
+%   cfg.outwardshift  = number, amount to shift the sensor sensors outward from the surface
+%   cfg.rotx          = Nx1 vector with the rotation around the x-axis (default is automatic)
+%   cfg.roty          = Nx1 vector with the rotation around the y-axis (default is automatic)
+%   cfg.rotz          = Nx1 vector with the rotation around the z-axis (default is automatic)
+%
+% The output configuration structure contains the rotations that were performed,
+% which can be used in a second iteration to make adjustments. The output sensor
+% structure contains the template mesh for each of the sensors, following rotation
+% and translation.
 %
 % See also FT_ELECTRODEPLACEMENT, FT_PREPARE_MESH, FT_MESHREALIGN, FT_DEFACEMESH
 
@@ -59,29 +66,49 @@ ft_preamble provenance headshape
 % ensure that the input data is valid for this function, this will also do
 headshape = ft_checkdata(headshape, 'datatype', 'mesh', 'feedback', 'yes');
 
+% get the sensor positions, read them from file if needed
+elec = ft_fetch_sens(cfg);
+
 % ensure that the required options are present
 cfg = ft_checkconfig(cfg, 'required', {'elec', 'template'});
 
 % set the defaults
-cfg.outwardshift  = ft_getopt(cfg, 'outwardshift', 0);
 cfg.channel       = ft_getopt(cfg, 'channel', 'all');
 cfg.write         = ft_getopt(cfg, 'write', 'no');
-cfg.rotate        = ft_getopt(cfg, 'rotate', 0);
+cfg.outwardshift  = ft_getopt(cfg, 'outwardshift', 0);
+cfg.orientation   = ft_getopt(cfg, 'orientation', 'surface');
+cfg.rotx          = ft_getopt(cfg, 'rotx');
+cfg.roty          = ft_getopt(cfg, 'roty');
+cfg.rotz          = ft_getopt(cfg, 'rotz');
 
-% select the channels/electrodes
-elec = keepfields(cfg.elec, {'elecpos', 'elecori', 'label'});
+% select the desired electrode positions
+elec = keepfields(elec, {'elecpos', 'elecori', 'label'});
 cfg.channel = ft_channelselection(cfg.channel, elec.label);
 [sel1, sel2] = match_str(cfg.channel, elec.label); % sort them according to cfg.channel
 elec.label   = elec.label(sel2);
 elec.elecpos = elec.elecpos(sel2,:);
 if isfield(elec, 'elecori')
   elec.elecori = elec.elecori(sel2,:);
+else
+  % use the direction perpendicular to the headshape, see below
 end
 nsens = length(elec.label);
 
-if isscalar(cfg.rotate)
-  % same rotation for each channel
-  cfg.rotate = ones(nsens,1) * cfg.rotate;
+% use the same rotation for each channel, or nan if not specified
+if isscalar(cfg.rotx)
+  cfg.rotx = ones(nsens,1) * cfg.rotx;
+elseif isempty(cfg.rotx)
+  cfg.rotx = nan(nsens,1);
+end
+if isscalar(cfg.roty)
+  cfg.roty = ones(nsens,1) * cfg.roty;
+elseif isempty(cfg.roty)
+  cfg.roty = nan(nsens,1);
+end
+if isscalar(cfg.rotz)
+  cfg.rotz = ones(nsens,1) * cfg.rotz;
+elseif isempty(cfg.rotz)
+  cfg.rotz = nan(nsens,1);
 end
 
 % read the template STL model, assume them to be in milimeter
@@ -96,58 +123,63 @@ if ~isfield(elec, 'elecori')
   elec.elecori = normals_elec(elec.elecpos, headshape.pos, headshape.tri);
 end % if not elecori
 
-[m, i] = max(headshape.pos(:,3));
-
 for i=1:nsens
   % first shift it away from the surface
   t1 = translate([0, 0, cfg.outwardshift]);
 
-  % determine the rotation
+  % determine the required orientation and rotation
   x = elec.elecori(i,1);
   y = elec.elecori(i,2);
   z = elec.elecori(i,3);
 
-  if x==0 && z==0 && y==1
-    alpha = -pi/2;
-    beta  = 0;
-  elseif x==0 && z==0 && y==-1
-    alpha = +pi/2;
-    beta  = 0;
+  % then rotate about z by angle γ (yaw)
+  % then rotate about y by angle β (pitch)
+  % then rotate about x by angle α (roll)
+
+  if ~isnan(cfg.rotz(i))
+    gamma = cfg.rotz(i)*pi/180; % convert from degrees to radians
   else
-    alpha = atan2(-y, sqrt(x^2 + z^2));
-    beta  = atan2(x, z);
+    gamma = 0;
   end
-  gamma = cfg.rotate(i) * pi/180; % convert from degrees to radians
 
-  rx = [
-    1  0           0
-    0 +cos(alpha) -sin(alpha)
-    0 +sin(alpha) +cos(alpha)
-    ];
+  if ~isnan(cfg.roty(i))
+    beta = cfg.roty(i)*pi/180; % convert from degrees to radians
+  else
+    beta = asin(x);
+  end
 
-  ry = [
-    +cos(beta) 0 +sin(beta)
-     0         1  0
-    -sin(beta) 0 +cos(beta)
-    ];
+  if ~isnan(cfg.rotx(i))
+    alpha = cfg.rotx(i)*pi/180; % convert from degrees to radians
+  elseif x==+1 && y==0 && z==0
+    alpha = 0;
+    beta  = 0;
+  elseif x==-1 && y==0 && z==0
+    alpha = 0;
+    beta  = pi;
+  else
+    alpha = atan2(-y, z);
+  end
 
-  rz = [
-    +cos(gamma) -sin(gamma) 0 
-    +sin(gamma) +cos(gamma) 0 
-     0           0          1
-     ];
+  % convert from radians to degrees
+  gamma = gamma*180/pi;
+  beta  = beta*180/pi;
+  alpha = alpha*180/pi;
 
-  % first rotate around z, then around x, then around y
-  r = ry * rx * rz;
-  r(4,4) = 1;
+  % rotate around z, then around y, then around x
+  r = rotate([alpha, beta, gamma]);
 
   % determine the final translation towards the electrode position
   t2 = translate(elec.elecpos(i,:));
 
-  % first rotate, then translate
+  % translate, rotate, translate once more
   sensor(i) = ft_transform_geometry(t2 * r * t1, template);
 
-end
+  % remember the rotations
+  cfg.rotz(i) = gamma;
+  cfg.roty(i) = beta;
+  cfg.rotx(i) = alpha;
+
+end % for each sensor
 
 if istrue(cfg.write)
   for i=1:nsens
@@ -155,7 +187,7 @@ if istrue(cfg.write)
     filename = [f '_' elec.label{i} '.stl'];
     ft_info('writing %s', filename)
     ft_write_headshape(filename, sensor(i), 'format', 'stl');
-  end
+  end % for each sensor
 end
 
 ft_postamble debug
