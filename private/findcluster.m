@@ -1,21 +1,21 @@
-function [cluster, numcluster] = findcluster(onoff, spatdimneighbstructmat, varargin)
+function [cluster, numcluster] = findcluster(onoff, connmat, varargin)
 
 % FINDCLUSTER returns all connected clusters for a three-dimensional six-connected
 % neighborhood
 %
 % Use as
-%   [cluster, num] = findcluster(onoff, spatdimneighbstructmat, minnbchan)
-% or ar
-%   [cluster, num] = findcluster(onoff, spatdimneighbstructmat, spatdimneighbselmat, minnbchan)
+%   [cluster, num] = findcluster(onoff, connmat, 'minnbchan', minnbchan)
+% or as
+%   [cluster, num] = findcluster(onoff, connmat, 'minnbchan', minnbchan, 'spatdimneighbselmat', spatdimneighbselmat)
 % where
 %   onoff                  =  is a 3D boolean matrix with size N1xN2xN3
-%   spatdimneighbstructmat =  defines the neighbouring channels/combinations, see below
+%   connmat                =  defines the neighbouring channels/combinations, see below
 %   minnbchan              =  the minimum number of neighbouring channels/combinations
 %   spatdimneighbselmat    =  is a special neighbourhood matrix that is used for selecting
 %                             channels/combinations on the basis of the minnbchan criterium
 %
 % The neighbourhood structure for the first dimension is specified using
-% spatdimneighbstructmat, which is a 2D (N1xN1) matrix. Each row and each column
+% connmat, which is a 2D (N1xN1) matrix. Each row and each column
 % corresponds to a channel (combination) along the first dimension and along that
 % row/column, elements with "1" define the neighbouring channel(s) (combinations).
 % The first dimension of onoff should correspond to the channel(s) (combinations).
@@ -46,6 +46,10 @@ function [cluster, numcluster] = findcluster(onoff, spatdimneighbstructmat, vara
 % the calling code should ensure that SPM is on the path, preferably the latest version
 ft_hastoolbox('spm', -1);
 
+minnbchan           = ft_getopt(varargin, 'minnbchan', 0);
+spatdimneighbselmat = ft_getopt(varargin, 'spatdimneighbselmat', []);
+useoldimplementation = istrue(ft_getopt(varargin, 'useoldimplementation', 1));
+
 siz           = size(onoff);
 spatdimlength = siz(1);
 siz           = siz(2:end);
@@ -62,31 +66,19 @@ seldims = repmat({':'},[1 dims-1]);
 % do the matrix permutation;
 onoff = permute(onoff, [2:dims 1]);
 
-if ~ismatrix(spatdimneighbstructmat) || ~all(size(spatdimneighbstructmat)==spatdimlength)
-  ft_error('invalid dimension of spatdimneighbstructmat');
-end
-
-% this input argument handling is somewhat clunky, but it does the trick
-if length(varargin)==1
-  minnbchan = varargin{1};
-else
-  minnbchan = 0;
-end
-if length(varargin)==2
-  spatdimneighbselmat = varargin{1};
-  minnbchan           = varargin{2};
+if ~ismatrix(connmat) || ~all(size(connmat)==spatdimlength)
+  ft_error('invalid dimension of connmat');
 end
 
 if minnbchan>0
   % For every (time,frequency)-element, it is calculated how many supra
   % threshold neighbours this spatial element has. If a supra threshold
-  % spatial elementhas fewer than minnbchan supra threshold neighbours,
+  % spatial element has fewer than minnbchan supra threshold neighbours,
   % it is removed from onoff.
   
-  if length(varargin)==1
-    selectmat = single(spatdimneighbstructmat | spatdimneighbstructmat');
-  end
-  if length(varargin)==2
+  if isempty(spatdimneighbselmat)
+    selectmat = single(connmat | connmat');
+  else
     selectmat = single(spatdimneighbselmat | spatdimneighbselmat');
   end
   
@@ -129,8 +121,13 @@ labelmat = reshape(labelmat, spatdimlength, []);
 % combine clusters that are connected in neighbouring channels or channel
 % combinations. Here we convert the input to uint32 as that is required by the mex
 % file, and the values will be positive integers anyway.
-if spatdimlength>1
-  cluster = combineClusters(uint32(labelmat), logical(spatdimneighbstructmat), uint32(numcluster));
+if spatdimlength>1 && useoldimplementation
+  if issparse(connmat)
+    connmat = full(connmat);
+  end
+  cluster = combineClusters(uint32(labelmat), logical(connmat), uint32(numcluster));
+elseif spatdimlength>1
+  cluster = combineClusters2(labelmat, connmat);
 else
   cluster = labelmat;
 end
