@@ -165,7 +165,7 @@ elseif needevt
   %% read the events
 
   % FIXME this does not yet allow the user to override the defaults for ft_read_event, such as detectflank
-  event = read_trigger(filename, 'header', hdr, 'dataformat', 'opm_fil', 'chanindx', find(strcmpi(hdr.chantype, 'TRIG')));
+  event = read_trigger(datafile, 'header', hdr, 'dataformat', 'opm_fil', 'chanindx', find(strcmpi(hdr.chantype, 'TRIG')));
 
   % return the events
   varargout = {event};
