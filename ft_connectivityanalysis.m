@@ -941,9 +941,9 @@ switch cfg.method
         nref = numel(cfg.refindx);
       end
 
-      [nrpttap, ~] = size(data.fourierspctrm);
+      siz   = size(data.fourierspctrm);
       ntap  = data.cumtapcnt(:,1);
-      tapers = nrpttap/sum(ntap);
+      tapers = siz(1)/sum(ntap);
 
       datout = zeros(nchan, nref, nfreq, ntime, tapers);
       % loop over all time bins
