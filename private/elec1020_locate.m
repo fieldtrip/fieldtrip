@@ -928,7 +928,7 @@ function fid = fix_perfection(fid, pos)
 
 % determine a tolerance that is appropriate given the units
 unit = ft_estimate_units(norm(idrange(pos)));
-tolerance = 0.1 * ft_scalingfactor(unit, 'mm');
+tolerance = 0.1 * ft_scalingfactor('mm', unit);
 
 % this is for the fiducials which are exactly on the surface
 d = pos;
