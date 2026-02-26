@@ -307,7 +307,7 @@ switch sortorder
     % sort from left-to-right, then from front-to-back
     lr = elc(:,2);
     fb = elc(:,1);
-    [dum, indx] = sortrows([az el], [2 1], 'descend');
+    [dum, indx] = sortrows([lr fb], [2 1], 'descend');
     elc = elc(indx,:);
 end
 
