@@ -221,7 +221,6 @@ if ~isstruct(stat)
   stat = struct('prob', stat);
 end
 
-
 % overrule the 'datsiz' if stat has a (possibly updated) dim field
 if isfield(stat, 'dim')
   datsiz = stat.dim;
@@ -232,9 +231,6 @@ end
 if ~isfield(stat, 'dimord')
   stat.dimord = cfg.dimord;
 end
-
-% the statistical output contains multiple elements, e.g. F-value, beta-weights and probability
-fn = fieldnames(stat);
 
 % JM HACK:
 if ~isequal(datsiz, cfg.dim)
@@ -250,6 +246,8 @@ if isfield(cfg, 'tstep')
   varargin{1}.time = varargin{1}.time(1:cfg.tstep:end);
 end
 
+% the statistical output contains multiple elements, e.g. F-value, beta-weights and probability
+fn = fieldnames(stat);
 for i=1:length(fn)
   if numel(stat.(fn{i}))==prod(datsiz)
     % reformat into the same dimensions as the input data

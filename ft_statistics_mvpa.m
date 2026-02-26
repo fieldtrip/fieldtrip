@@ -411,10 +411,10 @@ end
 %% Call MVPA-Light
 if isempty(cfg.mvpa.model)
   % -------- Classification --------
-  if ndims(dat)==3 && isscalar(cfg.features) && cfg.features==2 && isscalar(cfg.generalize) && cfg.generalize==3 && isempty(cfg.mvpa.neighbours)
-    % special case: time generalization for 3D data
-    [perf, result] = mv_classify_timextime(cfg.mvpa, dat, design);
-  elseif ~docrossdecode
+  %if ndims(dat)==3 && isscalar(cfg.features) && cfg.features==2 && isscalar(cfg.generalize) && cfg.generalize==3 && isempty(cfg.mvpa.neighbours)
+  %  % special case: time generalization for 3D data
+  %  [perf, result] = mv_classify_timextime(cfg.mvpa, dat, design);
+  if ~docrossdecode
     [perf, result] = mv_classify(cfg.mvpa, dat, design);
   elseif docrossdecode
     [perf, result] = mv_classify(cfg.mvpa, dat, design, dat2, design2);
@@ -435,16 +435,39 @@ for mm=1:numel(cfg.mvpa.metric)
   if strcmp(cfg.mvpa.metric{mm}, 'none')
     % This is a special case, skip for now  
   else
-    % Performance metric
-    stat.(cfg.mvpa.metric{mm})          = result.perf{mm};
-    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
-    try
-      %if isscalar(cfg.mvpa.metric)
-        outdimord = strjoin(strrep(result.perf_dimension_names{1}, ' ', ''), '_');
-      %else
-      %  outdimord = strjoin(strrep(result.perf_dimension_names{mm}, ' ', ''), '_');
-      %end
+    
+    dimnames  = strrep(result.perf_dimension_names(mm), ' ', '');
+    haschan   = find(strcmp(dimnames, 'chan'));
+    if isempty(haschan), haschan = 0; end
+    
+    % check whether a label exists, and whether the dimord has a 'chan'. If
+    % not add a singleton dimension to the left, if it does (but if it is
+    % not the leading dimension, permute)
+    if ~haschan
+      stat.(cfg.mvpa.metric{mm})          = shiftdim(result.perf{mm}, -1);
+      stat.([cfg.mvpa.metric{mm} '_std']) = shiftdim(result.perf_std{mm}, -1);
+      dimnames = ['chan' dimnames];
+    elseif haschan>1 || numel(haschan)>1
+      n = ndims(result.perf{mm});
+      pvec = [haschan setdiff(1:n, haschan)];
+      stat.(cfg.mvpa.metric{mm})          = permute(result.perf{mm},     pvec);
+      stat.([cfg.mvpa.metric{mm} '_std']) = permute(result.perf_std{mm}, pvec);
+      dimnames = dimnames(pvec);
+    else
+      stat.(cfg.mvpa.metric{mm})          = result.perf{mm};
+      stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
+    end
+
+    if numel(dimnames)>1
+      outdimord = strjoin(dimnames, '_');
+    else
+      outdimord = dimnames{1};
+    end
+
+    if isscalar(cfg.mvpa.metric)
       stat.dimord = outdimord;
+    else
+      stat.([cfg.mvpa.metric{mm} '_dimord']) = outdimord;
     end
   end
 
