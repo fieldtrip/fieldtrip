@@ -55,6 +55,7 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %                        'volume'          interactively locate electrodes on three orthogonal slices of a volumetric MRI or CT scan
 %                        'headshape'       interactively locate electrodes on a head surface
 %                        '1020'            automatically locate electrodes on a head surface according to the 10-20 system
+%                        'equidistant'     automatically locate electrodes on a head surface according to an equidistant dsitribution
 %                        'shaft'           automatically locate electrodes along a linear sEEG shaft
 %                        'grid'            automatically locate electrodes on a MxN ECoG grid
 %   cfg.figure         = 'yes' or 'no', whether to open a new figure. You can also specify a figure handle from FIGURE, GCF or SUBPLOT. (default = 'yes')
@@ -81,6 +82,13 @@ function [elec] = ft_electrodeplacement(cfg, varargin)
 %   cfg.fiducial.lpa   = 1x3 vector with coordinates
 %   cfg.fiducial.rpa   = 1x3 vector with coordinates
 %   cfg.feedback       = string, can be 'yes' or 'no' for detailed feedback (default = 'yes')
+%
+% The following additional options apply to the 'equidistant' method
+%   cfg.numelec        = scalar, how many electrodes to place
+%   cfg.nummidline     = scalar, how many electrodes along the midline over the vertex
+%   cfg.numsideline    = scalar, how many electrodes along the midline over the sideline above the ear
+%   cfg.maxiter        = scalar, maximum number of iterations at which to stop
+%   cfg.minchange      = scalar, minimum change at which to stop
 %
 % The following options apply to the 'shaft' method
 %   cfg.shaft.tip      = 1x3 position of the electrode at the tip of the shaft
@@ -158,6 +166,8 @@ cfg.figurename    = ft_getopt(cfg, 'figurename',    mfilename);
 cfg.numelec       = ft_getopt(cfg, 'numelec',             64);
 cfg.nummidline    = ft_getopt(cfg, 'nummidline');
 cfg.numsideline   = ft_getopt(cfg, 'numsideline');
+cfg.maxiter       = ft_getopt(cfg, 'maxiter');
+cfg.minchange     = ft_getopt(cfg, 'minchange');
 % view options
 cfg.clim          = ft_getopt(cfg, 'clim',             [0 1]); % initial volume intensity limit voxels
 cfg.markerdist    = ft_getopt(cfg, 'markerdist',           5); % marker-slice distance view when ~global
@@ -649,7 +659,7 @@ switch cfg.method
     vertex = elec1020.elecpos(strcmp(elec1020.label, 'Cz'),:);  % optional, can be []
     
     % distribute the electrodes automatically on the headshape 
-    [pos, lab] = equidistant_locate(headshape.pos, headshape.tri, front, back, left, right, vertex, cfg.numelec, cfg.nummidline, cfg.numsideline, istrue(cfg.feedback));
+    [pos, lab] = equidistant_locate(headshape.pos, headshape.tri, front, back, left, right, vertex, cfg.numelec, cfg.nummidline, cfg.numsideline, cfg.maxiter, cfg.minchange, istrue(cfg.feedback));
 
     % construct the output
     elec = keepfields(headshape, {'unit', 'coordsys'});
@@ -667,7 +677,7 @@ switch cfg.method
     orientation = surface_orientation(headshape.pos, headshape.tri);
 
     if strcmp(orientation, 'inward')
-      % flip the mesh inside-out
+      ft_info('flipping the headshape mesh inside-out');
       headshape.tri = fliplr(headshape.tri);
     elseif strcmp(orientation, 'unknown')
       ft_warning('the headshape is not topologically equivalent to a sphere');

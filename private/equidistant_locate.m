@@ -1,4 +1,4 @@
-function [elc, lab] = equidistant_locate(pos, tri, front, back, left, right, vertex, numelec, nummidline, numsideline, feedback)
+function [elc, lab] = equidistant_locate(pos, tri, front, back, left, right, vertex, numelec, nummidline, numsideline, maxiter, minchange, feedback)
 
 % EQUIDISTANT_LOCATE determines electrode positions that are distributed
 % equidistantly on a scalp surface that is described by a triangulation
@@ -23,7 +23,7 @@ function [elc, lab] = equidistant_locate(pos, tri, front, back, left, right, ver
 %    You should have received a copy of the GNU General Public License
 %    along with FieldTrip. If not, see <http://www.gnu.org/licenses/>.
 
-if nargin<10
+if nargin<12
   feedback = false;
 end
 
@@ -192,8 +192,13 @@ scale = inf;
 change = inf;
 iter = 0;
 
-minchange = headsize/2000; % approx 0.1 mm for a 200mm head
-maxiter = 1000;
+if isempty(minchange)
+  minchange = headsize/2000; % approx 0.1 mm for a 200mm head
+end
+
+if isempty(maxiter)
+  maxiter = 500;
+end
 
 while change>minchange && iter<maxiter
   % take the previous positions and copy then over four quadrants
