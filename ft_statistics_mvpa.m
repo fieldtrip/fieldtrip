@@ -483,7 +483,13 @@ if isfield(cfg, 'frequency')
   frequency = mean(cfg.frequency);
 end
 
-if exist('label', 'var'),     stat.label  = label;  end
+if exist('label', 'var')
+  if ischar(label)
+    stat.label = {label};
+  else
+    stat.label = label;
+  end
+end
 if exist('outdimord', 'var'), cfg.dimord  = dimord; end % stat.dimord is overwritten by cfg.dimord in the caller, hence it's useless to set stat.dimord here
 if exist('frequency', 'var'), stat.freq   = frequency; end
 if exist('time', 'var'),      stat.time   = time; end
