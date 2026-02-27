@@ -1,4 +1,4 @@
-function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
+function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design, dat2, design2)
 
 % FT_STATISTICS_MVPA performs multivariate pattern classification or regression using
 % the MVPA-Light toolbox. The function supports cross-validation, searchlight
@@ -142,6 +142,8 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design)
 %                      together with the immediately preceding and following
 %                      time points. Increasing timwin typially
 %                      leads to smoother results along the time axis.
+%   cfg.tstep        = integer, size of time step, only works in
+%                      combination with cfg.timwin
 %   cfg.freqwin      = integer, acts like cfg.timwin but across frequencies
 %
 % This returns:
@@ -176,6 +178,16 @@ ft_hastoolbox('mvpa-light', 1);
 assert(isnumeric(dat),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 assert(isnumeric(design), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
 
+% check whether cross-decoding is to be performed
+if nargin>3
+  assert(isnumeric(dat2),    'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+  assert(isnumeric(design2), 'this function requires numeric data as input, you probably want to use FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS or FT_SOURCESTATISTICS instead');
+  fprintf('performing cross-decoding, training on the first data argument, testing on the second\n');
+  docrossdecode = true;
+else
+  docrossdecode = false;
+end
+
 % check whether the function has been called from ft_timelockstatistics, ft_freqstatistics, or ft_sourcestatistics
 st = dbstack;
 m  = mfilename;
@@ -188,6 +200,7 @@ end
 %% cfg: set defaults
 cfg.generalize        = ft_getopt(cfg, 'generalize',   []);
 cfg.timwin            = ft_getopt(cfg, 'timwin',       []);
+cfg.tstep             = ft_getopt(cfg, 'tstep',        1);
 cfg.freqwin           = ft_getopt(cfg, 'freqwin',      []);
 cfg.neighbours        = ft_getopt(cfg, 'neighbours',   []);
 cfg.connectivity      = ft_getopt(cfg, 'connectivity', []); % the default is dealt with below
@@ -201,6 +214,7 @@ if isempty(cfg.mvpa.model)
   end
   cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric', 'accuracy');
 else
+  % if defined by user, we will perform a regression -> the mv-code makes this distinction based on mvpa.model/mvpa.classifier
   cfg.mvpa.metric     = ft_getopt(cfg.mvpa, 'metric', 'mae');
 end
 cfg.mvpa.neighbours   = ft_getopt(cfg.mvpa, 'neighbours',  []);
@@ -228,11 +242,12 @@ if numel(dim) ~= numel(dimtok)
   ft_error('the dim and dimord are inconsistent');
 end
 
-% flip dimensions such that the number of trials comes first
-dat = dat.';
-
-% reshape because MVPA-Light expects the original multi-dimensional array
-dat = reshape(dat, [size(dat,1) cfg.dim]);
+% flip dimensions such that the number of trials comes first and then reshape because MVPA-Light expects the 
+% original multi-dimensional array
+dat = reshape(dat.', [size(dat,2) cfg.dim]);
+if docrossdecode
+  dat2 = reshape(dat2.', [size(dat2,2) cfg.dim]); % FIXME this assumes same cfg.dim applies
+end
 
 %% defaults for cfg.features
 if ~isfield(cfg, 'features')
@@ -351,6 +366,7 @@ if isempty(cfg.mvpa.neighbours)
           else
             cfg.mvpa.neighbours{ix} = eye(cfg.dim(timdim));
           end
+          cfg.mvpa.neighbours{ix} = cfg.mvpa.neighbours{ix}(1:cfg.tstep:end,:);
         case 'freq'
           % create boolean neighbour matrix for freq
           freqdim = strcmp(dimtok, 'freq');
@@ -395,11 +411,13 @@ end
 %% Call MVPA-Light
 if isempty(cfg.mvpa.model)
   % -------- Classification --------
-  if ndims(dat)==3 && numel(cfg.features)==1 && cfg.features==2 && numel(cfg.generalize)==1 && cfg.generalize==3 && isempty(cfg.mvpa.neighbours)
-    % special case: time generalization for 3D data
-    [perf, result] = mv_classify_timextime(cfg.mvpa, dat, design);
-  else
+  %if ndims(dat)==3 && isscalar(cfg.features) && cfg.features==2 && isscalar(cfg.generalize) && cfg.generalize==3 && isempty(cfg.mvpa.neighbours)
+  %  % special case: time generalization for 3D data
+  %  [perf, result] = mv_classify_timextime(cfg.mvpa, dat, design);
+  if ~docrossdecode
     [perf, result] = mv_classify(cfg.mvpa, dat, design);
+  elseif docrossdecode
+    [perf, result] = mv_classify(cfg.mvpa, dat, design, dat2, design2);
   end
 else
   % -------- Regression --------
@@ -417,16 +435,39 @@ for mm=1:numel(cfg.mvpa.metric)
   if strcmp(cfg.mvpa.metric{mm}, 'none')
     % This is a special case, skip for now  
   else
-    % Performance metric
-    stat.(cfg.mvpa.metric{mm})          = result.perf{mm};
-    stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
-    try
-      if numel(cfg.mvpa.metric)==1
-        outdimord = strjoin(strrep(result.perf_dimension_names{1}, ' ', ''), '_');
-      else
-        outdimord = strjoin(strrep(result.perf_dimension_names{mm}, ' ', ''), '_');
-      end
+    
+    dimnames  = strrep(result.perf_dimension_names(mm), ' ', '');
+    haschan   = find(strcmp(dimnames, 'chan'));
+    if isempty(haschan), haschan = 0; end
+    
+    % check whether a label exists, and whether the dimord has a 'chan'. If
+    % not add a singleton dimension to the left, if it does (but if it is
+    % not the leading dimension, permute)
+    if ~haschan
+      stat.(cfg.mvpa.metric{mm})          = shiftdim(result.perf{mm}, -1);
+      stat.([cfg.mvpa.metric{mm} '_std']) = shiftdim(result.perf_std{mm}, -1);
+      dimnames = ['chan' dimnames];
+    elseif haschan>1 || numel(haschan)>1
+      n = ndims(result.perf{mm});
+      pvec = [haschan setdiff(1:n, haschan)];
+      stat.(cfg.mvpa.metric{mm})          = permute(result.perf{mm},     pvec);
+      stat.([cfg.mvpa.metric{mm} '_std']) = permute(result.perf_std{mm}, pvec);
+      dimnames = dimnames(pvec);
+    else
+      stat.(cfg.mvpa.metric{mm})          = result.perf{mm};
+      stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
+    end
+
+    if numel(dimnames)>1
+      outdimord = strjoin(dimnames, '_');
+    else
+      outdimord = dimnames{1};
+    end
+
+    if isscalar(cfg.mvpa.metric)
       stat.dimord = outdimord;
+    else
+      stat.([cfg.mvpa.metric{mm} '_dimord']) = outdimord;
     end
   end
 
@@ -442,7 +483,13 @@ if isfield(cfg, 'frequency')
   frequency = mean(cfg.frequency);
 end
 
-if exist('label', 'var'),     stat.label  = label;  end
+if exist('label', 'var')
+  if ischar(label)
+    stat.label = {label};
+  else
+    stat.label = label;
+  end
+end
 if exist('outdimord', 'var'), cfg.dimord  = dimord; end % stat.dimord is overwritten by cfg.dimord in the caller, hence it's useless to set stat.dimord here
 if exist('frequency', 'var'), stat.freq   = frequency; end
 if exist('time', 'var'),      stat.time   = time; end
