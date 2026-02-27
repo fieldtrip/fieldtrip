@@ -15,19 +15,20 @@ function [cfg, sensor] = ft_sensorplacement(cfg, headshape)
 % meshes representing the sensor sensors or sensor holders that can be plotted.
 %
 % The input configuration structure can contain the following
-%   cfg.template      = string, filename with the STL model of the sensor sensor or sensor sensor holder
-%   cfg.write         = 'no' or 'yes', write the sensor sensors to STL files
+%   cfg.template      = string, filename with the STL model of the sensor or sensor holder
+%   cfg.write         = 'no' or 'yes', write the sensors to STL files
 %   cfg.elec          = structure with electrode positions or filename, see FT_READ_SENS
 %   cfg.channel       = cell-array, selection of electrode locations at which to place an sensor sensor
-%   cfg.outwardshift  = number, amount to shift the sensor sensors outward from the surface
+%   cfg.outwardshift  = number, amount to shift the sensors outward from the surface
 %   cfg.rotx          = Nx1 vector with the rotation around the x-axis (default is automatic)
 %   cfg.roty          = Nx1 vector with the rotation around the y-axis (default is automatic)
 %   cfg.rotz          = Nx1 vector with the rotation around the z-axis (default is automatic)
+%   cfg.grad          = structure with a single OPM sensor, see FT_DATATYPE_SENS
 %
 % The output configuration structure contains the rotations that were performed,
-% which can be used in a second iteration to make adjustments. The output sensor
-% structure contains the template mesh for each of the sensors, following rotation
-% and translation.
+% which can be adjusted and used in a second iteration. The output sensor structure
+% array contains the geometrical description of all sensors, following rotation and
+% translation.
 %
 % See also FT_ELECTRODEPLACEMENT, FT_PREPARE_MESH, FT_MESHREALIGN, FT_DEFACEMESH
 
@@ -112,8 +113,13 @@ elseif isempty(cfg.rotz)
 end
 
 % read the template STL model, assume them to be in milimeter
-template = ft_read_headshape(cfg.template, 'unit', 'unknown');
-template.unit = 'mm';
+if ischar(cfg.template)
+  template = ft_read_headshape(cfg.template, 'unit', 'unknown');
+  template.unit = 'mm';
+else
+  % use the template object as specified, it can be a grad structure with a single OPM sensor 
+  template = cfg.template;
+end
 
 % project the electrodes onto the headshape surface
 [dum, elec.elecpos] = project_elec(elec.elecpos, headshape.pos, headshape.tri);
