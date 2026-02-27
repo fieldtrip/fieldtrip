@@ -24,7 +24,7 @@ function bemcp_example
 % $Id$
 
 % create volume conductor starting from unit sphere
-[pnt, tri] = mesh_sphere(162);
+[pnt, tri] = mesh_sphere162;
 
 vol = [];
 vol.cond = [1 1/80 1];
@@ -41,9 +41,7 @@ vol.bnd(3).pnt = pnt*100;
 vol.bnd(3).tri = tri;
 
 % create the BEM system matrix
-cfg = [];
-cfg.method = 'bemcp';
-vol1 = ft_prepare_bemmodel(cfg, vol);
+vol1 = ft_headmodel_bemcp(vol);
 
 
 % create some random electrodes
@@ -51,25 +49,25 @@ pnt = randn(200,3);
 pnt = pnt(pnt(:,3)>0, :);  % only those on the upper half
 sens = [];
 for i=1:size(pnt,1)
-  sens.pnt(i,:) = pnt(i,:) / norm(pnt(i,:)); % scale towards the skin surface
-  sens.label{i} = sprintf('%02d', i);
+  sens.pnt(i,:) = 100.* pnt(i,:) / norm(pnt(i,:)); % scale towards the skin surface
+  sens.label{i,1} = sprintf('%02d', i);
 end
 
 % prepare the sensor array and volume conduction, i.e. set up the linear
 % interpolation from vertices to electrodes
-[vol2, sens] = forwinv_prepare_vol_sens(vol1, sens);
+[vol2, sens] = ft_prepare_vol_sens(vol1, sens);
 
-lf = forwinv_compute_leadfield([0 0 50], sens, vol2);
+lf = ft_compute_leadfield([0 0 50], sens, vol2);
 
-figure; triplot(sens.pnt, [], lf(:,1)); colorbar
-figure; triplot(sens.pnt, [], lf(:,2)); colorbar
-figure; triplot(sens.pnt, [], lf(:,3)); colorbar
+figure; triplot(sens.chanpos, [], lf(:,1)); colorbar
+figure; triplot(sens.chanpos, [], lf(:,2)); colorbar
+figure; triplot(sens.chanpos, [], lf(:,3)); colorbar
 
 return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Subfunctions from FieldTrip
-function [pnt, tri] = mesh_sphere(162)
+function [pnt, tri] = mesh_sphere162
 
 % ICOSAHEDRON162 creates a 2-fold refined icosahedron
 
@@ -159,7 +157,7 @@ return
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-function [pntr, tri] = refine(pnt, tri, method, varargin)
+function [pntr, trir] = refine(pnt, tri, method, varargin)
 
 % REFINE a 3D surface that is described by a triangulation
 %
@@ -201,7 +199,7 @@ case 'banks'
   ntri   = size(tri,1);
   insert = spalloc(3*npnt,3*npnt,3*ntri);
 
-  tri  = zeros(4*ntri,3);		% allocate memory for the new triangles
+  trir  = zeros(4*ntri,3);		% allocate memory for the new triangles
   pntr  = zeros(npnt+3*ntri,3);		% allocate memory for the maximum number of new vertices
   pntr(1:npnt,:) = pnt;			% insert the original vertices
   current = npnt;
@@ -239,10 +237,10 @@ case 'banks'
     end
 
     % add the 4 new triangles with the correct indices
-    tri(4*(i-1)+1, :) = [tri(i,1) v12 v31];
-    tri(4*(i-1)+2, :) = [tri(i,2) v23 v12];
-    tri(4*(i-1)+3, :) = [tri(i,3) v31 v23];
-    tri(4*(i-1)+4, :) = [v12 v23 v31];
+    trir(4*(i-1)+1, :) = [tri(i,1) v12 v31];
+    trir(4*(i-1)+2, :) = [tri(i,2) v23 v12];
+    trir(4*(i-1)+3, :) = [tri(i,3) v31 v23];
+    trir(4*(i-1)+4, :) = [v12 v23 v31];
 
   end
 
