@@ -436,7 +436,12 @@ for mm=1:numel(cfg.mvpa.metric)
     % This is a special case, skip for now  
   else
     
-    dimnames  = strrep(result.perf_dimension_names(mm), ' ', '');
+    if iscell(result.perf_dimension_names)
+      dimnames  = strrep(result.perf_dimension_names{mm}, ' ', '');
+    else
+      dimnames  = strrep(result.perf_dimension_names, ' ', '');
+    end
+    if ~iscell(dimnames), dimnames = {dimnames}; end
     haschan   = find(strcmp(dimnames, 'chan'));
     if isempty(haschan), haschan = 0; end
     
@@ -446,7 +451,7 @@ for mm=1:numel(cfg.mvpa.metric)
     if ~haschan
       stat.(cfg.mvpa.metric{mm})          = shiftdim(result.perf{mm}, -1);
       stat.([cfg.mvpa.metric{mm} '_std']) = shiftdim(result.perf_std{mm}, -1);
-      dimnames = ['chan' dimnames];
+      dimnames = [{'chan'} dimnames];
     elseif haschan>1 || numel(haschan)>1
       n = ndims(result.perf{mm});
       pvec = [haschan setdiff(1:n, haschan)];
