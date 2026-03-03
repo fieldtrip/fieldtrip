@@ -299,31 +299,33 @@ cfg.mvpa.dimension_names = ft_getopt(cfg.mvpa, 'dimension_names', [{'samples'} d
 
 %% convert features and generalize from char to integers
 if ischar(cfg.features) || iscell(cfg.features)
-  if ~iscell(cfg.features),  feat = {cfg.features};
-  else, feat = cfg.features;
+  if ~iscell(cfg.features)
+    feat = {cfg.features};
+  else
+    feat = cfg.features;
   end
-  cfg.features = zeros(1, numel(feat));
+  features = zeros(1, numel(feat));
   for ix = 1:numel(feat)
     find_ix = find(ismember(cfg.mvpa.dimension_names, feat{ix}));
     assert(~isempty(find_ix), sprintf('''%s'' specified as feature but it is not found in cfg.dimord', feat{ix}))
-    cfg.features(ix) = find_ix;
+    features(ix) = find_ix;
   end
 end
 
 if ischar(cfg.generalize)
-  cfg.generalize = find(ismember(cfg.mvpa.dimension_names, cfg.generalize));
-  if isempty(cfg.generalize)
+  generalize = find(ismember(cfg.mvpa.dimension_names, cfg.generalize));
+  if isempty(generalize)
     ft_error(sprintf('cfg.generalize = ''%s'' is not contained in cfg.dimord', cfg.generalize))
   end
 end
 
-cfg.mvpa.feature_dimension          = cfg.features;
-cfg.mvpa.generalization_dimension   = cfg.generalize;
+cfg.mvpa.feature_dimension          = features;
+cfg.mvpa.generalization_dimension   = generalize;
 
 % names of search dimensions
 dimtok_search = dimtok;
-if ~isempty(cfg.features)
-  dimtok_search(cfg.features-1) = [];
+if ~isempty(features)
+  dimtok_search(features-1) = [];
 end
 
 %% transform neighbours into boolean matrix if necessary
@@ -386,7 +388,7 @@ elseif ~isempty(cfg.neighbours) || ~isempty(cfg.connectivity) || ~isempty(cfg.ti
 end
 
 %% adapt channel labels
-if any(strcmp('chan', cfg.mvpa.dimension_names(cfg.features)))
+if any(strcmp('chan', cfg.mvpa.dimension_names(features)))
   % combine all labels when chan is used as features
   label = sprintf('combined(%s)', strjoin(cfg.channel, ','));
 elseif ~isempty(cfg.neighbours)
@@ -411,9 +413,6 @@ end
 %% Call MVPA-Light
 if isempty(cfg.mvpa.model)
   % -------- Classification --------
-  %if ndims(dat)==3 && isscalar(cfg.features) && cfg.features==2 && isscalar(cfg.generalize) && cfg.generalize==3 && isempty(cfg.mvpa.neighbours)
-  %  % special case: time generalization for 3D data
-  %  [perf, result] = mv_classify_timextime(cfg.mvpa, dat, design);
   if ~docrossdecode
     [perf, result] = mv_classify(cfg.mvpa, dat, design);
   elseif docrossdecode
@@ -430,10 +429,85 @@ if ~iscell(result.perf_std), result.perf_std = {result.perf_std}; end
 
 %% setup stat struct
 stat = [];
-for mm=1:numel(cfg.mvpa.metric)
-  
+for mm = 1:numel(cfg.mvpa.metric)
+  out     = [];
+  out_std = [];
+
   if strcmp(cfg.mvpa.metric{mm}, 'none')
-    % This is a special case, skip for now  
+    % this requires some more adhoc reorganisation of the output
+    if numel(cfg.mvpa.metric)>1
+      dimnames = strrep(result.perf_dimension_names{mm}, ' ', '');
+    else
+      dimnames = strrep(result.perf_dimension_names, ' ', '');
+    end
+    if ~isempty(cfg.generalize)
+      sel = find(strcmp(dimnames, cfg.generalize));
+      for i = sel(:)'
+        dimnames{i} = ['train' dimnames{i}];
+      end
+    end
+
+    % some assumptions check
+    assert(isequal(dimnames{1}, 'repetition') && isequal(dimnames{2}, 'fold'));
+    
+    if numel(cfg.mvpa.metric)>1
+      [nrep, nfold, nother] = size(result.perf{mm});
+    else
+      [nrep, nfold, nother] = size(result.perf);
+    end
+
+    if iscell(result.testlabel)
+      assert(isequal(size(result.testlabel),[nrep nfold]));
+
+      vecrep = result.testlabel;
+      vecfold = result.testlabel;
+      for i = 1:nrep
+        for ii = 1:nfold
+          vecrep{i,ii}(:) = i;
+          vecfold{i,ii}(:) = ii;
+        end
+      end
+      lab     = reshape(result.testlabel, nrep*nfold, 1);
+      vecrep  = reshape(vecrep,  nrep*nfold, 1);
+      vecfold = reshape(vecfold, nrep*nfold, 1);
+
+      lab       = cat(1, lab{:});
+      vecrep    = cat(1, vecrep{:});
+      vecfold   = cat(1, vecfold{:});
+      trialinfo = [vecrep vecfold lab];
+      trialinfo = array2table(trialinfo, 'VariableNames', {'repetition' 'fold' 'testlabel'});
+    else
+      trialinfo = array2table(result.testlabel, 'VariableNames', {'testlabel'});
+    end
+
+    if numel(cfg.mvpa.metric)>1
+      out = reshape(result.perf{mm},  nrep*nfold, nother);
+    else
+      out = reshape(result.perf, nrep*nfold, nother);
+    end
+    
+    for i = 1:nother
+      out{1,i} = cat(1, out{:,i});
+    end
+    out = out(1,:);
+    if size(out{1},2)==1
+      out = cat(2, out{:});
+    else
+      out = cat(3, out{:});
+      out = permute(out, [1 3 2]); % FIXME this has not been exhaustively tested for generic correctness, but works fine for time generalization
+    end
+
+    dimnames = [{'rptfold'} dimnames(3:end)];
+    if ~isempty(cfg.generalize)
+      dimnames = [dimnames {['test' cfg.generalize]}];
+    end
+
+    if ~isempty(cfg.mvpa.model)
+      fname = [cfg.mvpa.model 'output'];
+    else
+      fname = [cfg.mvpa.classifier 'output'];
+    end
+
   else
     
     if iscell(result.perf_dimension_names)
@@ -442,38 +516,50 @@ for mm=1:numel(cfg.mvpa.metric)
       dimnames  = strrep(result.perf_dimension_names, ' ', '');
     end
     if ~iscell(dimnames), dimnames = {dimnames}; end
-    haschan   = find(strcmp(dimnames, 'chan'));
-    if isempty(haschan), haschan = 0; end
     
-    % check whether a label exists, and whether the dimord has a 'chan'. If
-    % not add a singleton dimension to the left, if it does (but if it is
-    % not the leading dimension, permute)
-    if ~haschan
-      stat.(cfg.mvpa.metric{mm})          = shiftdim(result.perf{mm}, -1);
-      stat.([cfg.mvpa.metric{mm} '_std']) = shiftdim(result.perf_std{mm}, -1);
-      dimnames = [{'chan'} dimnames];
-    elseif haschan>1 || numel(haschan)>1
-      n = ndims(result.perf{mm});
-      pvec = [haschan setdiff(1:n, haschan)];
-      stat.(cfg.mvpa.metric{mm})          = permute(result.perf{mm},     pvec);
-      stat.([cfg.mvpa.metric{mm} '_std']) = permute(result.perf_std{mm}, pvec);
-      dimnames = dimnames(pvec);
-    else
-      stat.(cfg.mvpa.metric{mm})          = result.perf{mm};
-      stat.([cfg.mvpa.metric{mm} '_std']) = result.perf_std{mm};
-    end
+    out     = result.perf{mm};
+    out_std = result.perf_std{mm};
 
-    if numel(dimnames)>1
-      outdimord = strjoin(dimnames, '_');
-    else
-      outdimord = dimnames{1};
-    end
+    fname = cfg.mvpa.metric{mm};
+  end
 
-    if isscalar(cfg.mvpa.metric)
-      stat.dimord = outdimord;
-    else
-      stat.([cfg.mvpa.metric{mm} '_dimord']) = outdimord;
-    end
+  haschan   = find(strcmp(dimnames, 'chan'));
+  if isempty(haschan), haschan = 0; end
+
+  % check whether a label exists, and whether the dimord has a 'chan'. If
+  % not add a singleton dimension to the left, if it does (but if it is
+  % not the leading dimension, permute)
+  if ~haschan && ~startsWith(dimnames{1}, 'rpt')
+    stat.(fname)          = shiftdim(out, -1);
+    if ~isempty(out_std), stat.([fname '_std']) = shiftdim(out_std, -1); end
+    dimnames = [{'chan'} dimnames];
+  elseif ~haschan && startsWith(dimnames{1}, 'rpt')
+    siz    = [size(out) 1];
+    siznew = [siz(1) 1 siz(2:end)];
+    stat.(fname) = zeros(siznew);
+    stat.(fname)(:) = out;
+    dimnames = [dimnames(1) {'chan'} dimnames(2:end)];
+  elseif haschan>1 || numel(haschan)>1
+    n = ndims(out);
+    pvec = [haschan setdiff(1:n, haschan)];
+    stat.(fname)          = permute(out,     pvec);
+    if ~isempty(out_std), stat.([fname '_std']) = permute(out_std, pvec); end
+    dimnames = dimnames(pvec);
+  else
+    stat.(fname)          = out;
+    if ~isempty(out_std), stat.([fname '_std']) = out_std; end
+  end
+
+  if numel(dimnames)>1
+    outdimord = strjoin(dimnames, '_');
+  else
+    outdimord = dimnames{1};
+  end
+
+  if isscalar(cfg.mvpa.metric)
+    stat.dimord = outdimord;
+  else
+    stat.([fname '_dimord']) = outdimord;
   end
 
 end
@@ -481,7 +567,10 @@ end
 % return the MVPA-Light result struct as well
 stat.mvpa = result;
 
-if isfield(cfg, 'latency') && ((isfield(cfg,'avgovertime') && strcmp(cfg.avgovertime, 'yes')) || (~isempty(cfg.mvpa.dimension_names) && any(ismember('time', cfg.mvpa.dimension_names(cfg.features)))))
+if exist('trialinfo', 'var')
+  stat.trialinfo = trialinfo;
+end
+if isfield(cfg, 'latency') && ((isfield(cfg,'avgovertime') && strcmp(cfg.avgovertime, 'yes')) || (~isempty(cfg.mvpa.dimension_names) && any(ismember('time', cfg.mvpa.dimension_names(features)))))
   time = mean(cfg.latency);
 end
 if isfield(cfg, 'frequency')
