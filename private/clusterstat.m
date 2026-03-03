@@ -211,7 +211,7 @@ if needpos
   end
   
   % identify positive clusters in the observed data
-  posclusobs = findcluster(tmp, connmat, cfg.minnbchan);
+  posclusobs = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan);
   
   if spacereshapeable
     posclusobs = posclusobs(cfg.inside);
@@ -236,7 +236,7 @@ if needneg
   end
   
   % identify negative clusters in the observed data
-  negclusobs = findcluster(tmp, connmat, cfg.minnbchan);
+  negclusobs = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan);
   
   if spacereshapeable
     negclusobs = negclusobs(cfg.inside);
@@ -279,7 +279,7 @@ for i = 1:Nrand
     else
       tmp = reshape(postailrnd(:,i), [cfg.dim 1]);
     end
-    posclusrnd = findcluster(tmp, connmat, cfg.minnbchan);
+    posclusrnd = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan);
     if spacereshapeable
       posclusrnd = posclusrnd(cfg.inside);
     else
@@ -326,7 +326,7 @@ for i = 1:Nrand
     else
       tmp = reshape(negtailrnd(:,i), [cfg.dim 1]);
     end
-    negclusrnd = findcluster(tmp, connmat, cfg.minnbchan);
+    negclusrnd = findcluster(tmp, connmat, 'minnbchan', cfg.minnbchan);
     if spacereshapeable
       negclusrnd = negclusrnd(cfg.inside);
     else  
