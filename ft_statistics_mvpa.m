@@ -317,6 +317,8 @@ if ischar(cfg.generalize)
   if isempty(generalize)
     ft_error(sprintf('cfg.generalize = ''%s'' is not contained in cfg.dimord', cfg.generalize))
   end
+elseif isempty(cfg.generalize)
+  generalize = [];
 end
 
 cfg.mvpa.feature_dimension          = features;
