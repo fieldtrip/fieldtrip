@@ -25,7 +25,7 @@ function dataout = ft_edmdanalysis(cfg, datain)
 %                'raw': generates a reconstruction of the original data,
 %                based on the mode decomposition 'seen through' the
 %                dictionary and the first snapshot of the data.
-%                'freq': generates a a spectrum derived from Koopman 
+%                'freq': generates a spectrum derived from Koopman 
 %                eigenvalues
 %                'binned_peak_freq': generates a freq structure with binned 
 %                dominant frequencies. The bins can be customized and as 
