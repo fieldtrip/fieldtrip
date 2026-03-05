@@ -41,7 +41,8 @@ The package aims to allow researchers to incorporate eDMD-based modeling directl
 
 * Clone the repository using Git:
 
-`git clone https://github.com/yourusername/your-repo-name.git`
+`git clone https://github.com/DchavezGH/edmd-meg-working-memory`
+
 
 * Or download the ZIP file and extract it
 
