@@ -310,6 +310,8 @@ if ischar(cfg.features) || iscell(cfg.features)
     assert(~isempty(find_ix), sprintf('''%s'' specified as feature but it is not found in cfg.dimord', feat{ix}))
     features(ix) = find_ix;
   end
+else
+  features = [];
 end
 
 if ischar(cfg.generalize)
