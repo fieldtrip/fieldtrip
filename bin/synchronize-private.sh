@@ -2787,6 +2787,14 @@ ARRAY+=(realtime/online_meg/private/open_figure.m)
 sync ${ARRAY[*]}
 
 ################################################################################
+# outline_shape.m
+
+ARRAY=()
+ARRAY+=(private/outline_shape.m)
+ARRAY+=(plotting/private/outline_shape.m)
+sync ${ARRAY[*]}
+
+################################################################################
 # parameterselection.m
 
 ARRAY=()
