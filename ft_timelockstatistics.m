@@ -132,6 +132,10 @@ else
   docrossmvpa = false;
 end
 
+if isequal(cfg.method,'mvpa')
+  cfg.time = varargin{1}.time;
+end
+
 dimord = getdimord(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
 dimsiz = getdimsiz(varargin{1}, cfg.parameter, numel(dimtok));
@@ -242,9 +246,6 @@ if ~isequal(varargin{1}.label, cfg.channel)
   % one take precedence
   varargin{1}.label = cfg.channel;
 end
-if isfield(cfg, 'tstep')
-  varargin{1}.time = varargin{1}.time(1:cfg.tstep:end);
-end
 
 % the statistical output contains multiple elements, e.g. F-value, beta-weights and probability
 fn = fieldnames(stat);
@@ -264,7 +265,7 @@ if isfield(stat, 'label'), fieldstobecopied = fieldstobecopied(~ismember(fieldst
 stat = copyfields(varargin{1}, stat, fieldstobecopied);
 
 % these were only present to inform the low-level functions
-cfg = removefields(cfg, {'dim', 'dimord'});
+cfg = removefields(cfg, {'dim', 'dimord' 'time'});
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug

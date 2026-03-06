@@ -204,6 +204,7 @@ cfg.tstep             = ft_getopt(cfg, 'tstep',        1);
 cfg.freqwin           = ft_getopt(cfg, 'freqwin',      []);
 cfg.neighbours        = ft_getopt(cfg, 'neighbours',   []);
 cfg.connectivity      = ft_getopt(cfg, 'connectivity', []); % the default is dealt with below
+cfg.time              = ft_getopt(cfg, 'time',         []);
 
 cfg.mvpa              = ft_getopt(cfg, 'mvpa',       []);
 cfg.mvpa.model        = ft_getopt(cfg.mvpa, 'model', []);
@@ -433,6 +434,15 @@ if ~iscell(result.perf_std), result.perf_std = {result.perf_std}; end
 
 %% setup stat struct
 stat = [];
+
+% preliminary, for if time has been defined in the cfg, and if a searchlight was requested
+if ~isempty(cfg.time)
+  time = cfg.time;
+  if cfg.tstep>1
+    time = time(1:cfg.tstep:end);
+  end
+end
+
 for mm = 1:numel(cfg.mvpa.metric)
   out     = [];
   out_std = [];
@@ -455,10 +465,13 @@ for mm = 1:numel(cfg.mvpa.metric)
     assert(isequal(dimnames{1}, 'repetition') && isequal(dimnames{2}, 'fold'));
     
     if numel(cfg.mvpa.metric)>1
-      [nrep, nfold, nother] = size(result.perf{mm});
+      siz = size(result.perf{mm});
     else
-      [nrep, nfold, nother] = size(result.perf);
+      siz = size(result.perf);
     end
+    nrep   = siz(1);
+    nfold  = siz(2);
+    nother = siz(3:end);
 
     if iscell(result.testlabel)
       assert(isequal(size(result.testlabel),[nrep nfold]));
@@ -485,21 +498,30 @@ for mm = 1:numel(cfg.mvpa.metric)
     end
 
     if numel(cfg.mvpa.metric)>1
-      out = reshape(result.perf{mm},  nrep*nfold, nother);
+      out = reshape(result.perf{mm},  [nrep*nfold, nother]);
     else
-      out = reshape(result.perf, nrep*nfold, nother);
+      out = reshape(result.perf, [nrep*nfold, nother]);
     end
     
-    for i = 1:nother
-      out{1,i} = cat(1, out{:,i});
+    outcat = cell([1 1 size(out(1,:,:,:,:,:))]);
+    nelem = zeros(nother);
+    for i = 1:prod(nother)
+      outcat{1,1,1,i} = cat(1, out{:,i});
+      nelem(i) = numel(outcat{1,1,1,i});
     end
-    out = out(1,:);
-    if size(out{1},2)==1
-      out = cat(2, out{:});
-    else
-      out = cat(3, out{:});
-      out = permute(out, [1 3 2]); % FIXME this has not been exhaustively tested for generic correctness, but works fine for time generalization
+    for i = 1:numel(nother)
+      selelem{i} = ~all(nelem==0,setdiff(1:numel(nother), i));
     end
+
+    if exist('label', 'var') && iscell(label) && any(contains(dimnames, 'chan'))
+      label = label(selelem{find(contains(dimnames,'chan'),1,'first')-2});
+    end
+    if exist('time', 'var') && any(contains(dimnames, 'time'))
+      time = time(selelem{find(contains(dimnames,'time'),1,'first')-2});
+    end
+    out = outcat; clear outcat
+    out = cell2mat(out);
+    out = squeeze(permute(out, [setdiff(1:ndims(out), 2), 2]));
 
     dimnames = [{'rptfold'} dimnames(3:end)];
     if ~isempty(cfg.generalize)
@@ -528,6 +550,7 @@ for mm = 1:numel(cfg.mvpa.metric)
   end
 
   haschan   = find(strcmp(dimnames, 'chan'));
+  hasrpt    = find(contains(dimnames,'rpt'));
   if isempty(haschan), haschan = 0; end
 
   % check whether a label exists, and whether the dimord has a 'chan'. If
@@ -543,7 +566,7 @@ for mm = 1:numel(cfg.mvpa.metric)
     stat.(fname) = zeros(siznew);
     stat.(fname)(:) = out;
     dimnames = [dimnames(1) {'chan'} dimnames(2:end)];
-  elseif haschan>1 || numel(haschan)>1
+  elseif (haschan>1 && ~hasrpt) || numel(haschan)>1
     n = ndims(out);
     pvec = [haschan setdiff(1:n, haschan)];
     stat.(fname)          = permute(out,     pvec);
