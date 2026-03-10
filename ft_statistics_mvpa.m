@@ -22,6 +22,14 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design, dat2, design2)
 % FT_FREQGRANDAVERAGE or FT_SOURCEGRANDAVERAGE respectively
 % and with cfg.method = 'mvpa'
 %
+% In relation to the other ft_statistics_<> functions, FT_STATISTICS_MVPA stands out
+% because it allows for cross-classification analysis; where the model is trained on
+% the single trial data present in the first data argument, and tested on the single
+% trial data present in the second data argument. In this case the highe level function
+% (e.g. FT_TIMELOCKSTATISTICS) needs to be called with 2 data arguments containing single
+% trial data, and with cfg.design as a 1x2 cell-array, where each cell corresponds with
+% a design, consistent with the respective data argument.
+%
 % The configuration options that can be specified are:
 %   cfg.features        = specifies the name or index of the dimension(s)
 %                         that serve(s) as features for the classifier or
@@ -147,10 +155,10 @@ function [stat, cfg] = ft_statistics_mvpa(cfg, dat, design, dat2, design2)
 %   cfg.freqwin      = integer, acts like cfg.timwin but across frequencies
 %
 % This returns:
-%   stat.metric = this contains the requested metric
+%   stat.<metric> = this contains the requested metric
 %
 % See also FT_TIMELOCKSTATISTICS, FT_FREQSTATISTICS, FT_SOURCESTATISTICS,
-% FT_STATISTICS_ANALYTIC, FT_STATISTICS_STATS, FT_STATISTICS_MONTECARLO, FT_STATISTICS_CROSSVALIDATE
+% FT_STATISTICS_ANALYTIC, FT_STATISTICS_STATS, FT_STATISTICS_MONTECARLO
 
 % Copyright (C) 2019-2025, Matthias Treder and Jan-Mathijs Schoffelen
 %
