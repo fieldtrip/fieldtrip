@@ -1201,6 +1201,7 @@ sync ${ARRAY[*]}
 # ft_setopt.m
 
 ARRAY=()
+ARRAY+=(fileio/private/ft_setopt.m)
 ARRAY+=(inverse/private/ft_setopt.m)
 ARRAY+=(qsub/private/ft_setopt.m)
 ARRAY+=(utilities/ft_setopt.m)
