@@ -13,17 +13,17 @@ switch method
     % note that the electrode positions should be scaled accordingly
     rmax  = 0.5;
     l     = 0:2*pi/100:2*pi;
-    HeadX = cos(l).*rmax;
-    HeadY = sin(l).*rmax;
-    NoseX = [0.18*rmax 0 -0.18*rmax];
-    NoseY = [rmax-.004 rmax*1.15 rmax-.004];
-    EarX  = [.497 .510 .518 .5299 .5419 .54 .547 .532 .510 .489];
-    EarY  = [.0555 .0775 .0783 .0746 .0555 -.0055 -.0932 -.1313 -.1384 -.1199];
+    headx = cos(l).*rmax;
+    heady = sin(l).*rmax;
+    nosex = [0.18*rmax 0 -0.18*rmax];
+    nosey = [rmax-.004 rmax*1.15 rmax-.004];
+    earx  = [.497 .510 .518 .5299 .5419 .54 .547 .532 .510 .489];
+    eary  = [.0555 .0775 .0783 .0746 .0555 -.0055 -.0932 -.1313 -.1384 -.1199];
     % Define the outline of the head, ears and nose
-    outline{1} = [HeadX(:) HeadY(:)];
-    outline{2} = [NoseX(:) NoseY(:)];
-    outline{3} = [ EarX(:)  EarY(:)];
-    outline{4} = [-EarX(:)  EarY(:)];
+    outline{1} = [headx(:) heady(:)];
+    outline{2} = [nosex(:) nosey(:)];
+    outline{3} = [ earx(:)  eary(:)];
+    outline{4} = [-earx(:)  eary(:)];
 
   case 'doublecirclecross'
     % generate an outline consisting of a unit-diameter circle
@@ -32,14 +32,14 @@ switch method
     % note that the electrode positions should be scaled accordingly
     rmax  = 0.5;
     l     = 0:2*pi/100:2*pi;
-    HeadX = cos(l).*rmax;
-    HeadY = sin(l).*rmax;
-    NoseX = [0.18*rmax 0 -0.18*rmax];
-    NoseY = [rmax-.004 rmax*1.15 rmax-.004];
+    headx = cos(l).*rmax;
+    heady = sin(l).*rmax;
+    nosex = [0.18*rmax 0 -0.18*rmax];
+    nosey = [rmax-.004 rmax*1.15 rmax-.004];
     % Define the outline of the head with the cross
-    outline{1} = [HeadX(:) HeadY(:)]*1.0; % outer circle
-    outline{2} = [HeadX(:) HeadY(:)]*0.8; % inner circle
-    outline{3} = [NoseX(:) NoseY(:)];     % nose
+    outline{1} = [headx(:) heady(:)]*1.0; % outer circle
+    outline{2} = [headx(:) heady(:)]*0.8; % inner circle
+    outline{3} = [nosex(:) nosey(:)];     % nose
     outline{4} = [-0.5 0 ; +0.5 0];       % horizontal line
     outline{5} = [0 -0.5 ; 0 +0.5];       % vertical line
 
