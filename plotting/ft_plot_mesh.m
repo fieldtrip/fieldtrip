@@ -417,7 +417,7 @@ if ~isempty(contour)
 
   for m = 1:numel(contour)
     C    = full(triangle2connectivity(tri));
-    clus = findcluster(contour{m},C,0);
+    clus = findcluster(contour{m},C);
 
     for cl = 1:max(clus)
       idxcl = find(clus==cl);
