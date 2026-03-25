@@ -28,7 +28,7 @@ assert(nnz(clus(:)==2)==3);
 assert(nnz(clus(:)==3)==3);
 clusold = clus;
 
-[clus, num] = findcluster(dat,C,'useoldimplementation',0);
+[clus, num] = findcluster(dat,C,'usemeximplementation',0);
 assert(num==3);
 assert(nnz(clus(:)==1)==12);
 assert(nnz(clus(:)==2)==3);
@@ -48,7 +48,7 @@ assert(nnz(clus(:)==3)==3);
 assert(nnz(clus(:)==4)==3);
 clusold = clus;
 
-[clus, num] = findcluster(dat,C2,'useoldimplementation',0);
+[clus, num] = findcluster(dat,C2,'usemeximplementation',0);
 assert(num==4);
 assert(nnz(clus(:)==1)==8);
 assert(nnz(clus(:)==2)==4);
@@ -64,7 +64,7 @@ assert(nnz(clus(:)==2)==3);
 assert(nnz(clus(:)==3)==3);
 clusold = clus;
 
-[clus, num] = findcluster(shiftdim(dat,-1),false,'useoldimplementation',0);
+[clus, num] = findcluster(shiftdim(dat,-1),false,'usemeximplementation',0);
 assert(num==3);
 assert(nnz(clus(:)==1)==12);
 assert(nnz(clus(:)==2)==3);
@@ -83,7 +83,7 @@ assert(nnz(clus4d(:)==2)==3*4);
 assert(nnz(clus4d(:)==3)==3*4);
 clusold = clus;
 
-[clus4d, num4d] = findcluster(dat4d,C,'useoldimplementation',0);
+[clus4d, num4d] = findcluster(dat4d,C,'usemeximplementation',0);
 assert(num4d==3);
 assert(nnz(clus4d(:)==1)==12*4);
 assert(nnz(clus4d(:)==2)==3*4);
@@ -97,7 +97,7 @@ assert(nnz(clus5d(:)==2)==3*4*5);
 assert(nnz(clus5d(:)==3)==3*4*5);
 clusold = clus;
 
-[clus5d, num5d] = findcluster(dat5d,C,'useoldimplementation',0);
+[clus5d, num5d] = findcluster(dat5d,C,'usemeximplementation',0);
 assert(num5d==3);
 assert(nnz(clus5d(:)==1)==12*4*5);
 assert(nnz(clus5d(:)==2)==3*4*5);
@@ -111,7 +111,7 @@ assert(nnz(clus6d(:)==2)==3*4*5*6);
 assert(nnz(clus6d(:)==3)==3*4*5*6);
 clusold = clus;
 
-[clus6d, num6d] = findcluster(dat6d,C,'useoldimplementation',0);
+[clus6d, num6d] = findcluster(dat6d,C,'usemeximplementation',0);
 assert(num6d==3);
 assert(nnz(clus6d(:)==1)==12*4*5*6);
 assert(nnz(clus6d(:)==2)==3*4*5*6);
@@ -125,7 +125,7 @@ assert(nnz(clus7d(:)==2)==3*4*5*6*7);
 assert(nnz(clus7d(:)==3)==3*4*5*6*7);
 clusold = clus;
 
-[clus7d, num7d] = findcluster(dat7d,C,'useoldimplementation',0);
+[clus7d, num7d] = findcluster(dat7d,C,'usemeximplementation',0);
 assert(num7d==3);
 assert(nnz(clus7d(:)==1)==12*4*5*6*7);
 assert(nnz(clus7d(:)==2)==3*4*5*6*7);
@@ -139,7 +139,7 @@ assert(nnz(clus4d(:)==2)==3*4);
 assert(nnz(clus4d(:)==3)==3*4);
 clusold = clus;
 
-[clus4d, num4d] = findcluster(shiftdim(dat4d,-1), false, 'useoldimplementation',0);
+[clus4d, num4d] = findcluster(shiftdim(dat4d,-1), false, 'usemeximplementation',0);
 assert(num4d==3);
 assert(nnz(clus4d(:)==1)==12*4);
 assert(nnz(clus4d(:)==2)==3*4);
@@ -153,7 +153,7 @@ assert(nnz(clus5d(:)==2)==3*4*5);
 assert(nnz(clus5d(:)==3)==3*4*5);
 clusold = clus;
 
-[clus5d, num5d] = findcluster(shiftdim(dat5d,-1), false, 'useoldimplementation',0);
+[clus5d, num5d] = findcluster(shiftdim(dat5d,-1), false, 'usemeximplementation',0);
 assert(num5d==3);
 assert(nnz(clus5d(:)==1)==12*4*5);
 assert(nnz(clus5d(:)==2)==3*4*5);
@@ -167,7 +167,7 @@ assert(nnz(clus6d(:)==2)==3*4*5*6);
 assert(nnz(clus6d(:)==3)==3*4*5*6);
 clusold = clus;
 
-[clus6d, num6d] = findcluster(shiftdim(dat6d,-1), false, 'useoldimplementation',0);
+[clus6d, num6d] = findcluster(shiftdim(dat6d,-1), false, 'usemeximplementation',0);
 assert(num6d==3);
 assert(nnz(clus6d(:)==1)==12*4*5*6);
 assert(nnz(clus6d(:)==2)==3*4*5*6);
@@ -181,7 +181,7 @@ assert(nnz(clus7d(:)==2)==3*4*5*6*7);
 assert(nnz(clus7d(:)==3)==3*4*5*6*7);
 clusold = clus;
 
-[clus7d, num7d] = findcluster(shiftdim(dat7d,-1), false, 'useoldimplementation',0);
+[clus7d, num7d] = findcluster(shiftdim(dat7d,-1), false, 'usemeximplementation',0);
 assert(num7d==3);
 assert(nnz(clus7d(:)==1)==12*4*5*6*7);
 assert(nnz(clus7d(:)==2)==3*4*5*6*7);
@@ -210,7 +210,7 @@ for k = 1:10
   datc = convn(dat,krn,'same');
   onoff = datc>15;
   tic;[c1, n1] = findcluster(onoff, C); t1(k) = toc;
-  tic;[c2, n2] = findcluster(onoff, C, 'useoldimplementation', 0); t2(k) = toc;
+  tic;[c2, n2] = findcluster(onoff, C, 'usemeximplementation', 0); t2(k) = toc;
   %assert(isequal(double(c1),c2)); % this is too strict, since the
   %numbering can be different, and - also - the old implementation tends to
   %'miss' to connect isolated pixels in a slice that connects spatially
@@ -228,7 +228,7 @@ for k = 1:10
   datc = convn(dat,krn,'same');
   onoff = datc>15;
   tic;[c1, n1] = findcluster(onoff, C); t1(k) = toc;
-  tic;[c2, n2] = findcluster(onoff, C, 'useoldimplementation', 0); t2(k) = toc;
+  tic;[c2, n2] = findcluster(onoff, C, 'usemeximplementation', 0); t2(k) = toc;
   %assert(isequal(double(c1),c2)); % this is too strict, since the
   %numbering can be different, and - also - the old implementation tends to
   %'miss' to connect isolated pixels in a slice that connects spatially
@@ -247,7 +247,7 @@ for k = 1:10
   datc = convn(dat,krn(:,:,2),'same');
   onoff = datc>1.5;
   tic;[c1, n1] = findcluster(onoff, C); t1(k) = toc;
-  tic;[c2, n2] = findcluster(onoff, C, 'useoldimplementation', 0); t2(k) = toc;
+  tic;[c2, n2] = findcluster(onoff, C, 'usemeximplementation', 0); t2(k) = toc;
   %assert(isequal(double(c1),c2)); % this is too strict, since the
   %numbering can be different, and - also - the old implementation tends to
   %'miss' to connect isolated pixels in a slice that connects spatially
@@ -267,7 +267,7 @@ for k = 1:10
   datc = convn(dat,krn(:,:,2),'same');
   onoff = datc+randn(20484,1)*linspace(-1,1,20)>2.5;
   tic;[c1, n1] = findcluster(onoff, C); t1(k) = toc;
-  tic;[c2, n2] = findcluster(onoff, C, 'useoldimplementation', 0); t2(k) = toc;
+  tic;[c2, n2] = findcluster(onoff, C, 'usemeximplementation', 0); t2(k) = toc;
   %assert(isequal(double(c1),c2)); % this is too strict, since the
   %numbering can be different, and - also - the old implementation tends to
   %'miss' to connect isolated pixels in a slice that connects spatially
@@ -285,7 +285,7 @@ for k = 1:10
   datc = convn(dat,krn,'same');
   onoff = datc>20;
   tic;[c1, n1] = findcluster(onoff, C); t1(k) = toc;
-  tic;[c2, n2] = findcluster(onoff, C, 'useoldimplementation', 0); t2(k) = toc;
+  tic;[c2, n2] = findcluster(onoff, C, 'usemeximplementation', 0); t2(k) = toc;
   %assert(isequal(double(c1),c2)); % this is too strict, since the
   %numbering can be different, and - also - the old implementation tends to
   %'miss' to connect isolated pixels in a slice that connects spatially
@@ -304,7 +304,7 @@ for k = 1:10
   datc = convn(dat,krn(:,5,5), 'same');
   onoff = datc>3;
   tic;[c1, n1] = findcluster(onoff, C); t1(k) = toc;
-  tic;[c2, n2] = findcluster(onoff, C, 'useoldimplementation', 0); t2(k) = toc;
+  tic;[c2, n2] = findcluster(onoff, C, 'usemeximplementation', 0); t2(k) = toc;
   %assert(isequal(double(c1),c2)); % this is too strict, since the
   %numbering can be different, and - also - the old implementation tends to
   %'miss' to connect isolated pixels in a slice that connects spatially

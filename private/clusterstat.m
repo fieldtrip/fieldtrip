@@ -26,6 +26,11 @@ function [stat, cfg] = clusterstat(cfg, statrnd, statobs)
 %
 % $Id$
 
+% undocumented cfg option:
+%   cfg.combineclusterfun allows to choose the original mex-file combineClusters, or a pure
+%     MATLAB based alternative, combineClusters2. (default is combineClusters). See the help
+%     of combineClusters2 for more information. 
+
 % set the defaults
 cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 cfg.spmversion   = ft_getopt(cfg, 'spmversion',   'spm12');

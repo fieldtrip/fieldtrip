@@ -48,7 +48,7 @@ ft_hastoolbox('spm', -1);
 
 minnbchan           = ft_getopt(varargin, 'minnbchan', 0);
 spatdimneighbselmat = ft_getopt(varargin, 'spatdimneighbselmat', []);
-useoldimplementation = strcmp(ft_getopt(varargin, 'combineclusterfun', 'combineClusters'), 'combineClusters');
+usemeximplementation = strcmp(ft_getopt(varargin, 'combineclusterfun', 'combineClusters'), 'combineClusters');
 
 siz           = size(onoff);
 spatdimlength = siz(1);
@@ -121,7 +121,7 @@ labelmat = reshape(labelmat, spatdimlength, []);
 % combine clusters that are connected in neighbouring channels or channel
 % combinations. Here we convert the input to uint32 as that is required by the mex
 % file, and the values will be positive integers anyway.
-if spatdimlength>1 && useoldimplementation
+if spatdimlength>1 && usemeximplementation
   if issparse(connmat)
     connmat = full(connmat);
   end
