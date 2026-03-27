@@ -143,15 +143,19 @@ if completed
   diarystring = ft_getopt(options, 'diary', stdout);
   options     = ft_setopt(options, 'diary', diarystring);
   
-  % if there is an error, it needs to be represented as a message string
-  % and optionally also as a strucure for rethrowing
+  % if there is an error, it needs to be represented as a message string and optionally also as a structure for rethrowing
   if ~isempty(err)
+    try
+      errstack = jsonencode(err.stack, 'PrettyPrint', true);
+    catch ME
+      errstack = getReport(ME, 'basic');
+    end
     if ischar(err)
       errmsg = err;
     elseif isstruct(err)
-      errmsg = sprintf('%s: %s', err.identifier, err.message);
+      errmsg = sprintf('%s: %s\n%s', err.identifier, err.message, errstack);
     else
-      errmsg = sprintf('%s: %s', err.identifier, err.message);
+      errmsg = sprintf('%s: %s\n%s', err.identifier, err.message, errstack);
       % convert the MEexception object into a structure to allow a rethrow further down in the code
       ws = warning('off', 'MATLAB:structOnObject');
       err = struct(err);
