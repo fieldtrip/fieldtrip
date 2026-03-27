@@ -658,6 +658,8 @@ for indx=1:Ndata
   % Set ft_plot_topo specific options
   if strcmp(cfg.interplimits, 'head')
     interplimits = 'mask';
+  elseif strcmp(cfg.interplimits, 'sensors')
+    interplimits = 'convex';
   else
     interplimits = cfg.interplimits;
   end
