@@ -90,7 +90,7 @@ figure(1), clf, hold on,
 set(gcf, 'units','centimeters','position',[0 0 18 10] );
 subplot(2,2,1), hold on, grid on,
 title( 'TFCE: H=2, E=0.5' );
-plot( statA.time, statA.stat_tfce, 'r');
+plot( statA.time, statA.stattfce, 'r');
 plot( statA.time(statA.mask), 400*ones(sum(statA.mask),1), 'r', 'linewidth',2 );
 ylabel( 'TFCE' );
 ylim( [-20, 420] );
@@ -99,7 +99,7 @@ set(gca, 'TickDir','out' );
 
 subplot(2,2,3), hold on, grid on,
 title( 'TFCE: H=2, E=0.25' );
-plot( statB.time, statB.stat_tfce, 'r');
+plot( statB.time, statB.stattfce, 'r');
 plot( statB.time(statB.mask), 400*ones(sum(statB.mask),1), 'r', 'linewidth',2 );
 ylabel( 'TFCE' );
 ylim( [-20, 420] );
