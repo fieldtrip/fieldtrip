@@ -118,7 +118,7 @@ alphalim        = ft_getopt(varargin, 'alphalim');
 alphamapping    = ft_getopt(varargin, 'alphamap',  'rampup');
 maskstyle       = ft_getopt(varargin, 'maskstyle', 'opacity');
 cmap            = ft_getopt(varargin, 'colormap');
-clim            = ft_getopt(varargin, 'clim');
+colorlim        = ft_getopt(varargin, 'clim');
 contour         = ft_getopt(varargin, 'contour');
 insideonly      = ft_getopt(varargin, 'insideonly', false);
 cutlocation     = ft_getopt(varargin, 'cutlocation', []);
@@ -349,13 +349,13 @@ switch maskstyle
       % vertexcolor is an array with number of elements equal to the number of vertices
       set(hs, 'FaceVertexCData', vertexcolor, 'FaceColor', 'interp');
       if numel(vertexcolor)==size(pos,1)
-        if ~isempty(clim), set(gca, 'clim', clim); end
+        if ~isempty(colorlim), set(gca, 'clim', colorlim); end
         if ~isempty(cmap), ft_colormap(cmap); end
       end
     elseif facepotential
       set(hs, 'FaceVertexCData', facecolor, 'FaceColor', 'flat');
       if numel(facecolor)==size(tri,1)
-        if ~isempty(clim), set(gca, 'clim', clim); end
+        if ~isempty(colorlim), set(gca, 'clim', colorlim); end
         if ~isempty(cmap), ft_colormap(cmap); end
       end
     else
@@ -367,7 +367,7 @@ switch maskstyle
     if size(pos,1)==numel(facealpha)
       set(hs, 'FaceVertexAlphaData', facealpha);
       set(hs, 'FaceAlpha', 'interp');
-    elseif ~isempty(pos) && numel(facealpha)==1 && facealpha~=1
+    elseif ~isempty(pos) && isscalar(facealpha) && facealpha~=1
       % the default is 1, so that does not have to be set
       set(hs, 'FaceAlpha', facealpha);
     end
@@ -389,15 +389,15 @@ switch maskstyle
     assert(isequal(size(facecolor),[1 3]), 'facecolor should be 1x3');
 
     % ensure facealpha to be nvertex x 1
-    if numel(facealpha)==1
+    if isscalar(facealpha)
       facealpha = repmat(facealpha, size(pos,1), 1);
     end
     assert(isequal(numel(facealpha),size(pos,1)), 'facealpha should be %dx1', size(pos,1));
 
     bgcolor = repmat(facecolor, [numel(vertexcolor) 1]);
-    rgb     = bg_rgba2rgb(bgcolor, vertexcolor, cmap, clim, facealpha, alphamapping, alphalim);
+    rgb     = bg_rgba2rgb(bgcolor, vertexcolor, cmap, colorlim, facealpha, alphamapping, alphalim);
     set(hs, 'FaceVertexCData', rgb, 'facecolor', 'interp');
-    if ~isempty(clim); caxis(clim); end % set colorbar scale to match [fcolmin fcolmax]
+    if ~isempty(colorlim); set(gca, 'clim', colorlim); end % set colorbar scale to match [fcolmin fcolmax]
 end
 
 if ~isempty(contour)
@@ -416,8 +416,8 @@ if ~isempty(contour)
   if numel(contour)>numel(contourlinestyle), contourlinestyle = repmat(contourlinestyle, [1 numel(contour)]); end
 
   for m = 1:numel(contour)
-    C    = full(triangle2connectivity(tri));
-    clus = findcluster(contour{m},C);
+    C    = triangle2connectivity(tri);
+    clus = findcluster(contour{m},C,'combineclusterfun', 'combineClusters2');
 
     for cl = 1:max(clus)
       idxcl = find(clus==cl);
@@ -471,7 +471,7 @@ if ~isequal(vertexcolor, 'none') && ~vertexpotential
       end
     end
 
-  elseif ischar(vertexcolor) && numel(vertexcolor)==1
+  elseif ischar(vertexcolor) && isscalar(vertexcolor)
     % one color for all points
     if isscalar(vertexsize)
       if size(pos,2)==2
