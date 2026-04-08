@@ -118,6 +118,10 @@ sync_lists = [
     'src/combineClusters.mexw64'
   ],
   [
+    'private/combineClusters2.m',
+    'plotting/private/combineClusters2.m'
+  ],
+  [
     'fileio/private/compile_mex_list.m',
     'forward/private/compile_mex_list.m'
   ],
