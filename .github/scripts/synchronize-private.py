@@ -1597,6 +1597,10 @@ sync_lists = [
     'realtime/online_meg/private/open_figure.m'
   ],
   [
+    'private/outline_shape.m',
+    'plotting/private/outline_shape.m'
+  ],
+  [
     'contrib/nutmegtrip/private/parameterselection.m',
     'fileio/private/parameterselection.m',
     'private/parameterselection.m',
