@@ -632,7 +632,7 @@ switch headerformat
     hdr.chantype(strcmp(hdr.chanunit, 'uV')) = {'eeg'}; % assume these to be EEG
 
   case 'brainvision_bvrh'
-    % NOTE: this is based on a single example test dataset, not sure how
+    % NOTE: this is based on two example test datasets, not sure how
     % well it generalizes
 
     [p, f, e] = fileparts(filename);
@@ -646,9 +646,18 @@ switch headerformat
     hdr.nSamplesPre = 0;
     hdr.nTrials     = orig.trials;
     hdr.orig        = removefields(orig, {'data' 'event'});
-    hdr.chanunit    = {h.EEGModality.Channels.Unit}';
-    hdr.chantype    = lower({h.EEGModality.Channels.Type}');
 
+    % anecdotally, the two example files based on which this code was
+    % written, each behave differently w.r.t. the contents of h.EEGModality
+    if isstruct(h.EEGModality.Channels)
+      hdr.chanunit    = {h.EEGModality.Channels.Unit}';
+      hdr.chantype    = lower({h.EEGModality.Channels.Type}');
+    elseif iscell(h.EEGModality.Channels)
+      for i = 1:numel(h.EEGModality.Channels)
+        hdr.chanunit{i,1} = h.EEGModality.Channels{i}.Unit;
+        hdr.chantype{i,1} = lower(h.EEGModality.Channels{i}.Type);
+      end
+    end
   case 'bucn_nirs'
     orig = read_bucn_nirshdr(filename);
     hdr  = rmfield(orig, 'time');
