@@ -610,6 +610,18 @@ elseif filetype_check_extension(filename, '.marker')
   type = 'brainvision_marker';
   manufacturer = 'BrainProducts';
   content = 'rejection markers';
+elseif filetype_check_extension(filename, '.bvrd')
+  type = 'brainvision_bvrd';
+  manufacturer = 'BrainProducts';
+  content = 'continuous EEG data';
+elseif filetype_check_extension(filename, '.bvrh')
+  type = 'brainvision_bvrh';
+  manufacturer = 'BrainProducts';
+  content = 'EEG header';
+elseif filetype_check_extension(filename, '.bvrm')
+  type = 'brainvision_bvrm';
+  manufacturer = 'BrainProducts';
+  content = 'EEG markers';
 
   % known Polhemus file types
 elseif filetype_check_extension(filename, '.pos')

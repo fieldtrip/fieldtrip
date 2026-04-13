@@ -631,6 +631,24 @@ switch headerformat
     hdr.chantype = repmat({'unknown'}, size(hdr.label));
     hdr.chantype(strcmp(hdr.chanunit, 'uV')) = {'eeg'}; % assume these to be EEG
 
+  case 'brainvision_bvrh'
+    % NOTE: this is based on a single example test dataset, not sure how
+    % well it generalizes
+
+    [p, f, e] = fileparts(filename);
+    [h, orig] = eeg_loadbvrf(p, [f, e]);
+    orig      = orig{1}; % FIXME don't know yet what happens with more than one element in the array
+    
+    hdr.Fs     = orig.srate;
+    hdr.nChans = orig.nbchan;
+    hdr.label  = {orig.chanlocs.labels}';
+    hdr.nSamples = orig.pnts;
+    hdr.nSamplesPre = 0;
+    hdr.nTrials     = orig.trials;
+    hdr.orig        = removefields(orig, {'data' 'event'});
+    hdr.chanunit    = {h.EEGModality.Channels.Unit}';
+    hdr.chantype    = lower({h.EEGModality.Channels.Type}');
+
   case 'bucn_nirs'
     orig = read_bucn_nirshdr(filename);
     hdr  = rmfield(orig, 'time');
