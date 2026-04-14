@@ -230,7 +230,7 @@ else
 
     fid = fopen(dataFile, 'r');
     fseek(fid, opt.sampleInterval(1) * nChannels * nBytes, 'bof');
-    vec = fread(fid, opt.sampleInterval(2), precision, 'ieee-le');
+    vec = fread(fid, opt.sampleInterval(2) * nChannels, precision, 'ieee-le');
     fclose(fid);
 
     n        = length(vec);

@@ -496,8 +496,8 @@ switch dataformat
     
   case 'brainvision_bvrd'
     [p, f, e] = fileparts(filename);
-    [h, orig] = eeg_loadbvrf(p, [f, '.bvrh'], 'channelIndx', chanindx, 'sampleInterval', [begsample endsample]-1); % samples are 0-based
-    dat = orig{1}.data{1};
+    [h, orig] = eeg_loadbvrf(p, [f, '.bvrh'], 'channelIndx', chanindx, 'sampleInterval', [begsample-1 endsample]); % begsample should be 0-based
+    dat = orig{1}.data;
 
   case 'bucn_nirs'
     dat = read_bucn_nirsdata(filename, hdr, begsample, endsample, chanindx);

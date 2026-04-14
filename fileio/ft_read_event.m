@@ -548,9 +548,15 @@ switch eventformat
     sample = [origevent.latency]';
     sample = mat2cell(sample, ones(numel(sample),1), 1);
 
+    val   = {origevent.bv_value}';
+    code  = {origevent.bv_code}';
+    value = cell(size(val));
+    for i = 1:numel(val)
+      value{i} = char(code{i}+val{i});
+    end
     event = struct('type', {origevent.bv_type}', ...
       'sample', sample, ...
-      'value', {origevent.bv_value}');
+      'value', value);
 
   case 'bucn_nirs'
     event = read_bucn_nirsevent(filename);
