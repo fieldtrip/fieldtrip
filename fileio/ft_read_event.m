@@ -236,6 +236,10 @@ if any(strcmp(eventformat, {'brainvision_eeg', 'brainvision_dat'}))
   [p, f] = fileparts(filename);
   filename = fullfile(p, [f '.vhdr']);
   eventformat = 'brainvision_vhdr';
+elseif any(strcmp(eventformat, {'brainvision_bvrd' 'brainvision_bvrh'}))
+  [p, f] = fileparts(filename);
+  filename = fullfile(p, [f '.bvrm']);
+  eventformat = 'brainvision_bvrm';
 end
 
 if strcmp(eventformat, 'brainvision_vhdr')
@@ -536,6 +540,23 @@ switch eventformat
       % the user specified a BrainVision dataset without a marker file
       event = [];
     end
+
+  case 'brainvision_bvrm'
+    [p, f, e] = fileparts(filename);
+    [h, orig] = eeg_loadbvrf(p, [f, '.bvrh'], 'sampleInterval', [0 0]); % samples are 0-based
+    origevent = orig{1}.event;
+    sample = [origevent.latency]';
+    sample = mat2cell(sample, ones(numel(sample),1), 1);
+
+    val   = {origevent.bv_value}';
+    code  = {origevent.bv_code}';
+    value = cell(size(val));
+    for i = 1:numel(val)
+      value{i} = char(code{i}+val{i});
+    end
+    event = struct('type', {origevent.bv_type}', ...
+      'sample', sample, ...
+      'value', value);
 
   case 'bucn_nirs'
     event = read_bucn_nirsevent(filename);

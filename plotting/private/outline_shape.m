@@ -13,17 +13,17 @@ switch method
     % note that the electrode positions should be scaled accordingly
     rmax  = 0.5;
     l     = 0:2*pi/100:2*pi;
-    headx = cos(l).*rmax;
-    heady = sin(l).*rmax;
-    nosex = [0.18*rmax 0 -0.18*rmax];
-    nosey = [rmax-.004 rmax*1.15 rmax-.004];
-    earx  = [.497 .510 .518 .5299 .5419 .54 .547 .532 .510 .489];
-    eary  = [.0555 .0775 .0783 .0746 .0555 -.0055 -.0932 -.1313 -.1384 -.1199];
+    head_xcoord = cos(l).*rmax;
+    head_ycoord = sin(l).*rmax;
+    nose_xcoord = [0.18*rmax 0 -0.18*rmax];
+    nose_ycoord = [rmax-.004 rmax*1.15 rmax-.004];
+    ear_xcoord  = [.497 .510 .518 .5299 .5419 .54 .547 .532 .510 .489];
+    ear_ycoord  = [.0555 .0775 .0783 .0746 .0555 -.0055 -.0932 -.1313 -.1384 -.1199];
     % Define the outline of the head, ears and nose
-    outline{1} = [headx(:) heady(:)];
-    outline{2} = [nosex(:) nosey(:)];
-    outline{3} = [ earx(:)  eary(:)];
-    outline{4} = [-earx(:)  eary(:)];
+    outline{1} = [head_xcoord(:) head_ycoord(:)];
+    outline{2} = [nose_xcoord(:) nose_ycoord(:)];
+    outline{3} = [ ear_xcoord(:)  ear_ycoord(:)];
+    outline{4} = [-ear_xcoord(:)  ear_ycoord(:)];
 
   case 'doublecirclecross'
     % generate an outline consisting of a unit-diameter circle
