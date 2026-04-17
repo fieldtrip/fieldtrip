@@ -49,6 +49,7 @@ typedef struct {
 #define AMP_SAMP_SIZE 1152
 #define AMP_ANALOG_CHANNELS_OFFSET 0
 #define AMP_ANALOG_CHANNELS 8
+#define AMP_DIGITAL_CHANNELS 2
 #define AMP_CONSTANT_RATE 1000
 
 #ifdef DEBUG
@@ -74,6 +75,8 @@ class AmpServerClient {
 		void error(std::string msg);
 
 		int getNumChannels();
+		int getNumAnalogChannels();
+		int getNumDigitalChannels();
 		int getSamplingFreq();
 
 		void getAmpId();
