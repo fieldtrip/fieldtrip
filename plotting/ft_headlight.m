@@ -1,4 +1,4 @@
-function ft_headlight(~,~)
+function ft_headlight
 
 % FT_HEADLIGHT places a light along the direction of the camera and updates the light
 % position as you rotate the scene and the camera view point changes.
@@ -36,7 +36,7 @@ h = gcf;
 e.Axes = gca;
 update(h, e);
 
-r = rotate3d;
+r = rotate3d(h);
 r.ActionPostCallback = @update;
 r.Enable = 'on';
 
