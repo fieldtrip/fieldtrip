@@ -90,7 +90,7 @@ cfg.coilfreq        = ft_getopt(cfg, 'coilfreq',   [293, 307, 314, 321, 328]); %
 cfg.usecoils        = ft_getopt(cfg, 'usecoils',   1:numel(cfg.coilfreq));
 cfg.dewar           = ft_getopt(cfg, 'dewar',            []); % mesh of the dewar
 cfg.headshape       = ft_getopt(cfg, 'headshape',        []); % mesh of the head with the structure sensor
-cfg.polhemus        = ft_getopt(cfg, 'polhemus',         []); % mesh of the head recorded with the polhemus
+cfg.polhemus        = ft_getopt(cfg, 'polhemus',         []); % 3D point cloud of the head surface recorded with the polhemus
 cfg.headmovement    = ft_getopt(cfg, 'headmovement',     []); % maxfilter created file containing quaternions information for headlocalistation
 
 % ensure pesistent variables are cleared
@@ -146,18 +146,20 @@ if ischar(cfg.headshape) && exist(cfg.headshape, 'file')
 end
 
 if ischar(cfg.polhemus) && exist(cfg.polhemus, 'file')
-  fprintf('reading polhemus data from file %s\n', cfg.polhemus);
+  fprintf('reading polhemus headshape data from file %s\n', cfg.polhemus);
   cfg.polhemus = ft_read_headshape(cfg.polhemus);
 elseif isneuromag
-  fprintf('reading polhemus data from file %s\n', cfg.dataset);
+  fprintf('reading headshape data from file %s\n', cfg.dataset);
   % Neuromag/Elekta/Megin dataset will contain head shape
   cfg.polhemus = ft_read_headshape(cfg.dataset);
-elseif isctf
-  fprintf('reading polhemus data from file %s\n', cfg.dataset);
-  % CTF dataset may contain electrode information
-  elec = ft_read_sens(cfg.dataset, 'senstype', 'eeg');
-  cfg.polhemus.pos  = elec.elecpos;
-  cfg.polhemus.unit = elec.unit;
+elseif isctf 
+  fprintf('attempt to create dummy headshape data from file %s\n', cfg.dataset);
+  try
+    % CTF dataset may contain electrode information
+    elec = ft_read_sens(cfg.dataset, 'senstype', 'eeg');
+    cfg.polhemus.pos  = elec.elecpos;
+    cfg.polhemus.unit = elec.unit;
+  end
 end
 
 if ~isempty(cfg.headshape)
