@@ -699,6 +699,17 @@ switch headerformat
     splitlabel = ft_getopt(varargin, 'splitlabel', true);
 
     orig = readCTFds(filename);
+    [p,f,e] = fileparts(filename);
+
+    if cache
+      % the code ends up here if cache==true AND the cached header was
+      % still empty, i.e. it is reading the chunk for the first time.
+      fid = fopen(fullfile(filename, sprintf('%s.res4', f)),'r','ieee-be');
+      chunk = fread(fid, 'uint8=>uint8');
+      fclose(fid);
+      hdr.ctf_res4 = chunk;
+    end
+    
     if isempty(orig)
       % this is to deal with data from the 64 channel system and the error
       % readCTFds: .meg4 file header=MEG4CPT   Valid header options:  MEG41CP  MEG42CP
@@ -795,6 +806,12 @@ switch headerformat
 
     % add the original header details
     hdr.orig = orig;
+
+    if cache
+      hdr.details = dir(headerfile);
+      cacheheader = hdr;
+      hdr = rmfield(hdr, 'details');
+    end
 
   case {'ctf_old', 'read_ctf_res4'}
     % read it using the open-source MATLAB code that originates from CTF and that was modified by the FCDC
