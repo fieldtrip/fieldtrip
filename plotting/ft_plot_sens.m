@@ -53,7 +53,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'linelength'      = scalar, length of the orientation line in mm (default = 20)
 %
 % The sensor array can include an optional fid field with fiducials, which will also be plotted.
-%   'fiducial'        = rue/false, plot the fiducials (default = true)
+%   'fiducial'        = true/false, plot the fiducials (default = true)
 %   'fidcolor'        = [r g b] values or string, for example 'red', 'r', or an Nx3 or Nx1 array where N is the number of fiducials
 %   'fidmarker'       = ['.', '*', '+',  ...]
 %   'fidlabel'        = ['yes', 'no', 1, 0, 'true', 'false']
