@@ -22,7 +22,7 @@ end
 
 if isfield(grad.balance, 'previous')
   % concatenate them and keep a single list
-  grad.balance.current = cat(1, grad.balance.previous(:), grad.balance.current(:))';
+  grad.balance.current = cat(1, flip(grad.balance.previous(:),1), grad.balance.current(:))';
   grad.balance = rmfield(grad.balance, 'previous');
 end
 
