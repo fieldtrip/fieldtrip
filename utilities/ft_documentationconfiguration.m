@@ -36,7 +36,6 @@ ft_defaults
 subdir = {
   '.'
   'contrib/misc'
-  'contrib/nutmegtrip'
   'contrib/spike'
   'external/artinis'
   'realtime/example'
@@ -149,6 +148,12 @@ end
 
 configuration = sortrows(configuration(:,[2 3 1]));
 configuration = configuration(:, [3 1 2]);
+
+% remove duplicates (i.e. when the same option is more than once in the docstring of a given function)
+templist = fullfile(configuration(:,1), configuration(:,2));
+[urows, i1, i2] = unique(templist);
+configuration = configuration(sort(i1), :);
+
 count = 0;
 for i=2:size(configuration,1)
   prevfun = configuration{i-1,1};
