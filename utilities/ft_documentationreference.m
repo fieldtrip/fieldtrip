@@ -37,7 +37,6 @@ subdir = {
   '.'
   'connectivity'
   'contrib/misc'
-  'contrib/nutmegtrip'
   'contrib/spike'
   'engine'
   'external/artinis'
