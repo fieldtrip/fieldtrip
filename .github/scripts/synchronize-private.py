@@ -3,7 +3,7 @@
 # This Python script synchronizes multiple copies of the same file in the repository.
 #
 # Use as:
-#   python ./github/scripts/synchronize-private.py
+#   python ./.github/scripts/synchronize-private.py
 
 import os
 import sys
