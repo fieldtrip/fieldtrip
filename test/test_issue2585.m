@@ -1,3 +1,5 @@
+function test_issue2585
+
 filename = dccnpath('/project/3031000.02/test/test_issue2585.mat');
 
 % MEM 1gb
