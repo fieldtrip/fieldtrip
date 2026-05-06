@@ -5,7 +5,6 @@ function [posr, trir, texr] = refine(pos, tri, method, varargin)
 % Use as
 %   [pos, tri]          = refine(pos, tri)
 %   [pos, tri]          = refine(pos, tri, 'banks')
-%   [pos, tri]          = refine(pos, tri, 'midpoint')
 %   [pos, tri, texture] = refine(pos, tri, 'banks', texture)
 %   [pos, tri]          = refine(pos, tri, 'updown', numtri)
 %
@@ -28,7 +27,7 @@ function [posr, trir, texr] = refine(pos, tri, method, varargin)
 % http://www.cs.rpi.edu/~flaherje/pdf/fea8.pdf, which also contains the original
 % reference.
 
-% Copyright (C) 2002-2026, Robert Oostenveld
+% Copyright (C) 2002-2014, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -66,22 +65,22 @@ end
 switch lower(method)
   case 'banks'
     if ~isempty(texture)
-      npos   = size(pos,1);
+      npnt   = size(pos,1);
       ntri   = size(tri,1);
       ntex   = size(texture,1);
-
-      assert(ntex==npos, 'invalid size of texture');
-
-      insert = spalloc(3*npos,3*npos,3*ntri);
+      
+      assert(ntex==npnt, 'invalid size of texture');
+      
+      insert = spalloc(3*npnt,3*npnt,3*ntri);
       trir  = zeros(4*ntri,3);      % allocate memory for the new triangles
-      posr  = zeros(npos+3*ntri,3); % allocate memory for the maximum number of new vertices
+      posr  = zeros(npnt+3*ntri,3); % allocate memory for the maximum number of new vertices
       texr  = zeros(ntex+3*ntri,2);
-      posr(1:npos,:) = pos;         % insert the original vertices
+      posr(1:npnt,:) = pos;         % insert the original vertices
       texr(1:ntex,:) = texture;
-      current = npos;
-
+      current = npnt;
+      
       for i=1:ntri
-
+        
         if ~insert(tri(i,1),tri(i,2))
           current = current + 1;
           posr(current,:) = (pos(tri(i,1),:) + pos(tri(i,2),:))/2;
@@ -92,7 +91,7 @@ switch lower(method)
         else
           v12 = insert(tri(i,1),tri(i,2));
         end
-
+        
         if ~insert(tri(i,2),tri(i,3))
           current = current + 1;
           posr(current,:) = (pos(tri(i,2),:) + pos(tri(i,3),:))/2;
@@ -103,7 +102,7 @@ switch lower(method)
         else
           v23 = insert(tri(i,2),tri(i,3));
         end
-
+        
         if ~insert(tri(i,3),tri(i,1))
           current = current + 1;
           posr(current,:) = (pos(tri(i,3),:) + pos(tri(i,1),:))/2;
@@ -114,31 +113,31 @@ switch lower(method)
         else
           v31 = insert(tri(i,3),tri(i,1));
         end
-
+        
         % add the 4 new triangles with the correct indices
         trir(4*(i-1)+1, :) = [tri(i,1) v12 v31];
         trir(4*(i-1)+2, :) = [tri(i,2) v23 v12];
         trir(4*(i-1)+3, :) = [tri(i,3) v31 v23];
         trir(4*(i-1)+4, :) = [v12 v23 v31];
-
+        
       end
       posr = posr(1:current, :);
       texr = texr(1:current, :);
-
+      
     else
       % there is no texture
-
-      npos   = size(pos,1);
+      
+      npnt   = size(pos,1);
       ntri   = size(tri,1);
-      insert = spalloc(3*npos,3*npos,3*ntri);
-
+      insert = spalloc(3*npnt,3*npnt,3*ntri);
+      
       trir  = zeros(4*ntri,3);      % allocate memory for the new triangles
-      posr  = zeros(npos+3*ntri,3); % allocate memory for the maximum number of new vertices
-      posr(1:npos,:) = pos;         % insert the original vertices
-      current = npos;
-
+      posr  = zeros(npnt+3*ntri,3); % allocate memory for the maximum number of new vertices
+      posr(1:npnt,:) = pos;         % insert the original vertices
+      current = npnt;
+      
       for i=1:ntri
-
+        
         if ~insert(tri(i,1),tri(i,2))
           current = current + 1;
           posr(current,:) = (pos(tri(i,1),:) + pos(tri(i,2),:))/2;
@@ -148,7 +147,7 @@ switch lower(method)
         else
           v12 = insert(tri(i,1),tri(i,2));
         end
-
+        
         if ~insert(tri(i,2),tri(i,3))
           current = current + 1;
           posr(current,:) = (pos(tri(i,2),:) + pos(tri(i,3),:))/2;
@@ -158,7 +157,7 @@ switch lower(method)
         else
           v23 = insert(tri(i,2),tri(i,3));
         end
-
+        
         if ~insert(tri(i,3),tri(i,1))
           current = current + 1;
           posr(current,:) = (pos(tri(i,3),:) + pos(tri(i,1),:))/2;
@@ -168,7 +167,7 @@ switch lower(method)
         else
           v31 = insert(tri(i,3),tri(i,1));
         end
-
+        
         % add the 4 new triangles with the correct indices
         trir(4*(i-1)+1, :) = [tri(i,1) v12 v31];
         trir(4*(i-1)+2, :) = [tri(i,2) v23 v12];
@@ -178,7 +177,7 @@ switch lower(method)
       % remove the space for the vertices that was not used
       posr = posr(1:current, :);
     end
-
+    
   case 'updown'
     ntri = size(tri,1);
     while ntri<numtri
@@ -188,50 +187,7 @@ switch lower(method)
     end
     % reduce number of triangles using MATLAB function
     [trir, posr] = reducepatch(tri, pos, numtri);
-
-  case 'midpoint'
-    npos   = size(pos,1);
-    ntri   = size(tri,1);
-
-    old2new = nan(npos,1);
-    m = 0;
-    n = 0;
-
-    posr = nan(npos+ntri,3);
-    trir = nan(3*ntri, 3);
-
-    for i=1:ntri
-      % construct the new vertex positions
-      i1 = tri(i,1);
-      i2 = tri(i,2);
-      i3 = tri(i,3);
-      if isnan(old2new(i1))
-        m = m + 1;
-        posr(m,:) = pos(i1,:);
-        old2new(i1) = m;
-      end
-      if isnan(old2new(i2))
-        m = m + 1;
-        posr(m,:) = pos(i2,:);
-        old2new(i2) = m;
-      end
-      if isnan(old2new(i3))
-        m = m + 1;
-        posr(m,:) = pos(i3,:);
-        old2new(i3) = m;
-      end
-      m = m + 1;
-      posr(m,:) = mean(pos(tri(i,:),:),1); % midpoint
-
-      % construct the new triangles
-      n = n + 1;
-      trir(n,:) = [old2new(i1) old2new(i2) m];
-      n = n + 1;
-      trir(n,:) = [old2new(i2) old2new(i3) m];
-      n = n + 1;
-      trir(n,:) = [old2new(i3) old2new(i1) m];
-    end
-
+    
   otherwise
     ft_error('unsupported method "%s"', method);
 end

@@ -515,6 +515,11 @@ switch version
         % for EEG it is not required
       end
     end
+
+    if isfield(sens, 'chantype')
+        % Make sure everything is in lower case
+        sens.chantype = lower(sens.chantype);
+    end
     
     if ~isfield(sens, 'unit')
       % this should be done prior to calling ft_chanunit, since ft_chanunit uses this for planar neuromag channels

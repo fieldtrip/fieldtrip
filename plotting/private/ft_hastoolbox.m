@@ -467,7 +467,9 @@ switch toolbox
     dependency = {'SGLX_readMeta'};
   case 'hbf'
     dependency = {'hbf_TM_Phi_LC','hbf_LFM_B_LC','hbf_BEMOperatorsB_Linear'};
-
+  case 'BVRF_READER'
+    dependency = {'eeg_loadbvrf'};
+    
     % the following are FieldTrip modules or toolboxes
   case 'FILEIO'
     dependency = {'ft_read_header', 'ft_read_data', 'ft_read_event', 'ft_read_sens'};
