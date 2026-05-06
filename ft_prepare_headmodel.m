@@ -62,19 +62,19 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 % Each specific method has its own specific configuration options which are listed below.
 %
 % BEMCP, DIPOLI, OPENMEEG
-%   cfg.tissue            see above; in combination with 'seg' input
+%   cfg.tissue            (see above; in combination with 'seg' input)
 %   cfg.isolatedsource    (optional)
 %   cfg.tempdir           (optional)
 %   cfg.tempname          (optional)
 %
 % CONCENTRICSPHERES
-%   cfg.tissue            see above; in combination with 'seg' input
+%   cfg.tissue            (see above; in combination with 'seg' input)
 %   cfg.order             (optional)
 %   cfg.fitind            (optional)
 %
 % LOCALSPHERES
 %   cfg.grad
-%   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
+%   cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
 %   cfg.feedback          (optional)
 %   cfg.radius            (optional)
 %   cfg.maxradius         (optional)
@@ -84,17 +84,18 @@ function [headmodel, cfg] = ft_prepare_headmodel(cfg, data)
 %   cfg.conductivity
 %
 % DUNEURO
-%   cfg.conductivity      An array with the conductivities must be provided. (see above)
-%   cfg.grid_filename     Alternatively,  a filename for the grid and a filename for the conductivities can be passed.
-%   cfg.tensors_filename  "
+%   cfg.conductivity      (required) vector with the conductivities must be provided. (see above)
+% Alternatively,  a filename for the source grid and a filename for the conductivities can be passed, as
+%   cfg.grid_filename
+%   cfg.tensors_filename  
 %   cfg.duneuro           (optional) Additional settings can be provided for duneuro (see http://www.duneuro.org, and duneuro_defaults.m).
 %
 % SINGLESHELL
-%   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'
+%   cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp')
 %   cfg.order             (optional)
 %
 % SINGLESPHERE
-%   cfg.tissue            see above; in combination with 'seg' input; default options are 'brain' or 'scalp'; must be only 1 value
+%   cfg.tissue            (see above; in combination with 'seg' input; default options are 'brain' or 'scalp'; must be only 1 value)
 %
 % INTERPOLATE
 %    cfg.outputfile       (required) string, filename prefix for the output files
