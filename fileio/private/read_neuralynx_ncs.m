@@ -217,7 +217,7 @@ if begrecord>=1 && endrecord>=begrecord
       NumValidSamp(k) = fread(fid,   1, 'int32');
       Samp(:,k)       = fread(fid, 512, 'int16');
       % mark the invalid samples
-      Samp((NumValidSamp+1):end,k) = nan;
+      Samp((NumValidSamp(k)+1):end,k) = nan;
     end
     
   end % if isMexv6
