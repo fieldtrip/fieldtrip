@@ -3,9 +3,10 @@
 # This Python script synchronizes multiple copies of the same file in the repository.
 #
 # Use as:
-#   python ./.github/scripts/synchronize-private.py
+#   python ./.github/scripts/synchronize-private.py file1 file2 file3 ...
 
 import os
+import shutil
 import sys
 
 sync_lists = [
@@ -2397,39 +2398,14 @@ sync_lists = [
   ],
 ]
 
-
-def sync_files(file_list):
-    '''
-    Synchronize the contents of the given list of files by copying the most recently modified file to all others.
-     '''
-
-    if not file_list:
-        return
-    
-    # Filter out non-existent files and get their modification times
-    existing_files = []
-    for file in file_list:
-        if os.path.exists(file):
-            existing_files.append(file)
-    
-    if not existing_files:
-        return
-    
-    # Find the latest file (most recently modified)
-    latest_file = max(existing_files, key=os.path.getmtime)
-    
-    # Copy the latest file to all other files
-    for file in existing_files:
-        if file != latest_file:
-            try:
-                # Use shutil.copy2 to preserve metadata
-                import shutil
-                shutil.copy2(latest_file, file)
-                print(f"Synced: {latest_file} -> {file}")
-            except Exception as e:
-                print(f"Error syncing {latest_file} to {file}: {e}", file=sys.stderr)
-
-
 if __name__ == "__main__":
-    for file_list in sync_lists:
-        sync_files(file_list)
+    if len(sys.argv) > 1:
+        for latest_file in sys.argv[1:]:
+            for file_list in sync_lists:
+              if os.path.exists(latest_file) and latest_file in file_list:
+                  for file in file_list:
+                      if os.path.exists(file) and file != latest_file:
+                        print(f"Synced: {latest_file} -> {file}")
+                        shutil.copy2(latest_file, file)
+    else:
+        print("No arguments provided")

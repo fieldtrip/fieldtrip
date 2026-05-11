@@ -4,10 +4,11 @@ on:
   workflow_dispatch:  # Allows manual triggering
   push:
     branches:
-      - master,main
+      - master
+      - main
 
 jobs:
-  sycnhronize-private:
+  synchronize-private:
     runs-on: ubuntu-latest
 
     permissions:
@@ -25,9 +26,13 @@ jobs:
       with:
         python-version: '3.10'
 
-    - name: Synchronize private files
+    - name: Identify files that changed
+      id: changed-files  # ← ADD THIS LINE
+      uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v47.0.6
+
+    - name: Synchronize files that changed
       run: |
-        python .github/scripts/synchronize-private.py
+        python .github/scripts/synchronize-private.py ${{ steps.changed-files.outputs.all_changed_files }}
 
     - name: Configure Git
       run: |
