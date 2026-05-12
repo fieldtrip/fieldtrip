@@ -34,9 +34,10 @@
 #else
 #endif
 
-double   swap_double(double   x);
-uint64_t swap_uint64(uint64_t x);
-uint32_t swap_uint32(uint32_t x);
-uint16_t swap_uint16(uint16_t x);
+int      bigendian(void);
+double   swap_double(double);
+uint64_t swap_uint64(uint64_t);
+uint32_t swap_uint32(uint32_t);
+uint16_t swap_uint16(uint16_t);
 
 #endif

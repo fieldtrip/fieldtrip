@@ -13,6 +13,8 @@
 #include "buffer.h"
 #include <pthread.h>
 
+void *sinewave_thread(void *);
+
 /***********************************************************************
   this is the main thread
  ***********************************************************************/
@@ -44,7 +46,7 @@ int main(int argc, char *argv[]) {
 	usleep(1000000);
 
 	/* start the acquisition */
-    sinewave_thread((void *)(&host));
+  sinewave_thread((void *)(&host));
 
 	return 0;
 }

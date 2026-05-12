@@ -95,6 +95,12 @@ ifeq "$(OS)" "Darwin"
 		CXXFLAGS += -m64
 		LDFLAGS  += -m64
 	endif
+	ifeq "$(MACHINE)" "arm64"
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maca64
+		CFLAGS   += -m64
+		CXXFLAGS += -m64
+		LDFLAGS  += -m64
+	endif
 endif
 
 ifndef BINDIR

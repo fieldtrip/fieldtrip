@@ -10,6 +10,8 @@
 #include <time.h>
 #include "buffer.h"
 
+void *event_thread(void *);
+
 int main(int argc, char *argv[]) {
 	host_t host;
     check_datatypes();

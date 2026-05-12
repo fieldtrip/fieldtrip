@@ -94,13 +94,19 @@ ifeq "$(OS)" "Darwin"
 		CXXFLAGS += -m64
 		LDFLAGS  += -m64
 	endif
+	ifeq "$(MACHINE)" "arm64"
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maca64
+		CFLAGS   += -m64
+		CXXFLAGS += -m64
+		LDFLAGS  += -m64
+	endif
 endif
 
 ifndef BINDIR
 $(error Unsupported platform: $(PLATFORM) :/.)
 endif
 
-TARGETS = $(patsubst %, $(BINDIR)/%$(SUFFIX), demo_combined demo_sinewave demo_event test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_pthread test_benchmark test_nslookup test_waitdat test_connect interface_write interface_server)
+TARGETS = $(patsubst %, $(BINDIR)/%$(SUFFIX), demo_combined demo_sinewave demo_event test_endian test_gethdr test_getdat test_getevt test_flushhdr test_flushdat test_flushevt test_pthread test_benchmark test_nslookup test_waitdat test_connect interface_write interface_server)
 
 ##############################################################################
 
@@ -108,7 +114,7 @@ all: demo test interface
 
 demo: demo_combined$(SUFFIX) demo_sinewave$(SUFFIX) demo_event$(SUFFIX)
 
-test: test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
+test: test_endian$(SUFFIX) test_gethdr$(SUFFIX) test_getdat$(SUFFIX) test_getevt$(SUFFIX) test_flushhdr$(SUFFIX) test_flushdat$(SUFFIX) test_flushevt$(SUFFIX) test_pthread$(SUFFIX) test_benchmark$(SUFFIX) test_nslookup$(SUFFIX) test_waitdat$(SUFFIX) test_connect$(SUFFIX)
 
 interface: interface_write$(SUFFIX) interface_server$(SUFFIX)
 
@@ -119,6 +125,9 @@ demo_sinewave$(SUFFIX): demo_sinewave.o sinewave.o ../src/libbuffer.a
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 demo_event$(SUFFIX): demo_event.o event.o ../src/libbuffer.a
+	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
+
+test_endian$(SUFFIX): test_endian.o
 	$(CC) $(LIBPATH) -o $(BINDIR)/$@ $^ $(LDFLAGS) $(LIBPATH) $(LDLIBS)
 
 test_gethdr$(SUFFIX): test_gethdr.o

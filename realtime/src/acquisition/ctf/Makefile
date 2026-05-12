@@ -38,6 +38,9 @@ ifeq "$(OS)" "Linux"
 endif
 
 ifeq "$(OS)" "Darwin"
+	ifeq "$(MACHINE)" "Power Macintosh"
+		BINDIR    = $(FIELDTRIP)/realtime/bin/mac
+	endif
 	ifeq "$(MACHINE)" "i386"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
 		CFLAGS   += -m32
@@ -50,8 +53,11 @@ ifeq "$(OS)" "Darwin"
 		CXXFLAGS += -m64
 		LDFLAGS  += -m64
 	endif
-	ifeq "$(MACHINE)" "Power Macintosh"
-		BINDIR = $(FIELDTRIP)/realtime/bin/mac
+	ifeq "$(MACHINE)" "arm64"
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maca64
+		CFLAGS   += -m64
+		CXXFLAGS += -m64
+		LDFLAGS  += -m64
 	endif
 endif
 

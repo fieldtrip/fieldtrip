@@ -89,6 +89,8 @@ endif
 
 ifeq "$(OS)" "Darwin"
 	fixpath = $1
+  INCPATH += -I/opt/homebrew/include
+  LIBPATH += -L/opt/homebrew/lib
 	LDLIBS +=-lpthread -lportaudio
 	ifeq "$(MACHINE)" "i386"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci
@@ -98,6 +100,12 @@ ifeq "$(OS)" "Darwin"
 	endif
 	ifeq "$(MACHINE)" "x86_64"
 		BINDIR    = $(FIELDTRIP)/realtime/bin/maci64
+		CFLAGS   += -m64
+		CXXFLAGS += -m64
+		LDFLAGS  += -m64
+	endif
+	ifeq "$(MACHINE)" "arm64"
+		BINDIR    = $(FIELDTRIP)/realtime/bin/maca64
 		CFLAGS   += -m64
 		CXXFLAGS += -m64
 		LDFLAGS  += -m64

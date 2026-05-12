@@ -45,6 +45,12 @@ ifeq "$(OS)" "Darwin"
 		CXXFLAGS += -m64
 		LDFLAGS  += -m64
 	endif
+	ifeq "$(MACHINE)" "arm64"
+		# compile for 64 bit ARM
+		CFLAGS   += -m64
+		CXXFLAGS += -m64
+		LDFLAGS  += -m64
+	endif
 endif
 
 includes = $(wildcard *.h)
