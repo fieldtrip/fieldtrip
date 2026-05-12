@@ -343,7 +343,12 @@ classdef cvpartition
         classIndices = classIndices(ix);
         for c = 1:numel(classIndices)
           candidates = find(foldSizes - cellfun(@length, obj.TestSets) > 0);
-          for k = randperm(numel(candidates), srt(c))
+          if numel(candidates) >= srt(c)
+            list = randperm(numel(candidates), srt(c));
+          else
+            list = candidates(randi(numel(candidates), [1 srt(c)]));
+          end
+          for k = list
             obj.TestSets{candidates(k)} = [obj.TestSets{candidates(k)}; classIndices{c}(1)];
             classIndices{c}(1) = [];
           end
