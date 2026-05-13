@@ -17,13 +17,13 @@ switch method
     heady = sin(l).*rmax;
     nosex = [0.18*rmax 0 -0.18*rmax];
     nosey = [rmax-.004 rmax*1.15 rmax-.004];
-    earx  = [.497 .510 .518 .5299 .5419 .54 .547 .532 .510 .489]; % # codespell:ignore
+    earx  = [.497 .510 .518 .5299 .5419 .54 .547 .532 .510 .489];
     eary  = [.0555 .0775 .0783 .0746 .0555 -.0055 -.0932 -.1313 -.1384 -.1199]; % # codespell:ignore
     % Define the outline of the head, ears and nose
     outline{1} = [headx(:) heady(:)];
     outline{2} = [nosex(:) nosey(:)];
-    outline{3} = [ earx(:)  eary(:)];
-    outline{4} = [-earx(:)  eary(:)];
+    outline{3} = [ earx(:)  eary(:)]; % # codespell:ignore
+    outline{4} = [-earx(:)  eary(:)]; % # codespell:ignore
 
   case 'doublecirclecross'
     % generate an outline consisting of a unit-diameter circle
