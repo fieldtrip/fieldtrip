@@ -25,7 +25,7 @@ function d = inv3x3(x)
 
 persistent warning_once
 if isempty(warning_once) || ~warning_once
-  % the mex file is many times faster than the matlab implementation, hence that is prefered
+  % the mex file is many times faster than the matlab implementation, hence that is preferred
   % but now we use the matlab implementation as a fallback
   warning_once = true;
   warning('Could not locate the MEX file "%s.%s"', mfilename, mexext);
