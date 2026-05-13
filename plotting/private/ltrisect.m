@@ -1,9 +1,9 @@
-function [varargout] = ltrisect(varargin)
+function [pos] = ltrisect(v1, v2, v3, l1, l2)
 
 % LTRISECT intersects a line with a plane spanned by three vertices
 %
 % Use as
-%   [sect] = ltrisect(v1, v2, v3, l1, l2)
+%   [pos] = ltrisect(v1, v2, v3, l1, l2)
 % where v1, v2 and v3 are three vertices spanning the plane, and l1 and l2
 % are two points on the line
 
@@ -27,42 +27,4 @@ function [varargout] = ltrisect(varargin)
 %
 % $Id$
 
-% compile the missing mex file on the fly
-% remember the original working directory
-pwdir = pwd;
-
-% determine the name and full path of this function
-funname = mfilename('fullpath');
-mexsrc  = [funname '.c'];
-[mexdir, mexname] = fileparts(funname);
-
-try
-  % try to compile the mex file on the fly
-  ft_warning('trying to compile MEX file from %s', mexsrc);
-  cd(mexdir);
-  
-  if ispc
-    mex -I. -c geometry.c
-    mex -I. -c ltrisect.c ; mex ltrisect.c ltrisect.obj geometry.obj
-  else
-    mex -I. -c geometry.c
-    mex -I. -c ltrisect.c ; mex -o ltrisect ltrisect.o geometry.o
-  end
-  
-  cd(pwdir);
-  success = true;
-
-catch
-  % compilation failed
-  disp(lasterr);
-  ft_error('could not locate MEX file for %s', mexname);
-  cd(pwdir);
-  success = false;
-end
-
-if success
-  % execute the mex file that was just created
-  funname   = mfilename;
-  funhandle = str2func(funname);
-  [varargout{1:nargout}] = funhandle(varargin{:});
-end
+error('Could not locate the MEX file "%s.%s"', mfilename, mexext);

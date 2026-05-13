@@ -23,6 +23,14 @@ function d = inv2x2(x)
 %
 % $Id$
 
+persistent warning_once
+if isempty(warning_once) || ~warning_once
+  % the mex file is many times faster than the matlab implementation, hence that is prefered
+  % but now we use the matlab implementation as a fallback
+  warning_once = true;
+  warning('Could not locate the MEX file "%s.%s"', mfilename, mexext);
+end
+
 siz = size(x);
 if all(siz(1:2)==2)
   adjx  = [x(2,2,:,:) -x(1,2,:,:); -x(2,1,:,:) x(1,1,:,:)];

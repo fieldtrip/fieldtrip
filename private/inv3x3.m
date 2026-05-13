@@ -23,6 +23,14 @@ function d = inv3x3(x)
 %
 % $Id$
 
+persistent warning_once
+if isempty(warning_once) || ~warning_once
+  % the mex file is many times faster than the matlab implementation, hence that is prefered
+  % but now we use the matlab implementation as a fallback
+  warning_once = true;
+  warning('Could not locate the MEX file "%s.%s"', mfilename, mexext);
+end
+
 siz = size(x);
 if all(siz(1:2)==3)
   adjx = [ det2x2(x([2 3],[2 3],:,:)) -det2x2(x([1 3],[2 3],:,:))  det2x2(x([1 2],[2 3],:,:)); ...

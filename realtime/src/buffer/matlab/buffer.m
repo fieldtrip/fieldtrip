@@ -45,4 +45,4 @@ function [varargout] = buffer(varargin)
 %
 % $Id$
 
-error('Could not locate mex file');
+error('Could not locate the MEX file');

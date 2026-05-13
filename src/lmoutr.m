@@ -1,10 +1,10 @@
-function [varargout] = lmoutr(varargin)
+function [la, mu, dist] = lmoutr(v1, v2, v3, r)
 
 % LMOUTR computes the la/mu parameters of a point projected to a triangle
 %
 % Use as
 %   [la, mu, dist] = lmoutr(v1, v2, v3, r)
-% where v1, v2 and v3 are three vertices of the triangle, and r is 
+% where v1, v2 and v3 are three vertices of the triangle, and r is
 % the point that is projected onto the plane spanned by the vertices
 
 % Copyright (C) 2002-2009, Robert Oostenveld
@@ -27,64 +27,26 @@ function [varargout] = lmoutr(varargin)
 %
 % $Id$
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% This is the MATLAB implementation.
-% The mex file is many times faster and therefore preferred.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% function [la, mu, dist] = lmoutr(v1, v2, v3, r);
-% 
-% % compute la/mu parameters
-% vec0 = r  - v1;
-% vec1 = v2 - v1;
-% vec2 = v3 - v2;
-% vec3 = v3 - v1;
-% 
-% tmp   = [vec1' vec3'] \ (vec0');
-% la    = tmp(1);
-% mu    = tmp(2);
-% 
-% % determine the projection onto the plane of the triangle
-% proj  = v1 + la*vec1 + mu*vec3;
-% 
-% % determine the distance from the original point to its projection
-% dist = norm(r-proj);
-
-% compile the missing mex file on the fly
-% remember the original working directory
-pwdir = pwd;
-
-% determine the name and full path of this function
-funname = mfilename('fullpath');
-mexsrc  = [funname '.c'];
-[mexdir, mexname] = fileparts(funname);
-
-try
-  % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
-  cd(mexdir);
-  
-  if ispc
-    mex -I. -c geometry.c
-    mex -I. -c lmoutr.c ; mex lmoutr.c lmoutr.obj geometry.obj
-  else
-    mex -I. -c geometry.c
-    mex -I. -c lmoutr.c ; mex -o lmoutr lmoutr.o geometry.o
-  end
-  
-  cd(pwdir);
-  success = true;
-
-catch
-  % compilation failed
-  disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
-  cd(pwdir);
-  success = false;
+persistent warning_once
+if isempty(warning_once) || ~warning_once
+  % the mex file is many times faster than the matlab implementation, hence that is prefered
+  % but now we use the matlab implementation as a fallback
+  warning_once = true;
+  warning('Could not locate the MEX file "%s.%s"', mfilename, mexext);
 end
 
-if success
-  % execute the mex file that was just created
-  funname   = mfilename;
-  funhandle = str2func(funname);
-  [varargout{1:nargout}] = funhandle(varargin{:});
-end
+% compute la/mu parameters
+vec0 = r  - v1;
+vec1 = v2 - v1;
+vec2 = v3 - v2;
+vec3 = v3 - v1;
+
+tmp   = [vec1' vec3'] \ (vec0');
+la    = tmp(1);
+mu    = tmp(2);
+
+% determine the projection onto the plane of the triangle
+proj  = v1 + la*vec1 + mu*vec3;
+
+% determine the distance from the original point to its projection
+dist = norm(r-proj);

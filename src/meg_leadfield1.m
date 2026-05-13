@@ -1,13 +1,13 @@
-function [varargout] = meg_leadfield1(varargin)
+function [lf] = meg_leadfield1(dippos, coilpos, coilori)
 
 % MEG_LEADFIELD1 magnetic leadfield for a dipole in a homogenous sphere
 %
-% [lf] = meg_leadfield1(R, pos, ori)
-%
+% Use as
+%   [lf] = meg_leadfield1(dippos, coilpos, coilori)
 % with input arguments
-%   R         position dipole
-%   pos     position magnetometers
-%   ori     orientation magnetometers
+%   dippos    position of the dipole dipole
+%   coilpos   position of the magnetometers
+%   coilori   orientation of the magnetometers
 %
 % The center of the homogenous sphere is in the origin, the field
 % of the dipole is not dependent on the sphere radius.
@@ -16,7 +16,7 @@ function [varargout] = meg_leadfield1(varargin)
 
 % adapted from Luetkenhoener, Habilschrift '92
 % optimized for speed using temporary variables
-% the mex implementation is a literary copy of this
+% the mex implementation is a literal copy of this
 
 % Copyright (C) 2002-2008, Robert Oostenveld
 %
@@ -38,83 +38,52 @@ function [varargout] = meg_leadfield1(varargin)
 %
 % $Id$
 
-% compile the missing mex file on the fly
-% remember the original working directory
-pwdir = pwd;
-
-% determine the name and full path of this function
-funname = mfilename('fullpath');
-mexsrc  = [funname '.c'];
-[mexdir, mexname] = fileparts(funname);
-
-try
-  % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
-  cd(mexdir);
-  mex(mexsrc);
-  cd(pwdir);
-  success = true;
-
-catch
-  % compilation failed
-  disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
-  cd(pwdir);
-  success = false;
+persistent warning_once
+if isempty(warning_once) || ~warning_once
+  % the mex file is many times faster than the matlab implementation, hence that is prefered
+  % but now we use the matlab implementation as a fallback
+  warning_once = true;
+  warning('Could not locate the MEX file "%s.%s"', mfilename, mexext);
 end
 
-if success
-  % execute the mex file that was just created
-  funname   = mfilename;
-  funhandle = str2func(funname);
-  [varargout{1:nargout}] = funhandle(varargin{:});
-end
+Nchans = size(coilpos, 1);
+lf = zeros(Nchans,3);
+tmp2 = norm(dippos);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% THE FOLLOWING CODE CORRESPONDS WITH THE ORIGINAL IMPLEMENTATION
-% function [lf] = meg_leadfield1(R, Rm, Um);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Nchans = size(Rm, 1);
-%
-% lf = zeros(Nchans,3);
-%
-% tmp2 = norm(R);
-%
-% for i=1:Nchans
-%   r = Rm(i,:);
-%   u = Um(i,:);
-%
-%   tmp1 = norm(r);
-%   % tmp2 = norm(R);
-%   tmp3 = norm(r-R);
-%   tmp4 = dot(r,R);
-%   tmp5 = dot(r,r-R);
-%   tmp6 = dot(R,r-R);
-%   tmp7 = (tmp1*tmp2)^2 - tmp4^2;  % cross(r,R)^2
-%
-%   alpha = 1 / (-tmp3 * (tmp1*tmp3+tmp5));
-%   A = 1/tmp3 - 2*alpha*tmp2^2 - 1/tmp1;
-%   B = 2*alpha*tmp4;
-%   C = -tmp6/(tmp3^3);
-%
-%   if tmp7<eps
-%     beta = 0;
-%   else
-%     beta = dot(A*r + B*R + C*(r-R), u)/tmp7;
-%   end
-%
-%   lf(i,:) = cross(alpha*u  + beta*r, R);
-% end
-% lf = 1e-7*lf; % multiply with u0/4pi
-%
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % fast cross product
-% function [c] = cross(a,b);
-% c = [a(2)*b(3)-a(3)*b(2) a(3)*b(1)-a(1)*b(3) a(1)*b(2)-a(2)*b(1)];
-%
-% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% % fast dot product
-% function [c] = dot(a,b);
-% c = sum(a.*b);
-%
+for i=1:Nchans
+  r = coilpos(i,:);
+  u = coilori(i,:);
+
+  tmp1 = norm(r);
+  % tmp2 = norm(R);
+  tmp3 = norm(r-dippos);
+  tmp4 = dot(r,dippos);
+  tmp5 = dot(r,r-dippos);
+  tmp6 = dot(dippos,r-dippos);
+  tmp7 = (tmp1*tmp2)^2 - tmp4^2;  % cross(r,R)^2
+
+  alpha = 1 / (-tmp3 * (tmp1*tmp3+tmp5));
+  A = 1/tmp3 - 2*alpha*tmp2^2 - 1/tmp1;
+  B = 2*alpha*tmp4;
+  C = -tmp6/(tmp3^3);
+
+  if tmp7<eps
+    beta = 0;
+  else
+    beta = dot(A*r + B*dippos + C*(r-dippos), u)/tmp7;
+  end
+
+  lf(i,:) = cross(alpha*u  + beta*r, dippos);
+end
+lf = 1e-7*lf; % multiply with u0/4pi
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% fast cross product
+function [c] = cross(a,b)
+c = [a(2)*b(3)-a(3)*b(2) a(3)*b(1)-a(1)*b(3) a(1)*b(2)-a(2)*b(1)];
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% fast dot product
+function [c] = dot(a,b)
+c = sum(a.*b);
+

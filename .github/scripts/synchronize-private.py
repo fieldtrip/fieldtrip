@@ -1001,6 +1001,7 @@ sync_lists = [
   [
     'forward/private/lmoutr.m',
     'private/lmoutr.m',
+    'src/lmoutr.m',
     'utilities/private/lmoutr.m'
   ],
   [
@@ -1067,6 +1068,11 @@ sync_lists = [
     'private/loadvar.m',
     'test/private/loadvar.m',
     'utilities/private/loadvar.m'
+  ],
+  [
+    'plotting/private/ltrisect.m',
+    'private/ltrisect.m',
+    'src/ltrisect.m'
   ],
   [
     'plotting/private/ltrisect.mexa64',
@@ -1730,6 +1736,7 @@ sync_lists = [
   [
     'forward/private/ptriproj.m',
     'private/ptriproj.m',
+    'src/ptriproj.m',
     'utilities/private/ptriproj.m'
   ],
   [
@@ -1873,6 +1880,10 @@ sync_lists = [
     'private/read_ctf_hist.m'
   ],
   [
+    'fileio/private/read_ctf_shm.m',
+    'src/read_ctf_shm.m'
+  ],
+  [
     'fileio/private/read_ctf_shm.mexglx',
     'src/read_ctf_shm.mexglx'
   ],
@@ -1974,6 +1985,11 @@ sync_lists = [
     'plotting/private/rotate.m',
     'private/rotate.m',
     'utilities/private/rotate.m'
+  ],
+  [
+    'forward/private/routlm.m',
+    'private/routlm.m',
+    'src/routlm.m'
   ],
   [
     'forward/private/routlm.mexa64',
@@ -2391,6 +2407,10 @@ sync_lists = [
   [
     'preproc/private/windows.m',
     'specest/private/windows.m'
+  ],
+  [
+    'fileio/private/write_ctf_shm.m',
+    'src/write_ctf_shm.m'
   ],
   [
     'fileio/private/write_ctf_shm.mexglx',

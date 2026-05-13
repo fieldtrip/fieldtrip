@@ -1,4 +1,4 @@
-function [varargout] = ptriproj(varargin)
+function [proj, dist] = ptriproj(v1, v2, v3, r, flag)
 
 % PTRIPROJ projects a point onto the plane going through a triangle
 %
@@ -31,42 +31,5 @@ function [varargout] = ptriproj(varargin)
 %
 % $Id$
 
-% compile the missing mex file on the fly
-% remember the original working directory
-pwdir = pwd;
+error('Could not locate the MEX file "%s.%s"', mfilename, mexext);
 
-% determine the name and full path of this function
-funname = mfilename('fullpath');
-mexsrc  = [funname '.c'];
-[mexdir, mexname] = fileparts(funname);
-
-try
-  % try to compile the mex file on the fly
-  warning('trying to compile MEX file from %s', mexsrc);
-  cd(mexdir);
-  
-  if ispc
-    mex -I. -c geometry.c
-    mex -I. -c ptriproj.c ; mex ptriproj.c ptriproj.obj geometry.obj
-  else
-    mex -I. -c geometry.c
-    mex -I. -c ptriproj.c ; mex -o ptriproj ptriproj.o geometry.o
-  end
-  
-  cd(pwdir);
-  success = true;
-
-catch
-  % compilation failed
-  disp(lasterr);
-  error('could not locate MEX file for %s', mexname);
-  cd(pwdir);
-  success = false;
-end
-
-if success
-  % execute the mex file that was just created
-  funname   = mfilename;
-  funhandle = str2func(funname);
-  [varargout{1:nargout}] = funhandle(varargin{:});
-end
