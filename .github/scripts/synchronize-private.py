@@ -61,24 +61,12 @@ sync_lists = [
     'realtime/src/buffer/matlab/buffer.mexglx'
   ],
   [
-    'fileio/private/buffer.mexmac',
-    'realtime/src/buffer/matlab/buffer.mexmac'
-  ],
-  [
     'fileio/private/buffer.mexmaca64',
     'realtime/src/buffer/matlab/buffer.mexmaca64'
   ],
   [
-    'fileio/private/buffer.mexmaci',
-    'realtime/src/buffer/matlab/buffer.mexmaci'
-  ],
-  [
     'fileio/private/buffer.mexmaci64',
     'realtime/src/buffer/matlab/buffer.mexmaci64'
-  ],
-  [
-    'fileio/private/buffer.mexw32',
-    'realtime/src/buffer/matlab/buffer.mexw32'
   ],
   [
     'fileio/private/buffer.mexw64',
@@ -107,11 +95,6 @@ sync_lists = [
     'private/combineClusters.mexa64',
     'plotting/private/combineClusters.mexa64',
     'src/combineClusters.mexa64'
-  ],
-  [
-    'private/combineClusters.mexw32',
-    'plotting/private/combineClusters.mexw32',
-    'src/combineClusters.mexw32'
   ],
   [
     'private/combineClusters.mexw64',
@@ -187,19 +170,9 @@ sync_lists = [
     'src/det2x2.mexglx'
   ],
   [
-    'connectivity/private/det2x2.mexmaci',
-    'private/det2x2.mexmaci',
-    'src/det2x2.mexmaci'
-  ],
-  [
     'connectivity/private/det2x2.mexmaci64',
     'private/det2x2.mexmaci64',
     'src/det2x2.mexmaci64'
-  ],
-  [
-    'connectivity/private/det2x2.mexw32',
-    'private/det2x2.mexw32',
-    'src/det2x2.mexw32'
   ],
   [
     'connectivity/private/det2x2.mexw64',
@@ -227,19 +200,9 @@ sync_lists = [
     'src/det3x3.mexmaca64'
   ],
   [
-    'connectivity/private/det3x3.mexmaci',
-    'private/det3x3.mexmaci',
-    'src/det3x3.mexmaci'
-  ],
-  [
     'connectivity/private/det3x3.mexmaci64',
     'private/det3x3.mexmaci64',
     'src/det3x3.mexmaci64'
-  ],
-  [
-    'connectivity/private/det3x3.mexw32',
-    'private/det3x3.mexw32',
-    'src/det3x3.mexw32'
   ],
   [
     'connectivity/private/det3x3.mexw64',
@@ -553,17 +516,6 @@ sync_lists = [
     'utilities/ft_getopt.mexglx'
   ],
   [
-    'connectivity/private/ft_getopt.mexmaci',
-    'fileio/private/ft_getopt.mexmaci',
-    'forward/private/ft_getopt.mexmaci',
-    'inverse/private/ft_getopt.mexmaci',
-    'plotting/private/ft_getopt.mexmaci',
-    'qsub/private/ft_getopt.mexmaci',
-    'specest/private/ft_getopt.mexmaci',
-    'src/ft_getopt.mexmaci',
-    'utilities/ft_getopt.mexmaci'
-  ],
-  [
     'connectivity/private/ft_getopt.mexmaci64',
     'fileio/private/ft_getopt.mexmaci64',
     'forward/private/ft_getopt.mexmaci64',
@@ -573,17 +525,6 @@ sync_lists = [
     'specest/private/ft_getopt.mexmaci64',
     'src/ft_getopt.mexmaci64',
     'utilities/ft_getopt.mexmaci64'
-  ],
-  [
-    'connectivity/private/ft_getopt.mexw32',
-    'fileio/private/ft_getopt.mexw32',
-    'forward/private/ft_getopt.mexw32',
-    'inverse/private/ft_getopt.mexw32',
-    'plotting/private/ft_getopt.mexw32',
-    'qsub/private/ft_getopt.mexw32',
-    'specest/private/ft_getopt.mexw32',
-    'src/ft_getopt.mexw32',
-    'utilities/ft_getopt.mexw32'
   ],
   [
     'connectivity/private/ft_getopt.mexw64',
@@ -784,10 +725,6 @@ sync_lists = [
     'src/getpid.mexa64'
   ],
   [
-    'qsub/private/getpid.mexmaci',
-    'src/getpid.mexmaci'
-  ],
-  [
     'qsub/private/getpid.mexmaci64',
     'src/getpid.mexmaci64'
   ],
@@ -855,18 +792,9 @@ sync_lists = [
     'src/inv2x2.mexglx'
   ],
   [
-    'connectivity/private/inv2x2.mexmaci',
-    'src/inv2x2.mexmaci'
-  ],
-  [
     'connectivity/private/inv2x2.mexmaci64',
     'private/inv2x2.mexmaci64',
     'src/inv2x2.mexmaci64'
-  ],
-  [
-    'connectivity/private/inv2x2.mexw32',
-    'private/inv2x2.mexw32',
-    'src/inv2x2.mexw32'
   ],
   [
     'connectivity/private/inv2x2.mexw64',
@@ -894,19 +822,9 @@ sync_lists = [
     'src/inv3x3.mexmaca64'
   ],
   [
-    'connectivity/private/inv3x3.mexmaci',
-    'private/inv3x3.mexmaci',
-    'src/inv3x3.mexmaci'
-  ],
-  [
     'connectivity/private/inv3x3.mexmaci64',
     'private/inv3x3.mexmaci64',
     'src/inv3x3.mexmaci64'
-  ],
-  [
-    'connectivity/private/inv3x3.mexw32',
-    'private/inv3x3.mexw32',
-    'src/inv3x3.mexw32'
   ],
   [
     'connectivity/private/inv3x3.mexw64',
@@ -1017,34 +935,16 @@ sync_lists = [
     'utilities/private/lmoutr.mexglx'
   ],
   [
-    'forward/private/lmoutr.mexmac',
-    'private/lmoutr.mexmac',
-    'src/lmoutr.mexmac',
-    'utilities/private/lmoutr.mexmac'
-  ],
-  [
     'forward/private/lmoutr.mexmaca64',
     'private/lmoutr.mexmaca64',
     'src/lmoutr.mexmaca64',
     'utilities/private/lmoutr.mexmaca64'
   ],
   [
-    'forward/private/lmoutr.mexmaci',
-    'private/lmoutr.mexmaci',
-    'src/lmoutr.mexmaci',
-    'utilities/private/lmoutr.mexmaci'
-  ],
-  [
     'forward/private/lmoutr.mexmaci64',
     'private/lmoutr.mexmaci64',
     'src/lmoutr.mexmaci64',
     'utilities/private/lmoutr.mexmaci64'
-  ],
-  [
-    'forward/private/lmoutr.mexw32',
-    'private/lmoutr.mexw32',
-    'src/lmoutr.mexw32',
-    'utilities/private/lmoutr.mexw32'
   ],
   [
     'forward/private/lmoutr.mexw64',
@@ -1085,29 +985,14 @@ sync_lists = [
     'src/ltrisect.mexglx'
   ],
   [
-    'plotting/private/ltrisect.mexmac',
-    'private/ltrisect.mexmac',
-    'src/ltrisect.mexmac'
-  ],
-  [
     'plotting/private/ltrisect.mexmaca64',
     'private/ltrisect.mexmaca64',
     'src/ltrisect.mexmaca64'
   ],
   [
-    'plotting/private/ltrisect.mexmaci',
-    'private/ltrisect.mexmaci',
-    'src/ltrisect.mexmaci'
-  ],
-  [
     'plotting/private/ltrisect.mexmaci64',
     'private/ltrisect.mexmaci64',
     'src/ltrisect.mexmaci64'
-  ],
-  [
-    'plotting/private/ltrisect.mexw32',
-    'private/ltrisect.mexw32',
-    'src/ltrisect.mexw32'
   ],
   [
     'plotting/private/ltrisect.mexw64',
@@ -1133,24 +1018,12 @@ sync_lists = [
     'src/meg_leadfield1.mexglx'
   ],
   [
-    'forward/private/meg_leadfield1.mexmac',
-    'src/meg_leadfield1.mexmac'
-  ],
-  [
     'forward/private/meg_leadfield1.mexmaca64',
     'src/meg_leadfield1.mexmaca64'
   ],
   [
-    'forward/private/meg_leadfield1.mexmaci',
-    'src/meg_leadfield1.mexmaci'
-  ],
-  [
     'forward/private/meg_leadfield1.mexmaci64',
     'src/meg_leadfield1.mexmaci64'
-  ],
-  [
-    'forward/private/meg_leadfield1.mexw32',
-    'src/meg_leadfield1.mexw32'
   ],
   [
     'forward/private/meg_leadfield1.mexw64',
@@ -1171,10 +1044,6 @@ sync_lists = [
   [
     'qsub/private/memprofile.mexmaca64',
     'utilities/private/memprofile.mexmaca64'
-  ],
-  [
-    'qsub/private/memprofile.mexmaci',
-    'utilities/private/memprofile.mexmaci'
   ],
   [
     'qsub/private/memprofile.mexmaci64',
@@ -1251,19 +1120,9 @@ sync_lists = [
     'src/mtimes2x2.mexmaca64'
   ],
   [
-    'connectivity/private/mtimes2x2.mexmaci',
-    'private/mtimes2x2.mexmaci',
-    'src/mtimes2x2.mexmaci'
-  ],
-  [
     'connectivity/private/mtimes2x2.mexmaci64',
     'private/mtimes2x2.mexmaci64',
     'src/mtimes2x2.mexmaci64'
-  ],
-  [
-    'connectivity/private/mtimes2x2.mexw32',
-    'private/mtimes2x2.mexw32',
-    'src/mtimes2x2.mexw32'
   ],
   [
     'connectivity/private/mtimes2x2.mexw64',
@@ -1291,19 +1150,9 @@ sync_lists = [
     'src/mtimes3x3.mexmaca64'
   ],
   [
-    'connectivity/private/mtimes3x3.mexmaci',
-    'private/mtimes3x3.mexmaci',
-    'src/mtimes3x3.mexmaci'
-  ],
-  [
     'connectivity/private/mtimes3x3.mexmaci64',
     'private/mtimes3x3.mexmaci64',
     'src/mtimes3x3.mexmaci64'
-  ],
-  [
-    'connectivity/private/mtimes3x3.mexw32',
-    'private/mtimes3x3.mexw32',
-    'src/mtimes3x3.mexw32'
   ],
   [
     'connectivity/private/mtimes3x3.mexw64',
@@ -1330,29 +1179,14 @@ sync_lists = [
     'src/mxDeserialize_c.mexglx'
   ],
   [
-    'fileio/private/mxDeserialize_c.mexmac',
-    'private/mxDeserialize_c.mexmac',
-    'src/mxDeserialize_c.mexmac'
-  ],
-  [
     'fileio/private/mxDeserialize_c.mexmaca64',
     'private/mxDeserialize_c.mexmaca64',
     'src/mxDeserialize_c.mexmaca64'
   ],
   [
-    'fileio/private/mxDeserialize_c.mexmaci',
-    'private/mxDeserialize_c.mexmaci',
-    'src/mxDeserialize_c.mexmaci'
-  ],
-  [
     'fileio/private/mxDeserialize_c.mexmaci64',
     'private/mxDeserialize_c.mexmaci64',
     'src/mxDeserialize_c.mexmaci64'
-  ],
-  [
-    'fileio/private/mxDeserialize_c.mexw32',
-    'private/mxDeserialize_c.mexw32',
-    'src/mxDeserialize_c.mexw32'
   ],
   [
     'fileio/private/mxDeserialize_c.mexw64',
@@ -1370,12 +1204,6 @@ sync_lists = [
     'private/mxDeserialize_cpp.mexmaci64',
     'src/mxDeserialize_cpp.mexmaci64',
     'utilities/private/mxDeserialize_cpp.mexmaci64'
-  ],
-  [
-    'fileio/private/mxDeserialize_cpp.mexw32',
-    'private/mxDeserialize_cpp.mexw32',
-    'src/mxDeserialize_cpp.mexw32',
-    'utilities/private/mxDeserialize_cpp.mexw32'
   ],
   [
     'fileio/private/mxSerialize.m',
@@ -1396,34 +1224,16 @@ sync_lists = [
     'utilities/private/mxSerialize_c.mexglx'
   ],
   [
-    'fileio/private/mxSerialize_c.mexmac',
-    'private/mxSerialize_c.mexmac',
-    'src/mxSerialize_c.mexmac',
-    'utilities/private/mxSerialize_c.mexmac'
-  ],
-  [
     'fileio/private/mxSerialize_c.mexmaca64',
     'private/mxSerialize_c.mexmaca64',
     'src/mxSerialize_c.mexmaca64',
     'utilities/private/mxSerialize_c.mexmaca64'
   ],
   [
-    'fileio/private/mxSerialize_c.mexmaci',
-    'private/mxSerialize_c.mexmaci',
-    'src/mxSerialize_c.mexmaci',
-    'utilities/private/mxSerialize_c.mexmaci'
-  ],
-  [
     'fileio/private/mxSerialize_c.mexmaci64',
     'private/mxSerialize_c.mexmaci64',
     'src/mxSerialize_c.mexmaci64',
     'utilities/private/mxSerialize_c.mexmaci64'
-  ],
-  [
-    'fileio/private/mxSerialize_c.mexw32',
-    'private/mxSerialize_c.mexw32',
-    'src/mxSerialize_c.mexw32',
-    'utilities/private/mxSerialize_c.mexw32'
   ],
   [
     'fileio/private/mxSerialize_c.mexw64',
@@ -1450,12 +1260,6 @@ sync_lists = [
     'utilities/private/mxSerialize_cpp.mexmaci64'
   ],
   [
-    'fileio/private/mxSerialize_cpp.mexw32',
-    'private/mxSerialize_cpp.mexw32',
-    'src/mxSerialize_cpp.mexw32',
-    'utilities/private/mxSerialize_cpp.mexw32'
-  ],
-  [
     'fileio/private/mxSerialize_cpp.mexw64',
     'private/mxSerialize_cpp.mexw64',
     'src/mxSerialize_cpp.mexw64',
@@ -1474,16 +1278,8 @@ sync_lists = [
     'src/nanmean.mexmaca64'
   ],
   [
-    'external/stats/nanmean.mexmaci',
-    'src/nanmean.mexmaci'
-  ],
-  [
     'external/stats/nanmean.mexmaci64',
     'src/nanmean.mexmaci64'
-  ],
-  [
-    'external/stats/nanmean.mexw32',
-    'src/nanmean.mexw32'
   ],
   [
     'external/stats/nanmean.mexw64',
@@ -1502,16 +1298,8 @@ sync_lists = [
     'src/nanstd.mexmaca64'
   ],
   [
-    'external/stats/nanstd.mexmaci',
-    'src/nanstd.mexmaci'
-  ],
-  [
     'external/stats/nanstd.mexmaci64',
     'src/nanstd.mexmaci64'
-  ],
-  [
-    'external/stats/nanstd.mexw32',
-    'src/nanstd.mexw32'
   ],
   [
     'external/stats/nanstd.mexw64',
@@ -1530,16 +1318,8 @@ sync_lists = [
     'src/nansum.mexmaca64'
   ],
   [
-    'external/stats/nansum.mexmaci',
-    'src/nansum.mexmaci'
-  ],
-  [
     'external/stats/nansum.mexmaci64',
     'src/nansum.mexmaci64'
-  ],
-  [
-    'external/stats/nansum.mexw32',
-    'src/nansum.mexw32'
   ],
   [
     'external/stats/nansum.mexw64',
@@ -1558,16 +1338,8 @@ sync_lists = [
     'src/nanvar.mexmaca64'
   ],
   [
-    'external/stats/nanvar.mexmaci',
-    'src/nanvar.mexmaci'
-  ],
-  [
     'external/stats/nanvar.mexmaci64',
     'src/nanvar.mexmaci64'
-  ],
-  [
-    'external/stats/nanvar.mexw32',
-    'src/nanvar.mexw32'
   ],
   [
     'external/stats/nanvar.mexw64',
@@ -1652,29 +1424,14 @@ sync_lists = [
     'src/plgndr.mexglx'
   ],
   [
-    'forward/private/plgndr.mexmac',
-    'private/plgndr.mexmac',
-    'src/plgndr.mexmac'
-  ],
-  [
     'forward/private/plgndr.mexmaca64',
     'private/plgndr.mexmaca64',
     'src/plgndr.mexmaca64'
   ],
   [
-    'forward/private/plgndr.mexmaci',
-    'private/plgndr.mexmaci',
-    'src/plgndr.mexmaci'
-  ],
-  [
     'forward/private/plgndr.mexmaci64',
     'private/plgndr.mexmaci64',
     'src/plgndr.mexmaci64'
-  ],
-  [
-    'forward/private/plgndr.mexw32',
-    'private/plgndr.mexw32',
-    'src/plgndr.mexw32'
   ],
   [
     'forward/private/plgndr.mexw64',
@@ -1752,34 +1509,16 @@ sync_lists = [
     'utilities/private/ptriproj.mexglx'
   ],
   [
-    'forward/private/ptriproj.mexmac',
-    'private/ptriproj.mexmac',
-    'src/ptriproj.mexmac',
-    'utilities/private/ptriproj.mexmac'
-  ],
-  [
     'forward/private/ptriproj.mexmaca64',
     'private/ptriproj.mexmaca64',
     'src/ptriproj.mexmaca64',
     'utilities/private/ptriproj.mexmaca64'
   ],
   [
-    'forward/private/ptriproj.mexmaci',
-    'private/ptriproj.mexmaci',
-    'src/ptriproj.mexmaci',
-    'utilities/private/ptriproj.mexmaci'
-  ],
-  [
     'forward/private/ptriproj.mexmaci64',
     'private/ptriproj.mexmaci64',
     'src/ptriproj.mexmaci64',
     'utilities/private/ptriproj.mexmaci64'
-  ],
-  [
-    'forward/private/ptriproj.mexw32',
-    'private/ptriproj.mexw32',
-    'src/ptriproj.mexw32',
-    'utilities/private/ptriproj.mexw32'
   ],
   [
     'forward/private/ptriproj.mexw64',
@@ -1816,16 +1555,8 @@ sync_lists = [
     'src/read_16bit.mexglx'
   ],
   [
-    'fileio/private/read_16bit.mexmaci',
-    'src/read_16bit.mexmaci'
-  ],
-  [
     'fileio/private/read_16bit.mexmaci64',
     'src/read_16bit.mexmaci64'
-  ],
-  [
-    'fileio/private/read_16bit.mexw32',
-    'src/read_16bit.mexw32'
   ],
   [
     'fileio/private/read_16bit.mexw64',
@@ -1840,24 +1571,12 @@ sync_lists = [
     'src/read_24bit.mexglx'
   ],
   [
-    'fileio/private/read_24bit.mexmac',
-    'src/read_24bit.mexmac'
-  ],
-  [
     'fileio/private/read_24bit.mexmaca64',
     'src/read_24bit.mexmaca64'
   ],
   [
-    'fileio/private/read_24bit.mexmaci',
-    'src/read_24bit.mexmaci'
-  ],
-  [
     'fileio/private/read_24bit.mexmaci64',
     'src/read_24bit.mexmaci64'
-  ],
-  [
-    'fileio/private/read_24bit.mexw32',
-    'src/read_24bit.mexw32'
   ],
   [
     'fileio/private/read_24bit.mexw64',
@@ -1927,10 +1646,6 @@ sync_lists = [
     'src/rename.mexmaca64'
   ],
   [
-    'qsub/private/rename.mexmaci',
-    'src/rename.mexmaci'
-  ],
-  [
     'qsub/private/rename.mexmaci64',
     'src/rename.mexmaci64'
   ],
@@ -1945,10 +1660,6 @@ sync_lists = [
   [
     'fileio/private/rfbevent.mexglx',
     'src/rfbevent.mexglx'
-  ],
-  [
-    'fileio/private/rfbevent.mexmac',
-    'src/rfbevent.mexmac'
   ],
   [
     'fileio/private/rfbevent.mexmaca64',
@@ -2002,29 +1713,14 @@ sync_lists = [
     'src/routlm.mexglx'
   ],
   [
-    'forward/private/routlm.mexmac',
-    'private/routlm.mexmac',
-    'src/routlm.mexmac'
-  ],
-  [
     'forward/private/routlm.mexmaca64',
     'private/routlm.mexmaca64',
     'src/routlm.mexmaca64'
   ],
   [
-    'forward/private/routlm.mexmaci',
-    'private/routlm.mexmaci',
-    'src/routlm.mexmaci'
-  ],
-  [
     'forward/private/routlm.mexmaci64',
     'private/routlm.mexmaci64',
     'src/routlm.mexmaci64'
-  ],
-  [
-    'forward/private/routlm.mexw32',
-    'private/routlm.mexw32',
-    'src/routlm.mexw32'
   ],
   [
     'forward/private/routlm.mexw64',
@@ -2052,19 +1748,9 @@ sync_lists = [
     'src/sandwich2x2.mexmaca64'
   ],
   [
-    'connectivity/private/sandwich2x2.mexmaci',
-    'private/sandwich2x2.mexmaci',
-    'src/sandwich2x2.mexmaci'
-  ],
-  [
     'connectivity/private/sandwich2x2.mexmaci64',
     'private/sandwich2x2.mexmaci64',
     'src/sandwich2x2.mexmaci64'
-  ],
-  [
-    'connectivity/private/sandwich2x2.mexw32',
-    'private/sandwich2x2.mexw32',
-    'src/sandwich2x2.mexw32'
   ],
   [
     'connectivity/private/sandwich2x2.mexw64',
@@ -2092,19 +1778,9 @@ sync_lists = [
     'src/sandwich3x3.mexmaca64'
   ],
   [
-    'connectivity/private/sandwich3x3.mexmaci',
-    'private/sandwich3x3.mexmaci',
-    'src/sandwich3x3.mexmaci'
-  ],
-  [
     'connectivity/private/sandwich3x3.mexmaci64',
     'private/sandwich3x3.mexmaci64',
     'src/sandwich3x3.mexmaci64'
-  ],
-  [
-    'connectivity/private/sandwich3x3.mexw32',
-    'private/sandwich3x3.mexw32',
-    'src/sandwich3x3.mexw32'
   ],
   [
     'connectivity/private/sandwich3x3.mexw64',
@@ -2118,10 +1794,6 @@ sync_lists = [
   [
     'fileio/private/sap2matlab.mexmaci64',
     'realtime/src/acquisition/siemens/src/sap2matlab.mexmaci64'
-  ],
-  [
-    'fileio/private/sap2matlab.mexw32',
-    'realtime/src/acquisition/siemens/src/sap2matlab.mexw32'
   ],
   [
     'private/savevar.m',
@@ -2219,15 +1891,6 @@ sync_lists = [
     'src/solid_angle.mexglx'
   ],
   [
-    'external/dipoli/private/solid_angle.mexmac',
-    'external/openmeeg/private/solid_angle.mexmac',
-    'forward/private/solid_angle.mexmac',
-    'inverse/private/solid_angle.mexmac',
-    'plotting/private/solid_angle.mexmac',
-    'private/solid_angle.mexmac',
-    'src/solid_angle.mexmac'
-  ],
-  [
     'external/dipoli/private/solid_angle.mexmaca64',
     'external/openmeeg/private/solid_angle.mexmaca64',
     'forward/private/solid_angle.mexmaca64',
@@ -2237,15 +1900,6 @@ sync_lists = [
     'src/solid_angle.mexmaca64'
   ],
   [
-    'external/dipoli/private/solid_angle.mexmaci',
-    'external/openmeeg/private/solid_angle.mexmaci',
-    'forward/private/solid_angle.mexmaci',
-    'inverse/private/solid_angle.mexmaci',
-    'plotting/private/solid_angle.mexmaci',
-    'private/solid_angle.mexmaci',
-    'src/solid_angle.mexmaci'
-  ],
-  [
     'external/dipoli/private/solid_angle.mexmaci64',
     'external/openmeeg/private/solid_angle.mexmaci64',
     'forward/private/solid_angle.mexmaci64',
@@ -2253,15 +1907,6 @@ sync_lists = [
     'plotting/private/solid_angle.mexmaci64',
     'private/solid_angle.mexmaci64',
     'src/solid_angle.mexmaci64'
-  ],
-  [
-    'external/dipoli/private/solid_angle.mexw32',
-    'external/openmeeg/private/solid_angle.mexw32',
-    'forward/private/solid_angle.mexw32',
-    'inverse/private/solid_angle.mexw32',
-    'plotting/private/solid_angle.mexw32',
-    'private/solid_angle.mexw32',
-    'src/solid_angle.mexw32'
   ],
   [
     'external/dipoli/private/solid_angle.mexw64',
@@ -2397,9 +2042,6 @@ sync_lists = [
   ],
   [
     'qsub/private/watchdog.mexmaca64'
-  ],
-  [
-    'qsub/private/watchdog.mexmaci'
   ],
   [
     'qsub/private/watchdog.mexmaci64'
