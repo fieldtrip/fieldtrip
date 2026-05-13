@@ -1404,11 +1404,6 @@ sync_lists = [
     'src/platform.h'
   ],
   [
-    'forward/private/plgndr.c',
-    'private/plgndr.c',
-    'src/plgndr.c'
-  ],
-  [
     'forward/private/plgndr.m',
     'private/plgndr.m',
     'src/plgndr.m'
