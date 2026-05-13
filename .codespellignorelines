@@ -7,3 +7,6 @@
   V  = nifti(fullfile(pth,['iy_',nam,ext]));
   [pth,nam,ext] = fileparts(fname);
   V  = nifti(fullfile(pth,['y_',nam,ext]));
+ eary  = [.0555 .0775 .0783 .0746 .0555 -.0055 -.0932 -.1313 -.1384 -.1199];
+    outline{3} = [ earx(:)  eary(:)];
+    outline{4} = [-earx(:)  eary(:)];
