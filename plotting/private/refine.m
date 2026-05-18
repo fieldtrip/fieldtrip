@@ -5,6 +5,7 @@ function [posr, trir, texr] = refine(pos, tri, method, varargin)
 % Use as
 %   [pos, tri]          = refine(pos, tri)
 %   [pos, tri]          = refine(pos, tri, 'banks')
+%   [pos, tri]          = refine(pos, tri, 'midpoint')
 %   [pos, tri, texture] = refine(pos, tri, 'banks', texture)
 %   [pos, tri]          = refine(pos, tri, 'updown', numtri)
 %
@@ -176,6 +177,28 @@ switch lower(method)
       end
       % remove the space for the vertices that was not used
       posr = posr(1:current, :);
+    end
+
+  case 'midpoint'
+    npos = size(pos,1);
+    ntri = size(tri,1);
+    posr = nan(npos+ntri,3);
+    posr(1:npos,:) = pos;
+    trir = nan(3*ntri,3);
+    k = 0;
+    for i=1:ntri
+      i1 = tri(i,1);
+      i2 = tri(i,2);
+      i3 = tri(i,3);
+      i4 = npos + i;
+      v1 = pos(i1,:);
+      v2 = pos(i2,:);
+      v3 = pos(i3,:);
+      v4 = (v1 + v2 + v3)/3;
+      posr(i4,:) = v4;
+      trir(3*(i-1)+1,:) = [i1 i2 i4];
+      trir(3*(i-1)+2,:) = [i2 i3 i4];
+      trir(3*(i-1)+3,:) = [i3 i1 i4];
     end
     
   case 'updown'
