@@ -1,4 +1,4 @@
-function cluster = combineClusters(labelmat, spatdimneighbstructmat, total)
+function cluster = combineClusters(labelmat, connmat, total)
 
 % COMBINECLUSTERS is a helper function for FINDCLUSTER. It searches for
 % adjacent clusters in neighbouring channels and combines them.
@@ -8,7 +8,7 @@ function cluster = combineClusters(labelmat, spatdimneighbstructmat, total)
 replaceby=1:total;
 spatdimlength = size(labelmat, 1);
 for spatdimlev=1:spatdimlength
-  neighbours=find(spatdimneighbstructmat(spatdimlev,:));
+  neighbours=find(connmat(spatdimlev,:));
   for nbindx=neighbours
     indx = find((labelmat(spatdimlev,:)~=0) & (labelmat(nbindx,:)~=0));
     for i=1:length(indx)
@@ -19,10 +19,10 @@ for spatdimlev=1:spatdimlength
         continue;
       elseif replaceby(a)<replaceby(b)
         % replace all entries with content replaceby(b) by replaceby(a).
-        replaceby(find(replaceby==replaceby(b))) = replaceby(a); 
+        replaceby(replaceby==replaceby(b)) = replaceby(a); 
       elseif replaceby(b)<replaceby(a)
         % replace all entries with content replaceby(a) by replaceby(b).
-        replaceby(find(replaceby==replaceby(a))) = replaceby(b); 
+        replaceby(replaceby==replaceby(a)) = replaceby(b); 
       end
     end
   end
