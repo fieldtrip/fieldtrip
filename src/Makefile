@@ -1,5 +1,15 @@
-MEXCMD = mex
-MEXEXT = $(shell mexext)
+ifeq (, $(shell which matlab))
+$(error "The MATLAB executable cannot be found, please add it to your PATH.")
+endif
+
+MATLAB = $(shell which matlab)
+MATLABBIN = $(dir $(realpath $(MATLAB)))
+MEX = $(MATLABBIN)mex
+MEXEXT = $(shell $(MATLABBIN)mexext)
+
+$(info MATLAB = $(MATLAB))
+$(info MEX    = $(MEX))
+$(info MEXEXT = $(MEXEXT))
 
 FIELDTRIPSRC = $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
 FIELDTRIPROOT = $(dir $(realpath $(FIELDTRIPSRC)))
@@ -63,16 +73,16 @@ endif
 all: $(ALLMEXFILES)
 
 $(MEXFILES) $(CTFMEXFILES): %.$(MEXEXT): %.c
-	$(MEXCMD) $<
+	$(MEX) $<
 
 $(CPPMEXFILES): %.$(MEXEXT): %.cpp
-	$(MEXCMD) $<
+	$(MEX) $<
 
 $(GEOMETRYMEXFILES): %.$(MEXEXT): %.c geometry.c geometry.h
-	$(MEXCMD) $< geometry.c 
+	$(MEX) $< geometry.c 
 
 $(D3DESMEXFILES): %.$(MEXEXT): %.c d3des.c d3des.h
-	$(MEXCMD) $< d3des.c
+	$(MEX) $< d3des.c
 
 install: $(ALLMEXFILES)
 	@echo ""
