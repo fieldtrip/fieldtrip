@@ -1,51 +1,121 @@
-#include "mex.h"
+#include "mex.hpp"
+#include "mexAdapter.hpp"
 
 #include <algorithm>
 #include <vector>
+#include <memory>
 
-/* The computational routine */
-void combineClusters_impl(unsigned int *labelmat, unsigned int *total, mwSize spatdimlength, mwSize timefreqlength, mxLogical *neighbours, unsigned int *out) {
+class MexFunction : public matlab::mex::Function {
+private:
+    std::shared_ptr<matlab::engine::MATLABEngine> matlabPtr = getEngine();
+    matlab::data::ArrayFactory factory;
     
-    /* increase the total by one because indices in labelmat are 1-based and our array is zero-based */
-    (*total)++;
-    
-    /* fill array with 1:total */
-    unsigned int *replaceby;
-    replaceby = (unsigned int *) malloc( (*total) * sizeof(unsigned int));
-    int n;
-    for (n = 0; n < *total; n++) {
-        replaceby[n] = n;
-    }
-
-    mwSize i;
-    mwSize j;
-    mwSize k;
-
-    /* iterate over channels */
-    for (i = 0; i < spatdimlength; i++) {
-
-        /* iterate over possible neighbours for this channel */
-        for (j = 0; j < spatdimlength; j++) {
+public:
+    void operator()(matlab::mex::ArgumentList outputs, matlab::mex::ArgumentList inputs) override {
         
-            if ( *(neighbours + i*spatdimlength + j) ) {
-                /* channel is a neighbour */
-
-                for (k = 0; k < timefreqlength; k++) {
-                    unsigned int a = *(labelmat + k*spatdimlength + i);
-                    unsigned int b = *(labelmat + k*spatdimlength + j);
-                    if (a > 0 && b > 0) {
-                        if (replaceby[a] == replaceby[b]) {
-                            continue;
-                        } else if (replaceby[a] < replaceby[b]) {
-                            for (n = 0; n < *total; n++) {
-                                if (replaceby[n] == replaceby[b]) {
-                                    replaceby[n] = replaceby[a];
+        // Check for proper number of arguments
+        if (inputs.size() != 3) {
+            matlabPtr->feval(u"error", 0, 
+                std::vector<matlab::data::Array>({
+                    factory.createScalar("three inputs required: labelmat, connmat, total")
+                }));
+            return;
+        }
+        if (outputs.size() != 1) {
+            matlabPtr->feval(u"error", 0, 
+                std::vector<matlab::data::Array>({
+                    factory.createScalar("one output required")
+                }));
+            return;
+        }
+        
+        // Validate input types
+        if (inputs[0].getType() != matlab::data::ArrayType::UINT32) {
+            matlabPtr->feval(u"error", 0, 
+                std::vector<matlab::data::Array>({
+                    factory.createScalar("first input must be a matrix of uint32")
+                }));
+            return;
+        }
+        
+        if (inputs[1].getType() != matlab::data::ArrayType::LOGICAL) {
+            matlabPtr->feval(u"error", 0, 
+                std::vector<matlab::data::Array>({
+                    factory.createScalar("second input must be logical matrix")
+                }));
+            return;
+        }
+        
+        if (inputs[2].getType() != matlab::data::ArrayType::UINT32 || inputs[2].getNumberOfElements() != 1) {
+            matlabPtr->feval(u"error", 0, 
+                std::vector<matlab::data::Array>({
+                    factory.createScalar("third input must be a scalar of uint32")
+                }));
+            return;
+        }
+        
+        // Get dimensions of labelmat
+        matlab::data::ArrayDimensions dims = inputs[0].getDimensions();
+        size_t spatdimlength = dims[0];  // rows (channels)
+        size_t timefreqlength = dims[1]; // columns (time/freq points)
+        
+        // Validate connmat matrix dimensions
+        matlab::data::ArrayDimensions neighbourDims = inputs[1].getDimensions();
+        if (neighbourDims.size() != 2 || neighbourDims[0] != spatdimlength || neighbourDims[1] != spatdimlength) {
+            matlabPtr->feval(u"error", 0, 
+                std::vector<matlab::data::Array>({
+                    factory.createScalar("second input must be square matrix with one row and column for each channel")
+                }));
+            return;
+        }
+        
+        // Get typed access to inputs (move semantics for efficiency)
+        matlab::data::TypedArray<uint32_t> labelmat = std::move(inputs[0]);
+        matlab::data::TypedArray<bool> connmat = std::move(inputs[1]);
+        matlab::data::TypedArray<uint32_t> totalInput = std::move(inputs[2]);
+        
+        // Get the scalar total value (increase by 1 because indices are 1-based)
+        uint32_t total = totalInput[0][0] + 1;
+        
+        // Create output matrix
+        matlab::data::TypedArray<uint32_t> out = factory.createArray<uint32_t>(dims);
+        
+        // Call the computational routine
+        // Create replaceby array using vector (RAII - no manual memory management)
+        std::vector<uint32_t> replaceby(total);
+        for (uint32_t n = 0; n < total; n++) {
+            replaceby[n] = n;
+        }
+        
+        // Iterate over channels
+        for (size_t i = 0; i < spatdimlength; i++) {
+            // Iterate over possible connmat for this channel
+            for (size_t j = 0; j < spatdimlength; j++) {
+                // Check if channels i and j are connmat
+                if (connmat[i][j]) {
+                    // Channel is a neighbour
+                    for (size_t k = 0; k < timefreqlength; k++) {
+                        uint32_t a = labelmat[i][k];
+                        uint32_t b = labelmat[j][k];
+                        
+                        if (a > 0 && b > 0) {
+                            if (replaceby[a] == replaceby[b]) {
+                                continue;
+                            } else if (replaceby[a] < replaceby[b]) {
+                                uint32_t target = replaceby[b];
+                                uint32_t replacement = replaceby[a];
+                                for (uint32_t n = 0; n < total; n++) {
+                                    if (replaceby[n] == target) {
+                                        replaceby[n] = replacement;
+                                    }
                                 }
-                            }
-                        } else if (replaceby[b] < replaceby[a]) {
-                            for (n = 0; n < *total; n++) {
-                                if (replaceby[n] == replaceby[a]) {
-                                    replaceby[n] = replaceby[b];
+                            } else if (replaceby[b] < replaceby[a]) {
+                                uint32_t target = replaceby[a];
+                                uint32_t replacement = replaceby[b];
+                                for (uint32_t n = 0; n < total; n++) {
+                                    if (replaceby[n] == target) {
+                                        replaceby[n] = replacement;
+                                    }
                                 }
                             }
                         }
@@ -53,94 +123,37 @@ void combineClusters_impl(unsigned int *labelmat, unsigned int *total, mwSize sp
                 }
             }
         }
-    }
-    
-    /* copy and sort replaceby, retain only unique elements */
-    std::vector<int> replacebySorted (replaceby, replaceby+*total);
-    std::sort(replacebySorted.begin(), replacebySorted.end());
-    std::vector<int>::iterator it;
-    it = std::unique(replacebySorted.begin(), replacebySorted.end());
-    replacebySorted.resize(std::distance(replacebySorted.begin(), it));
-    
-    /* generate sequential cluster numbers */
-    unsigned int *clusternums;
-    unsigned int sortedSize = replacebySorted.size();
-
-    clusternums = (unsigned int *) malloc(sortedSize * sizeof(unsigned int));
-    for (n = 0; n < sortedSize; n++) {
-        clusternums[n] = n; /* the first element will be 0 (i.e. no cluster present), as is the case in replacebySorted */
-    }
-    
-    for (i = 0; i < spatdimlength; i++) {
-        for (j = 0; j < timefreqlength; j++) {
-            unsigned int val = *(labelmat + j*spatdimlength + i);
-            if (val > 0) {
-            
-                /* look for the cluster number */
-                for (n = 0; n < sortedSize; n++) {
-                    if (replacebySorted[n] == replaceby[val]) {
-                        *(out + j*spatdimlength + i) = clusternums[n];
-                        break;
+        
+        // Copy and sort replaceby, retain only unique elements
+        std::vector<uint32_t> replacebySorted(replaceby.begin(), replaceby.end());
+        std::sort(replacebySorted.begin(), replacebySorted.end());
+        auto it = std::unique(replacebySorted.begin(), replacebySorted.end());
+        replacebySorted.erase(it, replacebySorted.end());
+        
+        // Generate sequential cluster numbers
+        size_t sortedSize = replacebySorted.size();
+        std::vector<uint32_t> clusternums(sortedSize);
+        for (size_t n = 0; n < sortedSize; n++) {
+            clusternums[n] = static_cast<uint32_t>(n); // first element will be 0 (no cluster)
+        }
+        
+        // Fill output matrix
+        for (size_t i = 0; i < spatdimlength; i++) {
+            for (size_t j = 0; j < timefreqlength; j++) {
+                uint32_t val = labelmat[i][j];
+                if (val > 0) {
+                    // Look for the cluster number
+                    for (size_t n = 0; n < sortedSize; n++) {
+                        if (replacebySorted[n] == replaceby[val]) {
+                            out[i][j] = clusternums[n];
+                            break;
+                        }
                     }
                 }
             }
         }
-    }
-    
-    /* clean up temp variables */
-    free((void *) replaceby);
-    free((void *) clusternums);
-}
 
-/* The gateway function */
-void mexFunction( int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-    unsigned int *labelmat;
-    unsigned int *total;
-    mwSize spatdimlength;
-    mwSize timefreqlength;
-    mxLogical *neighbours;
-    unsigned int *out;
-    unsigned int *replaceby;
-
-    /* check for proper number of arguments */
-    if(nrhs != 3) {
-        mexErrMsgIdAndTxt("FieldTrip:findcluster:nrhs", "three inputs required: labelmat, neighbours, total");
+        // Return output
+        outputs[0] = std::move(out);
     }
-    if(nlhs != 1) {
-        mexErrMsgIdAndTxt("FieldTrip:findcluster:nlhs", "one output required");
-    }
-    
-    /* make sure the first input argument is real uint32 */
-    if (!mxIsUint32(prhs[0]) || mxIsComplex(prhs[0])) {
-        mexErrMsgIdAndTxt("FieldTrip:findcluster:notUint32", "first input must be a matrix of uint32");
-    }
-
-    if (!mxIsLogical(prhs[1])) {
-        mexErrMsgIdAndTxt("FieldTrip:findcluster:notLogical", "second input must be logical matrix");
-    }
-    
-    if (!mxIsUint32(prhs[2]) || mxGetNumberOfElements(prhs[2]) > 1) {
-        mexErrMsgIdAndTxt("FieldTrip:findcluster:notUint32", "third input must be a scalar of uint32");
-    }
-    
-    /* get dimensions of labelmat */
-    spatdimlength = (mwSize)mxGetM(prhs[0]);
-    timefreqlength = (mwSize)mxGetN(prhs[0]);
-    
-    /* perform dimension check */
-    if (spatdimlength != mxGetM(prhs[1]) || spatdimlength != mxGetN(prhs[1])) {
-        mexErrMsgIdAndTxt("FieldTrip:findcluster:neighboursNotOK","second input must be square matrix with one row and column for each channel");
-    }
-    
-    /* get the other inputs */
-    labelmat = (unsigned int *)mxGetData(prhs[0]);
-    neighbours = (mxLogical *)mxGetData(prhs[1]);
-    total = (unsigned int *)mxGetData(prhs[2]);
-
-    /* create the output matrix */
-    plhs[0] = mxCreateNumericMatrix(spatdimlength, timefreqlength, mxUINT32_CLASS, mxREAL);
-    out = (unsigned int *)mxGetData(plhs[0]);
-
-    /* call the computational routine */
-    combineClusters_impl(labelmat, total, spatdimlength, timefreqlength, neighbours, out);
-}
+};
