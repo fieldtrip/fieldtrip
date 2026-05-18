@@ -85,12 +85,18 @@ sync_lists = [
   ],
   [
     'private/combineClusters.m',
-    'plotting/private/combineClusters.m'
+    'plotting/private/combineClusters.m',
+    'src/combineClusters.m'
   ],
   [
     'private/combineClusters.mexa64',
     'plotting/private/combineClusters.mexa64',
     'src/combineClusters.mexa64'
+  ],
+  [
+    'private/combineClusters.mexmaca64',
+    'plotting/private/combineClusters.mexmaca64',
+    'src/combineClusters.mexmaca64'
   ],
   [
     'private/combineClusters.mexw64',
@@ -1919,8 +1925,6 @@ sync_lists = [
   [
     'fileio/private/write_ctf_shm.m',
     'src/write_ctf_shm.m'
-  ],
-  [
   ],
 ]
 
