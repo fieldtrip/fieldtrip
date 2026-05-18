@@ -1,8 +1,8 @@
 MEXCMD = mex
 MEXEXT = $(shell mexext)
 
-FIELDTRIPSRC = $(dir $(abspath $(lastword $(MAKEFILE_LIST))))
-FIELDTRIPROOT = $(shell dirname $(FIELDTRIPSRC))
+FIELDTRIPSRC = $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+FIELDTRIPROOT = $(dir $(realpath $(FIELDTRIPSRC)))
 
 MEXFILES = \
 	det2x2.$(MEXEXT) \
@@ -35,56 +35,69 @@ GEOMETRYMEXFILES = \
 	routlm.$(MEXEXT) \
 	solid_angle.$(MEXEXT)
 
+CTFMEXFILES = \
+	read_ctf_shm.$(MEXEXT) \
+	write_ctf_shm.$(MEXEXT)
+
+D3DESMEXFILES = \
+	rfbevent.$(MEXEXT)
+
 CPPMEXFILES = \
 	combineClusters.$(MEXEXT)
 
-SPECIALMEXFILES = \
-	mxDeserialize_c.$(MEXEXT) \
+OBSOLETEMEXFILES = \
 	mxDeserialize_cpp.$(MEXEXT) \
-	mxSerialize_c.$(MEXEXT) \
 	mxSerialize_cpp.$(MEXEXT) \
-	plgndr.$(MEXEXT) \
-	rfbevent.$(MEXEXT)
+	mxDeserialize.$(MEXEXT) \
+	mxSerialize.$(MEXEXT)
 
-ALLMEXFILES = $(MEXFILES) $(GEOMETRYMEXFILES)
+ALLMEXFILES = $(MEXFILES) $(GEOMETRYMEXFILES) $(CPPMEXFILES)
 
-all: $(MEXFILES) $(GEOMETRYMEXFILES)
+ifeq ($(MEXEXT),mexa64)
+	ALLMEXFILES += $(D3DESMEXFILES)
+	ALLMEXFILES += $(CTFMEXFILES)
+else ifeq ($(MEXEXT), mexmaca64)
+	ALLMEXFILES += $(D3DESMEXFILES)
+endif
 
-$(MEXFILES): %.$(MEXEXT): %.c
+all: $(ALLMEXFILES)
+
+$(MEXFILES) $(CTFMEXFILES): %.$(MEXEXT): %.c
+	$(MEXCMD) $<
+
+$(CPPMEXFILES): %.$(MEXEXT): %.cpp
 	$(MEXCMD) $<
 
 $(GEOMETRYMEXFILES): %.$(MEXEXT): %.c geometry.c geometry.h
 	$(MEXCMD) $< geometry.c 
 
-$(CPPMEXFILES): %.$(MEXEXT): %.cpp
-	$(MEXCMD) $<
+$(D3DESMEXFILES): %.$(MEXEXT): %.c d3des.c d3des.h
+	$(MEXCMD) $< d3des.c
 
-install:
+install: $(ALLMEXFILES)
 	@echo ""
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "📦 Installing MEX files"
+	@echo "📦 Installing compiled MEX files ..."
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@for file in $(ALLMEXFILES); do \
-		if [ -f "$$file" ]; then \
-			count=$$(find $(FIELDTRIPROOT) -type f -name "$$file" -not -path "$(FIELDTRIPROOT)/src/*" | wc -l | tr -d ' '); \
-			if [ $$count -gt 0 ]; then \
-				echo "  📄 $$file → updating $$count location(s)"; \
-				find $(FIELDTRIPROOT) -type f -name "$$file" -not -path "$(FIELDTRIPROOT)/src/*" -exec cp -f "$$file" {} \; ; \
-			else \
-				echo "  📄 $$file → no matching files found in tree"; \
-			fi \
-		else \
-			echo "  ⚠️  Warning: $$file not found, skipping..."; \
-		fi \
+	@for file in $^; do \
+		TARGETS=$$(find $(FIELDTRIPROOT) -type f -name "$$file" -not -path "$(FIELDTRIPSRC)*" ); \
+		if [ -z "$$TARGETS" ]; then \
+			echo "⚠️ No target found for $$file, skipping..."; \
+			continue; \
+		fi; \
+		for target in $$TARGETS; do \
+			cp -f "$(FIELDTRIPSRC)/$$file" "$$target" && \
+			echo "✅ Installed $$file to $$target" || \
+			echo "❌ Failed to install $$file to $$target"; \
+		done; \
 	done
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "✅ Deployment complete"
+	@echo "✔️ Installation complete"
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
 
 clean:
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-	@echo "🧹 Removing compiled MEX files here..."
+	@echo "🧹 Removing compiled MEX files ..."
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 	rm -f $(ALLMEXFILES)
 	@echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
