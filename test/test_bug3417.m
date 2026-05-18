@@ -10,7 +10,7 @@ function test_bug3417
 % of Matlab (e.g. 2017b), we get the following bug:
 %
 % Error using findcluster (line 50)
-% invalid dimension of spatdimneighbstructmat
+% invalid dimension of spatdimneighbstructmat/connmat
 
 % figure 4
 
