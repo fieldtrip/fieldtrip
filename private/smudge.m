@@ -76,4 +76,8 @@ val  = 1./nix(i2);
 S = sparse(vecx(:,2),vecx(:,1),val,npnt,npnt);
 S = S + spdiags(datin(:)>threshold, 0, npnt, npnt);
 
+% ensure that the weights sum to 1
+sumS = sum(S,2);
+S(sumS>0,:) = S(sumS>0,:)./sumS(sumS>0);
+
 datout = S*datin(:);
