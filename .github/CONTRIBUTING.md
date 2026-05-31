@@ -33,6 +33,33 @@ to see if anybody else has made a comparable request:
       request. Be sure to select the "feature request" option to get started
       with writing the issue.
 
+For substantial new functionality, such as a complete analysis method, pipeline,
+graphical interface, or toolbox-like addition, please also describe whether the
+work should become part of the FieldTrip code base or remain an externally
+maintained FieldTrip extension. This helps the maintainers balance broad
+usefulness, findability, attribution, review effort, dependencies, and long-term
+maintenance.
+
+As a rule of thumb, a contribution is more likely to fit in the core FieldTrip
+repository when it follows the existing FieldTrip data structures, has broad
+relevance for many users, can be tested with the existing infrastructure, and
+can be maintained by the FieldTrip team after merge. A self-contained toolbox,
+method collection, or research-group-specific workflow may be easier to maintain
+as a separate repository, with visibility through the FieldTrip website's
+extensions page.
+
+When proposing such functionality, please include:
+
+-  The intended user workflow and the FieldTrip data structures it consumes or
+   produces.
+-  The expected maintainer or contact person after the initial contribution.
+-  Any new dependencies, compiled code, large data files, or licensing
+   constraints.
+-  The documentation, examples, and tests that would help users and maintainers
+   evaluate the contribution.
+-  Whether an external extension listing on the FieldTrip website would be a
+   better first step than integrating the code directly into FieldTrip.
+
 ## Asking questions
 
 General questions regarding FieldTrip download, usage, or any other
