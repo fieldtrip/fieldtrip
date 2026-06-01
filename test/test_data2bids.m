@@ -16,7 +16,7 @@ cfg.writejson                   = 'replace';
 cfg.bidsroot                    = fullfile(tempdir, 'bids');
 cfg.sub                         = 'A2002';
 cfg.ses                         = 'MEG';
-cfg.datatype                    = 'events';
+cfg.suffix                      = 'events';
 cfg.TaskName                    = 'language';
 cfg.InstitutionName             = 'Radboud University';
 cfg.InstitutionalDepartmentName = 'Donders Institute for Brain, Cognition and Behaviour';
@@ -41,7 +41,7 @@ cd(dccnpath('/project/3031000.02/test/data2bids/test3'))
 cfg = [];
 cfg.method                      = 'convert';
 cfg.dataset                     = 'Subject1_MP.cnt';
-cfg.datatype                    = 'eeg';
+cfg.suffix                      = 'eeg';
 cfg.outputfile                  = 'sub-MP_task-visual_eeg.vhdr';
 cfg.writejson                   = 'replace';
 cfg.writetsv                    = 'replace';
@@ -62,7 +62,7 @@ cd(dccnpath('/project/3031000.02/test/data2bids/test4'))
 cfg = [];
 cfg.method                      = 'copy';
 cfg.dataset                     = 'Subject1_MP.vhdr';
-cfg.datatype                    = 'eeg';
+cfg.suffix                      = 'eeg';
 cfg.bidsroot                    = tempname();
 cfg.sub                         = '01';
 cfg.ses                         = '02';
@@ -89,7 +89,7 @@ data = ft_preprocessing(cfg);
 
 cfg = [];
 cfg.outputfile                  = 'sub-MP_task-visual_eeg.vhdr';
-cfg.datatype                    = 'eeg'; % could also be ieeg or emg
+cfg.suffix                      = 'eeg'; % could also be ieeg or emg
 cfg.writejson                   = 'yes';
 cfg.writetsv                    = 'yes';
 cfg.TaskName                    = 'visual';
@@ -167,7 +167,7 @@ cfg = [];
 cfg.bidsroot = 'human_ecog';
 cfg.sub = 'UCI29';
 cfg.task = 'attention';
-cfg.datatype = 'ieeg';
+cfg.suffix = 'ieeg';
 cfg.coordsystem.iEEGCoordinateSystem = 'ACPC';
 cfg.coordsystem.iEEGCoordinateSystemDescription = 'electrodes were aligned with ACPC and projected on the cortex hull';
 data2bids(cfg, data);
@@ -175,7 +175,7 @@ data2bids(cfg, data);
 cfg = [];
 cfg.bidsroot = 'human_ecog';
 cfg.sub = 'UCI29';
-cfg.datatype = 'T1w';
+cfg.suffix = 'T1w';
 cfg.mri.StationName = 'bay3';
 cfg.mri.MagneticFieldStrength = 3;
 data2bids(cfg, mri);
