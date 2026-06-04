@@ -3,28 +3,48 @@ function [stattfce, cfg] = tfcestat(cfg, statobs)
 % TFCESTAT computes threshold-free cluster statistic for multidimensional
 % channel-freq-time or volumetric source data.
 %
-% This implementation evaluates the TFCE integral EXACTLY (eTFCE) rather than
-% approximating it with a fixed number of discrete height thresholds. Because
-% the cluster extent e(h) is piecewise constant in the height h (it changes
-% only when h crosses a data value), the integral
+% Two implementations are available, selected with cfg.tfce_method:
 %
-%     TFCE(v) = integral_{h0}^{h_v} e(h)^E * h^H dh
+%   'exact'    (default) evaluates the TFCE integral EXACTLY (eTFCE). Because
+%              the cluster extent e(h) is piecewise constant in the height h
+%              (it changes only when h crosses a data value), the integral
 %
-% has a closed form on each interval and is obtained in a single pass with a
-% disjoint-set (union-find) cluster-retrieval forest, using the same spatial
-% connectivity as FINDCLUSTER. This removes the cfg.tfce_nsteps discretisation
-% (and its bias), is typically much faster than the threshold loop, and needs
-% no SPM/Image-Processing clustering routine.
+%                  TFCE(v) = integral_{h0}^{h_v} e(h)^E * h^H dh
 %
-% The exact-TFCE (eTFCE) algorithm is the method of Chen, Weeda, Nichols &
-% Goeman (2026), "eTFCE: Exact Threshold-Free Cluster Enhancement via Fast
-% Cluster Retrieval", arXiv:2603.03004; this is a MATLAB implementation of it
-% for FieldTrip and was not developed by the FieldTrip team.
+%              has a closed form on each interval and is obtained in a single
+%              pass with a disjoint-set (union-find) cluster-retrieval forest,
+%              using the same spatial connectivity as FINDCLUSTER. This removes
+%              the cfg.tfce_nsteps discretisation (and its bias), is typically
+%              much faster than the threshold loop, and needs no SPM toolbox.
+%
+%   'discrete' the original implementation, which approximates the integral by
+%              summing over cfg.tfce_nsteps discrete height thresholds and
+%              calls FINDCLUSTER (requires SPM) at each threshold. Kept for
+%              backward compatibility and for validating the exact method.
+%
+% Relevant options:
+%   cfg.tfce_method = 'exact' (default) or 'discrete'
+%   cfg.tfce_H      = height exponent H (default 2)
+%   cfg.tfce_E      = extent exponent E (default 0.5)
+%   cfg.tfce_h0     = baseline/offset that is subtracted first (default 0)
+%   cfg.tfce_nsteps = number of height steps for the 'discrete' method (default 100)
+%   cfg.tail        = -1, 0 or 1 (default 0)
+%
+% The exact-TFCE (eTFCE) algorithm was developed by Xu Chen, Wouter D. Weeda,
+% Thomas E. Nichols and Jelle J. Goeman (2026), "eTFCE: Exact Threshold-Free
+% Cluster Enhancement via Fast Cluster Retrieval", arXiv:2603.03004. The 'exact'
+% method below is a MATLAB implementation of that published algorithm for
+% FieldTrip; it was NOT created or developed by the implementer, who only
+% translated the method into code.
 %
 % See also CLUSTERSTAT, FINDCLUSTER
 
-% Copyright (C) 2021, Jan-Mathijs Schoffelen (original discretised version)
-% Copyright (C) 2026, exact (eTFCE) reimplementation
+% Copyright (C) 2021, Jan-Mathijs Schoffelen (discretised implementation)
+%
+% The exact (eTFCE) algorithm was created by:
+% Copyright (C) 2026, Xu Chen, Wouter D. Weeda, Thomas E. Nichols and Jelle J. Goeman (eTFCE algorithm, arXiv:2603.03004)
+% and implemented for FieldTrip (the implementer did not develop the method) by:
+% Copyright (C) 2026, Devon Yanitski (FieldTrip implementation of the eTFCE algorithm)
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -54,14 +74,14 @@ cfg.tail         = ft_getopt(cfg, 'tail',         0);         % -1, 0, 1
 cfg.tfce_h0      = ft_getopt(cfg, 'tfce_h0',      0);
 cfg.tfce_H       = ft_getopt(cfg, 'tfce_H',       2);
 cfg.tfce_E       = ft_getopt(cfg, 'tfce_E',       0.5);
-cfg.tfce_nsteps  = ft_getopt(cfg, 'nsteps',       100);       % unused by the exact method; kept for cfg compatibility
+% honour the documented cfg.tfce_nsteps (set by the caller), falling back to the
+% legacy 'nsteps' field and finally to 100; only used by the 'discrete' method
+cfg.tfce_nsteps  = ft_getopt(cfg, 'tfce_nsteps',  ft_getopt(cfg, 'nsteps', 100));
+cfg.tfce_method  = ft_getopt(cfg, 'tfce_method',  'exact');   % 'exact' (eTFCE) or 'discrete'
 cfg.height       = ft_getopt(cfg, 'height',       []);
 % these defaults are already set in the caller function,
 % but may be necessary if a user calls this function directly
 cfg.connectivity = ft_getopt(cfg, 'connectivity', false);
-
-% NB the exact method does not threshold at a discrete set of heights, so it
-% does not call findcluster/spm_bwlabel and therefore needs no SPM toolbox.
 
 if isempty(cfg.dim)
   ft_error('cfg.dim should be defined and not empty');
@@ -73,7 +93,7 @@ end % cfg.inside is set in ft_sourcestatistics, but is also needed for timelock 
 
 if isfield(cfg, 'origdim')
   cfg.dim = cfg.origdim;
-end % this snippet is to support correct clustering of N-dimensional data
+end % this snippet is to support correct clustering of N-dimensional data, not fully tested yet
 
 % get connectivity matrix for the spatially neighbouring elements
 connmat = full(ft_getopt(cfg, 'connectivity', false));
@@ -84,9 +104,10 @@ needneg = cfg.tail==0 || cfg.tail==-1;
 % remove the offset, which by default is 0
 statobs = statobs - cfg.tfce_h0;
 
-% explicitly compute the height (max statistic), to be returned in cfg so that
-% subsequent (randomization) calls can reuse the same value; the exact method
-% does not need it for the integral but it keeps the cfg round-trip unchanged.
+% compute the height (max statistic) once and return it in cfg, so that in a
+% subsequent call (for the randomizations) the same value is reused. The
+% 'discrete' method needs it for the stepsize; the 'exact' method does not need
+% it for the integral, but it keeps the cfg round-trip identical.
 if isempty(cfg.height)
   if needneg && needpos
     cfg.height = max(abs(statobs(:)));
@@ -96,6 +117,114 @@ if isempty(cfg.height)
     cfg.height = max(statobs(:));
   end
 end
+
+switch lower(cfg.tfce_method)
+  case 'exact'
+    stattfce = tfce_exact(cfg, statobs, connmat, needpos, needneg);
+  case 'discrete'
+    % ensure that the preferred SPM version is on the path (findcluster needs it)
+    ft_hastoolbox(cfg.spmversion, 1);
+    stattfce = tfce_discrete(cfg, statobs, connmat, needpos, needneg);
+  otherwise
+    ft_error('unsupported cfg.tfce_method ''%s'' (use ''exact'' or ''discrete'')', cfg.tfce_method);
+end
+
+
+%==========================================================================
+% DISCRETE method: original implementation, summing over cfg.tfce_nsteps
+% height thresholds and calling findcluster at each one.
+%==========================================================================
+function stattfce = tfce_discrete(cfg, statobs, connmat, needpos, needneg)
+
+stepsize = cfg.height./cfg.tfce_nsteps;
+
+% first do the clustering on the observed data
+spacereshapeable = (isscalar(connmat) && ~isfinite(connmat));
+
+statobspos = 0;
+statobsneg = 0;
+
+if needpos
+  if spacereshapeable
+    % this pertains to data for which the spatial dimension can be reshaped
+    % into 3D, i.e. when it is described on an ordered set of positions on
+    % a 3D-grid. It deals with the inside dipole positions, and creates a
+    % fake extra spatial dimension, so that findcluster can deal with it
+    tmp = zeros([1 cfg.dim]);
+    tmp(cfg.inside) = statobs;
+  else
+    tmp = reshape(statobs, [cfg.dim 1]);
+  end
+
+  statobspos = zeros(size(tmp));
+  for j = 1:cfg.tfce_nsteps
+    thr = (j-1)*stepsize;
+    tmp(tmp<=thr) = 0;
+    [clus, nclus] = findcluster(tmp, connmat);
+    extent = zeros(size(clus));
+    extent = getextent(clus, nclus, extent);
+    statobspos = statobspos + stepsize .* (extent.^cfg.tfce_E) .* (thr.^cfg.tfce_H);
+  end
+
+  if spacereshapeable
+    statobspos = statobspos(cfg.inside);
+  else
+    statobspos = statobspos(:);
+  end
+
+end % if needpos
+
+if needneg
+  if spacereshapeable
+    tmp = zeros([1 cfg.dim]);
+    tmp(cfg.inside) = statobs;
+  else
+    tmp = reshape(statobs, [cfg.dim 1]);
+  end
+  tmp = -tmp;
+
+  statobsneg = zeros(size(tmp));
+  for j = 1:cfg.tfce_nsteps
+    thr = (j-1)*stepsize;
+    tmp(tmp<=thr) = 0;
+    [clus, nclus] = findcluster(tmp, connmat);
+    extent = zeros(size(clus));
+    extent = getextent(clus, nclus, extent);
+    statobsneg = statobsneg + stepsize .* (extent.^cfg.tfce_E) .* (thr.^cfg.tfce_H);
+  end
+
+  if spacereshapeable
+    statobsneg = -statobsneg(cfg.inside);
+  else
+    statobsneg = -statobsneg(:);
+  end
+
+end % if needneg
+stattfce = statobsneg + statobspos;
+
+
+% faster integration a la Bruno Giordano, borrowed from LIMO_eeg
+function extent_map = getextent(clustered_map, num, extent_map)
+
+clustered_map = clustered_map(:);
+nv = histc(clustered_map,0:num);
+[dum,idxall] = sort(clustered_map,'ascend');
+idxall(1:nv(1)) = [];
+nv(1) = [];
+ends = cumsum(nv);
+inis = ends-nv+1;
+for i = 1:num
+  idx = idxall(inis(i):ends(i));
+  extent_map(idx) = nv(i);
+end
+
+
+%==========================================================================
+% EXACT method (eTFCE): evaluate the TFCE integral in a single pass with a
+% union-find cluster-retrieval forest, using the same connectivity as the
+% discrete method but without thresholding at discrete heights.
+%==========================================================================
+function stattfce = tfce_exact(cfg, statobs, connmat, needpos, needneg)
 
 % layout: replicate how the discretised code arranges the data for findcluster
 spacereshapeable = (isscalar(connmat) && ~isfinite(connmat));
@@ -116,7 +245,6 @@ Nlin = prod(arrsz);
 % spatial (first) dimension at matching non-spatial positions
 edges = local_build_edges(arrsz, connmat);
 
-% exact positive and negative TFCE
 statobspos = zeros(numel(statobs),1);
 statobsneg = zeros(numel(statobs),1);
 
