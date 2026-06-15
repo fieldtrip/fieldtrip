@@ -215,6 +215,20 @@ elseif Ndata>1
   ft_error('multiple data inputs into a topoplot function should be of the same datatype');
 elseif Ndata==1
   dtype =dtype{1};
+
+  % quickly check whether the parameter field is specified by the user, and
+  % if it's a cell-array, recurse into the function
+  param = ft_getopt(cfg, 'parameter');
+  if iscell(param)
+    for i=1:numel(param)
+      tmpdata{i} = keepfields(varargin{1}, {'label' 'time' 'freq' 'dimord'});
+      tmpdata{i}.data = varargin{1}.(param{i});
+      cfg.dataname{i} = param{i};
+    end
+    cfg.parameter = 'data';
+    topoplot_common(cfg, tmpdata{:});
+    return;
+  end
 end
 
 if strcmp(dtype, 'comp')
