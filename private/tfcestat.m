@@ -3,7 +3,15 @@ function [stattfce, cfg] = tfcestat(cfg, statobs)
 % TFCESTAT computes threshold-free cluster statistic for multidimensional
 % channel-freq-time or volumetric source data.
 %
-% Two implementations are available, selected with cfg.tfce_method:
+% The configuration options that can be specified are:
+%   cfg.tfce_method = 'exact' (default) or 'discrete'
+%   cfg.tfce_H      = height exponent H (default 2)
+%   cfg.tfce_E      = extent exponent E (default 0.5)
+%   cfg.tfce_h0     = baseline/offset that is subtracted first (default 0)
+%   cfg.tfce_nsteps = number of height steps for the 'discrete' method (default 100)
+%   cfg.tail        = -1, 0 or 1 (default 0)
+%
+% Two implementations are implemented, to be selected with cfg.tfce_method:
 %
 %   'exact'    (default) evaluates the TFCE integral EXACTLY (eTFCE). Because
 %              the cluster extent e(h) is piecewise constant in the height h
@@ -19,16 +27,8 @@ function [stattfce, cfg] = tfcestat(cfg, statobs)
 %
 %   'discrete' the original implementation, which approximates the integral by
 %              summing over cfg.tfce_nsteps discrete height thresholds and
-%              calls FINDCLUSTER (requires SPM) at each threshold. Kept for
+%              calls FINDCLUSTER (which requires SPM) at each threshold. Kept for
 %              backward compatibility and for validating the exact method.
-%
-% Relevant options:
-%   cfg.tfce_method = 'exact' (default) or 'discrete'
-%   cfg.tfce_H      = height exponent H (default 2)
-%   cfg.tfce_E      = extent exponent E (default 0.5)
-%   cfg.tfce_h0     = baseline/offset that is subtracted first (default 0)
-%   cfg.tfce_nsteps = number of height steps for the 'discrete' method (default 100)
-%   cfg.tail        = -1, 0 or 1 (default 0)
 %
 % The exact-TFCE (eTFCE) algorithm was developed by Xu Chen, Wouter D. Weeda,
 % Thomas E. Nichols and Jelle J. Goeman (2026), "eTFCE: Exact Threshold-Free
@@ -40,10 +40,6 @@ function [stattfce, cfg] = tfcestat(cfg, statobs)
 % See also CLUSTERSTAT, FINDCLUSTER
 
 % Copyright (C) 2021, Jan-Mathijs Schoffelen (discretised implementation)
-%
-% The exact (eTFCE) algorithm was created by:
-% Copyright (C) 2026, Xu Chen, Wouter D. Weeda, Thomas E. Nichols and Jelle J. Goeman (eTFCE algorithm, arXiv:2603.03004)
-% and implemented for FieldTrip (the implementer did not develop the method) by:
 % Copyright (C) 2026, Devon Yanitski (FieldTrip implementation of the eTFCE algorithm)
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -69,15 +65,13 @@ cfg.feedback     = ft_getopt(cfg, 'feedback',     'text');
 cfg.spmversion   = ft_getopt(cfg, 'spmversion',   'spm12');
 cfg.dim          = ft_getopt(cfg, 'dim',          []);
 cfg.inside       = ft_getopt(cfg, 'inside',       []);
-cfg.tail         = ft_getopt(cfg, 'tail',         0);         % -1, 0, 1
+cfg.tail         = ft_getopt(cfg, 'tail',         0); % -1, 0, 1
 
 cfg.tfce_h0      = ft_getopt(cfg, 'tfce_h0',      0);
 cfg.tfce_H       = ft_getopt(cfg, 'tfce_H',       2);
 cfg.tfce_E       = ft_getopt(cfg, 'tfce_E',       0.5);
-% honour the documented cfg.tfce_nsteps (set by the caller), falling back to the
-% legacy 'nsteps' field and finally to 100; only used by the 'discrete' method
-cfg.tfce_nsteps  = ft_getopt(cfg, 'tfce_nsteps',  ft_getopt(cfg, 'nsteps', 100));
-cfg.tfce_method  = ft_getopt(cfg, 'tfce_method',  'exact');   % 'exact' (eTFCE) or 'discrete'
+cfg.tfce_nsteps  = ft_getopt(cfg, 'tfce_nsteps',  100);
+cfg.tfce_method  = ft_getopt(cfg, 'tfce_method',  'exact');
 cfg.height       = ft_getopt(cfg, 'height',       []);
 % these defaults are already set in the caller function,
 % but may be necessary if a user calls this function directly
@@ -130,10 +124,6 @@ switch lower(cfg.tfce_method)
 end
 
 
-%==========================================================================
-% DISCRETE method: original implementation, summing over cfg.tfce_nsteps
-% height thresholds and calling findcluster at each one.
-%==========================================================================
 function stattfce = tfce_discrete(cfg, statobs, connmat, needpos, needneg)
 
 stepsize = cfg.height./cfg.tfce_nsteps;
@@ -219,26 +209,21 @@ for i = 1:num
 end
 
 
-%==========================================================================
-% EXACT method (eTFCE): evaluate the TFCE integral in a single pass with a
-% union-find cluster-retrieval forest, using the same connectivity as the
-% discrete method but without thresholding at discrete heights.
-%==========================================================================
 function stattfce = tfce_exact(cfg, statobs, connmat, needpos, needneg)
 
-% layout: replicate how the discretised code arranges the data for findcluster
 spacereshapeable = (isscalar(connmat) && ~isfinite(connmat));
 if spacereshapeable
-  % source data on a 3D grid: a fake leading singleton spatial dimension
+  % this pertains to data for which the spatial dimension can be reshaped
+  % into 3D, i.e. when it is described on an ordered set of positions on
+  % a 3D-grid. It deals with the inside dipole positions, and creates a
+  % fake extra spatial dimension, so that findcluster can deal with it
   arrsz = [1 cfg.dim];
-  fullvals = zeros(prod(arrsz),1);
-  fullvals(cfg.inside(:)) = statobs(:);
+  tmp = zeros(arrsz);
+  tmp(cfg.inside) = statobs;
 else
-  % channel x (freq) x time data: spatial (channel) dimension is first
   arrsz = [cfg.dim 1];
-  fullvals = statobs(:);
+  tmp = reshape(statobs, arrsz);
 end
-Nlin = prod(arrsz);
 
 % build the voxel adjacency once (geometry only), matching findcluster:
 % face connectivity over the non-spatial dimensions + connmat across the
@@ -249,21 +234,17 @@ statobspos = zeros(numel(statobs),1);
 statobsneg = zeros(numel(statobs),1);
 
 if needpos
-  sc = local_etfce(max(fullvals,0), edges, Nlin, cfg.tfce_E, cfg.tfce_H);
+  sc = local_etfce(max(tmp,0), edges, prod(cfg.dim), cfg.tfce_E, cfg.tfce_H);
   if spacereshapeable, statobspos = sc(cfg.inside(:)); else, statobspos = sc(:); end
 end
 
 if needneg
-  sc = local_etfce(max(-fullvals,0), edges, Nlin, cfg.tfce_E, cfg.tfce_H);
+  sc = local_etfce(max(-tmp,0), edges, prod(cfg.dim), cfg.tfce_E, cfg.tfce_H);
   if spacereshapeable, statobsneg = -sc(cfg.inside(:)); else, statobsneg = -sc(:); end
 end
 
 stattfce = statobspos + statobsneg;
 
-
-%==========================================================================
-% exact TFCE for the (non-negative) input vals, returned per voxel
-%==========================================================================
 function score = local_etfce(vals, edges, Nlin, E, H)
 
 score  = zeros(Nlin,1);
@@ -322,10 +303,6 @@ end
 score(activeIdx) = T;
 
 
-%==========================================================================
-% voxel adjacency matching FINDCLUSTER, as an [M x 2] edge list of linear
-% indices into an array of size arrsz (spatial/channel dimension first)
-%==========================================================================
 function edges = local_build_edges(arrsz, connmat)
 
 D1    = arrsz(1);
