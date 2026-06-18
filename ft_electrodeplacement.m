@@ -227,7 +227,7 @@ chanlabel = {};
 chanstring = {};
 markerlab = {}; 
 markerpos = {};
-use_html = verLessThan('matlab','25.1');  % version 2025a and newer no longer support html
+use_html = ~ft_platform_supports('matlabversion', '2025a', inf); % version 2025a and newer no longer support html
 if ~isempty(cfg.elec) % re-use previously placed (cfg.elec) electrodes
   for e = 1:numel(cfg.elec.label)
     chanlabel{end+1,1} = cfg.elec.label{e};
