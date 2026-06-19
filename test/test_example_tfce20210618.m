@@ -1,4 +1,4 @@
-function test_example_threshold_free_cluster_enhancement_20210618
+function test_example_tfce20210618
 
 % WALLTIME 00:20:00
 % MEM 1gb

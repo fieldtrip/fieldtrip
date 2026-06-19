@@ -1,4 +1,4 @@
-function test_example_threshold_free_cluster_enhancement
+function test_example_tfce20220113
 
 % MEM 2gb
 % WALLTIME 00:10:00
@@ -77,19 +77,24 @@ cfg.neighbours       = nb;      % this will not be used, since we selected only 
 cfg.correctm         = 'tfce';
 cfg.tfce_H           = 2;       % default setting
 cfg.tfce_E           = 0.5;     % default setting
+cfg.tfce_method      = 'discrete';
 statA = ft_timelockstatistics(cfg, allsubjFIC{:}, allsubjFC{:});
 
 cfg.tfce_H           = 2;
 cfg.tfce_E           = 0.25;
 statB = ft_timelockstatistics(cfg, allsubjFIC{:}, allsubjFC{:});
+
+cfg.tfce_method = 'exact';
+statC = ft_timelockstatistics(cfg, allsubjFIC{:}, allsubjFC{:});
+
 %
 % Note that the TFCE method takes longer to compute than the conventional method. We can visualize and compare the slightly different statistical outputs given by these methods.
 %
 %% Visualize the results
 figure(1), clf, hold on,
 set(gcf, 'units','centimeters','position',[0 0 18 10] );
-subplot(2,2,1), hold on, grid on,
-title( 'TFCE: H=2, E=0.5' );
+subplot(3,2,1), hold on, grid on,
+title( 'TFCE: discrete, H=2, E=0.5' );
 plot( statA.time, statA.stattfce, 'r');
 plot( statA.time(statA.mask), 400*ones(sum(statA.mask),1), 'r', 'linewidth',2 );
 ylabel( 'TFCE' );
@@ -97,8 +102,8 @@ ylim( [-20, 420] );
 xticks( 0:0.2:1 );
 set(gca, 'TickDir','out' );
 
-subplot(2,2,3), hold on, grid on,
-title( 'TFCE: H=2, E=0.25' );
+subplot(3,2,3), hold on, grid on,
+title( 'TFCE: discrete, H=2, E=0.25' );
 plot( statB.time, statB.stattfce, 'r');
 plot( statB.time(statB.mask), 400*ones(sum(statB.mask),1), 'r', 'linewidth',2 );
 ylabel( 'TFCE' );
@@ -106,7 +111,16 @@ ylim( [-20, 420] );
 xticks( 0:0.2:1 );
 set(gca, 'TickDir','out' );
 
-subplot(2,2,2), hold on, grid on,
+subplot(3,2,5), hold on, grid on,
+title( 'TFCE: exact, H=2, E=0.25' );
+plot( statC.time, statC.stattfce, 'r');
+plot( statC.time(statC.mask), 400*ones(sum(statC.mask),1), 'r', 'linewidth',2 );
+ylabel( 'TFCE' );
+ylim( [-20, 420] );
+xticks( 0:0.2:1 );
+set(gca, 'TickDir','out' );
+
+subplot(3,2,2), hold on, grid on,
 title( 'clusteralpha = .01' );
 plot( stat01.time, stat01.stat, 'k');
 plot( stat01.time(stat01.mask), 7.5*ones(sum(stat01.mask),1), 'k', 'linewidth',2 );
@@ -115,7 +129,7 @@ ylim( [-3, 8] );
 xticks( 0:0.2:1 );
 set(gca, 'TickDir','out' );
 
-subplot(2,2,4), hold on, grid on,
+subplot(3,2,4), hold on, grid on,
 title( 'clusteralpha = .05' );
 plot( stat05.time, stat05.stat, 'k');
 plot( stat05.time(stat05.mask), 7.5*ones(sum(stat05.mask),1), 'k', 'linewidth',2 );
@@ -123,6 +137,8 @@ ylabel( 't-value' );
 ylim( [-3, 8] );
 xticks( 0:0.2:1 );
 set(gca, 'TickDir','out' );
+
+
 %
 %% # Output of the example code
 %
