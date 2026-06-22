@@ -211,6 +211,9 @@ end
 
 function stattfce = tfce_exact(cfg, statobs, connmat, needpos, needneg)
 
+persistent previous_edges previous_connmat previous_dim
+
+
 spacereshapeable = (isscalar(connmat) && ~isfinite(connmat));
 if spacereshapeable
   % this pertains to data for which the spatial dimension can be reshaped
@@ -225,10 +228,20 @@ else
   tmp = reshape(statobs, arrsz);
 end
 
-% build the voxel adjacency once (geometry only), matching findcluster:
-% face connectivity over the non-spatial dimensions + connmat across the
-% spatial (first) dimension at matching non-spatial positions
-edges = local_build_edges(arrsz, connmat);
+if isequal(cfg.dim, previous_dim) && isequal(connmat, previous_connmat)
+  edges = previous_edges;
+else
+  % build the voxel adjacency once (geometry only), matching findcluster:
+  % face connectivity over the non-spatial dimensions + connmat across the
+  % spatial (first) dimension at matching non-spatial positions
+  edges = local_build_edges(arrsz, connmat);
+  previous_edges = edges;
+end
+
+if isempty(previous_dim)
+  previous_dim     = cfg.dim;
+  previous_connmat = connmat;
+end
 
 statobspos = zeros(numel(statobs),1);
 statobsneg = zeros(numel(statobs),1);
@@ -267,7 +280,7 @@ src = [ea; eb]; dst = [eb; ea];
 cnt    = accumarray(src, 1, [N 1]);
 startp = cumsum([1; cnt]);
 
-[~, order] = sort(nodeval, 'descend');
+[dum, order] = sort(nodeval, 'descend');
 rnk        = zeros(N,1); rnk(order) = 1:N;
 
 ufp = (1:N)'; csize = ones(N,1); croot = (1:N)'; hpar = (1:N)'; ext = ones(N,1);
