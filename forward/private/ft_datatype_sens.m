@@ -157,7 +157,7 @@ nchan = length(sens.label);
 % these are used at multiple places, therefore we determine them only once
 if isfield(sens, 'coilpos')
   ismeg = true;
-  iseeg = true;
+  iseeg = false;
   isnirs = false;
 elseif isfield(sens, 'elecpos')
   ismeg = false;

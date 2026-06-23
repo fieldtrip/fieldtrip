@@ -64,6 +64,18 @@ ft_preamble debug
 ft_preamble loadvar    headshape
 ft_preamble provenance headshape
 
+if ischar(headshape) && isfile(headshape)
+  ft_info('reading headshape from file %s\n', headshape);
+  headshape = ft_read_headshape(headshape);
+end
+
+if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
+  pos = headshape;
+  prj = elproj(pos);
+  tri = delaunay(prj(:,1), prj(:,2));
+  headshape = struct('pos', pos, 'tri', tri);
+end
+
 % ensure that the input data is valid for this function, this will also do
 headshape = ft_checkdata(headshape, 'datatype', 'mesh', 'feedback', 'yes');
 
@@ -71,7 +83,7 @@ headshape = ft_checkdata(headshape, 'datatype', 'mesh', 'feedback', 'yes');
 elec = ft_fetch_sens(cfg);
 
 % ensure that the required options are present
-cfg = ft_checkconfig(cfg, 'required', {'elec', 'template'});
+cfg = ft_checkconfig(cfg, 'required', {'template', 'elec'});
 
 % set the defaults
 cfg.channel       = ft_getopt(cfg, 'channel', 'all');

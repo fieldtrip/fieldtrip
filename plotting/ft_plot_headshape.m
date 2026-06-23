@@ -65,9 +65,7 @@ headshape = fixpos(headshape);
 
 if ~isstruct(headshape) && isnumeric(headshape) && size(headshape,2)==3
   % the input seems like a list of points, convert into something that resembles a headshape
-  ws1 = warning('off', 'MATLAB:warn_r14_stucture_assignment');
-  headshape.pos = headshape;
-  warning(ws1);
+  headshape = struct('pos', headshape);
 end
 
 % the default behavior depends on whether there is a triangulated surface or not

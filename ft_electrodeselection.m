@@ -70,6 +70,23 @@ end
 % ensure the input data to be valid and update it to the latest standard
 elec = ft_datatype_sens(elec);
 
+% determine the sensor description type, that could be elec, grad or opto
+convert = ft_datatype(elec);
+
+% convert the sensor description into something that resembles EEG electrodes
+switch convert
+  case 'elec'
+    % nothing to do
+  case 'grad'
+    grad = elec; % keep a copy, we need it later
+    elec = grad2elec(grad);
+  case 'opto'
+    opto = elec; % keep a copy, we need it later
+    elec = opto2elec(opto);
+  otherwise
+    ft_error('unsupported sensor definition')
+end
+
 % set the defaults
 cfg.channel         = ft_getopt(cfg, 'channel', 'all');
 cfg.headshape       = ft_getopt(cfg, 'headshape');
@@ -79,9 +96,25 @@ cfg.elecstyle       = ft_getopt(cfg, 'elecstyle', {});
 cfg.headshapestyle  = ft_getopt(cfg, 'headshapestyle', {});
 cfg.meshstyle       = ft_getopt(cfg, 'meshstyle', {});
 
-if ischar(cfg.headshape) && exist(cfg.headshape, 'file')
+if ischar(cfg.headshape) && isfile(cfg.headshape)
   ft_info('reading headshape from file %s\n', cfg.headshape);
   cfg.headshape = ft_read_headshape(cfg.headshape);
+end
+
+if ~isstruct(cfg.headshape) && isnumeric(cfg.headshape) && size(cfg.headshape,2)==3
+  % the input seems like a list of points, convert into something that resembles a headshape
+  pos = cfg.headshape;
+  prj = elproj(pos);
+  tri = delaunay(prj(:,1), prj(:,2));
+  cfg.headshape = struct('pos', pos, 'tri', tri);
+end
+
+% ensure consistent units
+if ~isempty(cfg.headshape)
+  cfg.headshape = ft_convert_units(cfg.headshape, elec.unit);
+end
+if ~isempty(cfg.mesh)
+  cfg.mesh = ft_convert_units(cfg.mesh, elec.unit);
 end
 
 % set the default style using helper functions
@@ -127,11 +160,27 @@ if ~isempty(cfg.headshape)
 else
   % only keep the desired channels, order them according to the users specification
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
-  [selchan, selsens] = match_str(cfg.channel, elec.label);
-
+   
   % make the final selection
+  [selchan, selsens] = match_str(cfg.channel, elec.label);
   selected = make_selection(elec, selsens);
 end % if headshape
+
+switch convert
+  case 'elec'
+    % nothing to do
+  case 'grad'
+    % make the final selection
+    [selchan, selsens] = match_str(cfg.channel, grad.label);
+    selected = make_selection(grad, selsens);
+  case 'opto'
+    % make the final selection
+    [selchan, selsens] = match_str(cfg.channel, opto.label);
+    selected = make_selection(opto, selsens);
+  otherwise
+    ft_error('unsupported input data')
+end
+
 
 % do the general cleanup and bookkeeping at the end of the function
 ft_postamble debug
@@ -140,16 +189,23 @@ ft_postamble savevar selected
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function elec = make_selection(elec, selected)
-elec.label    = elec.label(selected);
-elec.elecpos  = elec.elecpos(selected,:);
-try, elec.elecori  = elec.elecori(selected,:);  end
-try, elec.chantype = elec.chantype(selected,:); end
-try, elec.chanunit = elec.chanunit(selected,:); end
-try, elec.chanpos  = elec.chanpos (selected,:); end
-try, elec.chanori  = elec.chanori (selected,:); end
-try, elec.tra      = elec.tra(selected,:);      end
+function sens = make_selection(sens, selected)
+sens.label    = sens.label(selected);
+try, sens.elecpos  = sens.elecpos(selected,:);  end
+try, sens.elecori  = sens.elecori(selected,:);  end
+try, sens.chantype = sens.chantype(selected,:); end
+try, sens.chanunit = sens.chanunit(selected,:); end
+try, sens.chanpos  = sens.chanpos (selected,:); end
+try, sens.chanori  = sens.chanori (selected,:); end
+try, sens.tra      = sens.tra(selected,:);      end
 
+if isfield(sens, 'tra')
+  % remove the coils that do not contribute to any channel output
+  selcoil      = any(sens.tra~=0,1);
+  sens.tra     = sens.tra(:,selcoil);
+  try, sens.coilpos = sens.coilpos(selcoil,:); end
+  try, sens.coilori = sens.coilori(selcoil,:); end
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
@@ -408,12 +464,11 @@ if opt.showmesh && ~isempty(opt.mesh)
   end
 end
 
-
 % plot the selected electrodes
 ft_info('%d out of %d electrodes have been selected\n', sum(opt.selected), length(opt.selected));
 options = ft_cfg2keyval(opt.elecstyle);
 options = ft_setopt(options, 'facecolor', 'r');
-ft_plot_sens(make_selection(opt.elec, opt.selected), options{:}); 
+ft_plot_sens(make_selection(opt.elec, opt.selected), options{:});
 
 % plot the non-selected electrodes
 options = ft_setopt(options, 'facecolor', [1 1 1]*0.8);
