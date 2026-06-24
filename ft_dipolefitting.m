@@ -419,10 +419,11 @@ if strcmp(cfg.gridsearch, 'yes')
   for i=1:length(insideindx)
     ft_progress(i/length(insideindx), 'scanning grid location %d/%d\n', i, length(insideindx));
     thisindx = insideindx(i);
-    if isfield(sourcemodel, 'leadfield')
+    if isfield(sourcemodel, 'leadfield') && ~isempty(sourcemodel.leadfield{thisindx})
       % reuse the previously computed leadfield
       lf = sourcemodel.leadfield{thisindx};
     else
+      % compute the leadfield on the fly, also for positions without a precomputed leadfield
       lf = ft_compute_leadfield(sourcemodel.pos(thisindx,:), sens, headmodel, leadfieldopt{:});
     end
     % the model is V=lf*mom+noise, therefore mom=pinv(lf)*V estimates the

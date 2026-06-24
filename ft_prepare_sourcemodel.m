@@ -76,8 +76,10 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %   cfg.tight           = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift     = number, amount to shift the innermost surface of the headmodel inward when determining
 %                         whether sources are inside or outside the source compartment (default = 0)
-%   cfg.compartment     = string, the head model compartment that sources should be inside, either
-%                         'brain' (default) or 'scalp', see FT_INSIDE_HEADMODEL
+%   cfg.compartment     = string or cell-array of strings, the head model compartment(s) that
+%                         sources should be inside, either 'brain' (default) or 'scalp', see
+%                         FT_INSIDE_HEADMODEL. With multiple compartments the inside positions are
+%                         their union and sourcemodel.compartment labels each position
 %   cfg.moveinward      = number, amount to move sources inward to ensure a certain minimal distance to the innermost
 %                         surface of the headmodel (default = 0)
 %   cfg.movetocentroids = 'yes' or 'no', move the dipoles to the centroids of the hexahedral
@@ -786,8 +788,27 @@ if ~isfield(sourcemodel, 'inside')
     brain = find(ismember(headmodel.tissuelabel, {'gm', 'gray', 'grey', 'brain'}));
     sourcemodel.inside = ismember(sourcemodel.tissue, brain);
   else
-    % this returns a boolean vector
-    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift, 'surface', cfg.compartment);
+    % determine the inside positions for one or multiple head model compartments
+    compartments = cfg.compartment;
+    if ~iscell(compartments)
+      compartments = {compartments};
+    end
+    sourcemodel.inside = false(size(sourcemodel.pos,1),1);
+    if numel(compartments)>1
+      % label each position with the compartment that contains it
+      sourcemodel.compartment = repmat({''}, size(sourcemodel.pos,1), 1);
+    end
+    for i=1:numel(compartments)
+      % this returns a boolean vector
+      thisinside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift, 'surface', compartments{i});
+      thisinside = thisinside(:);
+      if numel(compartments)>1
+        % the first compartment that contains a position determines its label
+        newpoints = thisinside & ~sourcemodel.inside;
+        sourcemodel.compartment(newpoints) = compartments(i);
+      end
+      sourcemodel.inside = sourcemodel.inside | thisinside;
+    end
   end
 end % if inside
 
