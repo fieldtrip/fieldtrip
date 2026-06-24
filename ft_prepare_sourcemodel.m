@@ -76,6 +76,8 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %   cfg.tight           = 'yes' or 'no' (default is automatic)
 %   cfg.inwardshift     = number, amount to shift the innermost surface of the headmodel inward when determining
 %                         whether sources are inside or outside the source compartment (default = 0)
+%   cfg.compartment     = string, the head model compartment that sources should be inside, either
+%                         'brain' (default) or 'scalp', see FT_INSIDE_HEADMODEL
 %   cfg.moveinward      = number, amount to move sources inward to ensure a certain minimal distance to the innermost
 %                         surface of the headmodel (default = 0)
 %   cfg.movetocentroids = 'yes' or 'no', move the dipoles to the centroids of the hexahedral
@@ -176,6 +178,7 @@ cfg.unit              = ft_getopt(cfg, 'unit');
 cfg.symmetry          = ft_getopt(cfg, 'symmetry');
 cfg.spmversion        = ft_getopt(cfg, 'spmversion', 'spm12');
 cfg.spherify          = ft_getopt(cfg, 'spherify', 'no');
+cfg.compartment       = ft_getopt(cfg, 'compartment', 'brain'); % the head model compartment that sources should be inside
 cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
 cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic and depends on a triangulation being present
 cfg.checkinside       = ft_getopt(cfg, 'checkinside', 'no'); % default is 'no' since this is a relatively slow procedure. It is also not always required, for example with MEG singlesphere, singleshell, localspheres.
@@ -784,7 +787,7 @@ if ~isfield(sourcemodel, 'inside')
     sourcemodel.inside = ismember(sourcemodel.tissue, brain);
   else
     % this returns a boolean vector
-    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift);
+    sourcemodel.inside = ft_inside_headmodel(sourcemodel.pos, headmodel, 'grad', sens, 'headshape', cfg.headshape, 'inwardshift', cfg.inwardshift, 'surface', cfg.compartment);
   end
 end % if inside
 
