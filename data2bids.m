@@ -1597,12 +1597,12 @@ if need_coordsystem_json
       coordsystem_json.MEGCoordinateSystemDescription      = 'ElektaNeuromag dewar coordinates, orientation RAS';
     else
       % coordinate system for MEG sensors
-      coordsystem_json.MEGCoordinateSystem                 = 'ElektaNeuromag';
+      coordsystem_json.MEGCoordinateSystem                 = 'ElektaNeuromagMEGIN';
       coordsystem_json.MEGCoordinateUnits                  = 'm';
       coordsystem_json.MEGCoordinateSystemDescription      = 'ElektaNeuromag head coordinates, orientation RAS, origin between the ears';
       % coordinate system for head localization coils
       coordsystem_json.HeadCoilCoordinates                 = []; % see below
-      coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromag';
+      coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromagMEGIN';
       coordsystem_json.HeadCoilCoordinateUnits             = 'm';
       coordsystem_json.HeadCoilCoordinateSystemDescription = 'ElektaNeuromag head coordinates, orientation RAS, origin between the ears';
       if isempty(coordsystem_json.HeadCoilCoordinates)
@@ -1614,7 +1614,7 @@ if need_coordsystem_json
       end
       % coordinates of the anatomical landmarks (LPA/RPA/NAS)
       coordsystem_json.AnatomicalLandmarkCoordinates                 = []; % see below
-      coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromag';
+      coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromagMEGIN';
       coordsystem_json.AnatomicalLandmarkCoordinateUnits             = 'm';
       coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'ElektaNeuromag head coordinates, orientation RAS, origin between the ears';
       if isempty(coordsystem_json.AnatomicalLandmarkCoordinates)

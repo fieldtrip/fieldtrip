@@ -466,7 +466,7 @@ switch cfg.method
       ft_error('creating an automatic 3D grid requires either the sensor positions, a headmodel, or a headshape to estimate the extent');
     end
 
-    if isempty(cfg.symmetry) || ~istrue(cfg.symmetry)
+    if isempty(cfg.symmetry)
       % round the limits such that [0 0 0] will be on the grid
       minpos = floor(minpos/cfg.resolution)*cfg.resolution;
       maxpos = ceil( maxpos/cfg.resolution)*cfg.resolution;
