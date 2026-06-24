@@ -142,6 +142,17 @@ if ~isempty(cfg.headshape)
   opt.meshstyle = cfg.meshstyle;
   opt.selected = ismember(elec.label, cfg.channel);
   opt.quit = false;
+
+  % get the boundinp box for the plotting
+  if ~isempty(cfg.mesh)
+    minpos = min(cat(1, opt.mesh.pos),[],1);
+    maxpos = max(cat(1, opt.mesh.pos),[],1);
+  else
+    minpos = min(opt.headshape.pos,[],1);
+    maxpos = max(opt.headshape.pos,[],1);
+  end
+  opt.boundingbox = [minpos(1) maxpos(1) minpos(2) maxpos(2) minpos(3) maxpos(3)];
+
   setappdata(fig, 'opt', opt);
 
   cb_help(fig);
@@ -160,7 +171,7 @@ if ~isempty(cfg.headshape)
 else
   % only keep the desired channels, order them according to the users specification
   cfg.channel = ft_channelselection(cfg.channel, elec.label);
-   
+
   % make the final selection
   [selchan, selsens] = match_str(cfg.channel, elec.label);
   selected = make_selection(elec, selsens);
@@ -454,7 +465,7 @@ if ~isempty(opt.headshape)
   ft_plot_headshape(opt.headshape, options{:}, 'axis', true);
 end
 
-if opt.showmesh && ~isempty(opt.mesh)
+if opt.showmesh && ~isempty(opt.mesh) && any(opt.selected)
   options = ft_cfg2keyval(opt.meshstyle);
   if numel(opt.mesh)==length(opt.elec.label)
     % only plot the mesh for the selected electrodes
@@ -463,6 +474,9 @@ if opt.showmesh && ~isempty(opt.mesh)
     ft_plot_mesh(opt.mesh, options{:});
   end
 end
+
+% set the axis limits such that it does not rescale if sensors are enabled/disabled
+axis(opt.boundingbox);
 
 % plot the selected electrodes
 ft_info('%d out of %d electrodes have been selected\n', sum(opt.selected), length(opt.selected));
