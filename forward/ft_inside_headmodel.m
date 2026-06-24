@@ -16,6 +16,9 @@ function [inside] = ft_inside_headmodel(dippos, headmodel, varargin)
 %   inwardshift = number
 %   grad        = structure with gradiometer information, used for localspheres
 %   headshape   = structure with headshape, used for old CTF localspheres strategy
+%   surface     = string, the compartment that dipoles should be inside, either
+%                 'brain' (default) or 'scalp'/'skin'. Choose 'scalp'/'skin' to
+%                 fit muscle and eye sources outside the brain, as in the HArtMuT model.
 
 % Copyright (C) 2003-2024, Robert Oostenveld
 %
@@ -41,6 +44,7 @@ function [inside] = ft_inside_headmodel(dippos, headmodel, varargin)
 grad        = ft_getopt(varargin, 'grad');
 headshape   = ft_getopt(varargin, 'headshape');
 inwardshift = ft_getopt(varargin, 'inwardshift');
+surface     = ft_getopt(varargin, 'surface', 'brain');
 
 % for backward compatibility
 headmodel = fixpos(headmodel);
@@ -116,8 +120,22 @@ switch ft_headmodeltype(headmodel)
 
   case {'bem', 'dipoli', 'bemcp', 'openmeeg', 'asa', 'singleshell', 'neuromag', 'nolte', 'hbf'}
     % this is a model with a realistic shape described by a triangulated boundary
-    [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
-    inside = surface_inside(dippos, pos, tri);
+    switch surface
+      case 'brain'
+        [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
+        inside = surface_inside(dippos, pos, tri);
+      case {'scalp', 'skin'}
+        % a dipole is in the scalp compartment when it is inside the skin but outside the skull
+        if ~isfield(headmodel, 'bnd') || numel(headmodel.bnd)<2
+          ft_error('the scalp compartment requires a head model with at least two boundaries');
+        end
+        [skinpos, skintri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'skin');
+        order  = surface_nesting(headmodel.bnd, 'outsidefirst');
+        skull  = order(2); % the boundary just inside the skin
+        inside = surface_inside(dippos, skinpos, skintri) & ~surface_inside(dippos, headmodel.bnd(skull).pos, headmodel.bnd(skull).tri);
+      otherwise
+        ft_error('unsupported surface "%s"', surface);
+    end
 
   case {'simbio', 'duneuro'}
     % this is a model with hexahedrons or tetrahedrons
