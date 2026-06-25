@@ -70,7 +70,11 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dipfit.compartment  = string or cell-array, the head model compartment(s) that dipoles should be inside,
 %                             either 'brain' (default) or 'scalp', see FT_INSIDE_HEADMODEL and FT_PREPARE_SOURCEMODEL
 %   cfg.dipfit.hartmut      = 'yes' or 'no' (default = 'no'), use the HArtMuT extension to also fit sources in the
-%                             scalp compartment, e.g. muscle artefacts
+%                             scalp compartment, e.g. muscle artefacts, and the eyes as symmetric dipole pairs
+%   cfg.dipfit.eye          = structure controlling the ocular sources of the HArtMuT extension, with fields
+%                             radius (default 22), interocular (default 68) and offset (default [68 -32], the
+%                             [anterior superior] offset), all in mm, and an optional field pos with the centre
+%                             of one eye in head coordinates, see also private/hartmut_eyemodel.m
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
@@ -240,9 +244,17 @@ end
 % the HArtMuT extension allows fitting sources outside the brain, such as muscle artefacts in the scalp
 cfg.dipfit.hartmut     = ft_getopt(cfg.dipfit, 'hartmut', 'no');
 cfg.dipfit.compartment = ft_getopt(cfg.dipfit, 'compartment', 'brain');
-if istrue(cfg.dipfit.hartmut) && isequal(cfg.dipfit.compartment, 'brain')
-  % by default HArtMuT scans both the brain and the scalp compartment
-  cfg.dipfit.compartment = {'brain', 'scalp'};
+if istrue(cfg.dipfit.hartmut)
+  if isequal(cfg.dipfit.compartment, 'brain')
+    % by default HArtMuT scans both the brain and the scalp compartment
+    cfg.dipfit.compartment = {'brain', 'scalp'};
+  end
+  % the ocular sources are seeded with the default eye geometry, averaged over the HArtMuT
+  % NYhead and Colin27 heads and expressed in mm, see also private/hartmut_eyemodel.m
+  cfg.dipfit.eye             = ft_getopt(cfg.dipfit, 'eye', []);
+  cfg.dipfit.eye.radius      = ft_getopt(cfg.dipfit.eye, 'radius', 22);
+  cfg.dipfit.eye.interocular = ft_getopt(cfg.dipfit.eye, 'interocular', 68);
+  cfg.dipfit.eye.offset      = ft_getopt(cfg.dipfit.eye, 'offset', [68 -32]);
 end
 
 if iscomp
@@ -413,7 +425,12 @@ if strcmp(cfg.gridsearch, 'yes')
     end
     tmpcfg.compartment = cfg.dipfit.compartment;
     sourcemodel = ft_prepare_sourcemodel(tmpcfg);
-    
+
+    if istrue(cfg.dipfit.hartmut)
+      % add ocular source candidates with precomputed fused leadfields to the grid
+      sourcemodel = hartmut_add_eyes(sourcemodel, cfg, sens, headmodel, leadfieldopt);
+    end
+
   end % if precomputed leadfield or not
 
   ngrid = size(sourcemodel.pos,1);

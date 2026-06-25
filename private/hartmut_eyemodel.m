@@ -1,11 +1,11 @@
-function [pos, lraxis] = hartmut_eyemodel(eyecfg, coordsys, unit)
+function [pos, lraxis, centre, radius] = hartmut_eyemodel(eyecfg, coordsys, unit)
 
 % HARTMUT_EYEMODEL returns candidate positions for ocular sources in one eye and the
 % left-right symmetry axis of the coordinate system. It is used by FT_DIPOLEFITTING for
 % the HArtMuT extension, which fits the eyes as a mirror-symmetric dipole pair.
 %
 % Use as
-%   [pos, lraxis] = hartmut_eyemodel(eyecfg, coordsys, unit)
+%   [pos, lraxis, centre, radius] = hartmut_eyemodel(eyecfg, coordsys, unit)
 % where the input is
 %   eyecfg   = structure with fields radius, interocular and offset (all in mm), and an
 %              optional field pos with the centre of one eye in head coordinates
@@ -14,6 +14,8 @@ function [pos, lraxis] = hartmut_eyemodel(eyecfg, coordsys, unit)
 % and the output is
 %   pos      = Nx3 matrix with candidate positions in one eye, empty when they cannot be determined
 %   lraxis   = the left-right symmetry axis, 'x', 'y' or 'z', empty when it cannot be determined
+%   centre   = 1x3 vector with the centre of one eye in head coordinates, empty when not determined
+%   radius   = scalar radius of the eye region in head coordinates
 %
 % The candidate positions are returned for a single eye; the partner in the other eye is
 % its mirror image across the midsagittal plane. The default eye geometry is derived from the
@@ -62,6 +64,7 @@ else
   % the default MNI eye centre does not apply and the user did not specify one
   lefteye = [];
 end
+centre = lefteye;
 
 % determine the left-right axis, this is the axis whose two directions are left and right
 [labelx, labely, labelz] = coordsys2label(coordsys, 0, true);
