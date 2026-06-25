@@ -67,6 +67,10 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dipfit.optimfun     = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
 %   cfg.dipfit.maxiter      = maximum number of function evaluations allowed (default depends on the optimfun)
 %   cfg.dipfit.checkinside  = boolean, check that the dipole remains in the source compartment (default = false)
+%   cfg.dipfit.compartment  = string or cell-array, the head model compartment(s) that dipoles should be inside,
+%                             either 'brain' (default) or 'scalp', see FT_INSIDE_HEADMODEL and FT_PREPARE_SOURCEMODEL
+%   cfg.dipfit.hartmut      = 'yes' or 'no' (default = 'no'), use the HArtMuT extension to also fit sources in the
+%                             scalp compartment, e.g. muscle artefacts
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
@@ -231,6 +235,14 @@ end
 if ft_getopt(cfg.dipfit.constr, 'sequential', false) && strcmp(cfg.model, 'moving')
   ft_error('the moving dipole model does not combine with the sequential constraint')
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
+end
+
+% the HArtMuT extension allows fitting sources outside the brain, such as muscle artefacts in the scalp
+cfg.dipfit.hartmut     = ft_getopt(cfg.dipfit, 'hartmut', 'no');
+cfg.dipfit.compartment = ft_getopt(cfg.dipfit, 'compartment', 'brain');
+if istrue(cfg.dipfit.hartmut) && isequal(cfg.dipfit.compartment, 'brain')
+  % by default HArtMuT scans both the brain and the scalp compartment
+  cfg.dipfit.compartment = {'brain', 'scalp'};
 end
 
 if iscomp
@@ -399,6 +411,7 @@ if strcmp(cfg.gridsearch, 'yes')
     elseif ft_senstype(sens, 'meg')
       tmpcfg.grad = sens;
     end
+    tmpcfg.compartment = cfg.dipfit.compartment;
     sourcemodel = ft_prepare_sourcemodel(tmpcfg);
     
   end % if precomputed leadfield or not
