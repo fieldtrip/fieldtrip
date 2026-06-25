@@ -39,6 +39,7 @@ coordsys = ft_getopt(headmodel, 'coordsys', ft_getopt(sens, 'coordsys', 'unknown
 [eyepos, lraxis, centre, radius] = hartmut_eyemodel(cfg.dipfit.eye, coordsys, sourcemodel.unit);
 if isempty(eyepos)
   % the eye position or symmetry axis could not be determined, keep brain and scalp only
+  ft_warning('the HArtMuT ocular source positions could not be determined, the eyes are fit as single dipoles; provide cfg.dipfit.eye.pos or use an MNI-like coordinate system');
   return
 end
 

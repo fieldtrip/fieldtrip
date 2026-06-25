@@ -255,6 +255,9 @@ if istrue(cfg.dipfit.hartmut)
   cfg.dipfit.eye.radius      = ft_getopt(cfg.dipfit.eye, 'radius', 22);
   cfg.dipfit.eye.interocular = ft_getopt(cfg.dipfit.eye, 'interocular', 68);
   cfg.dipfit.eye.offset      = ft_getopt(cfg.dipfit.eye, 'offset', [68 -32]);
+  if strcmp(cfg.model, 'regional')
+    ft_warning('the HArtMuT extension fits symmetric ocular dipoles only in the moving model, the eyes are fit as single dipoles in the regional model');
+  end
 end
 
 if iscomp
@@ -585,6 +588,8 @@ if strcmp(cfg.nonlinear, 'yes')
           eyeconstr.expand  = [1 2 3 1 2 3];
           eyeconstr.mirror  = ones(1,6); eyeconstr.mirror(3+axisindx) = -1;
           eyeconstr.linkmom = true;
+        else
+          ft_warning('the HArtMuT ocular source positions could not be determined, the eyes are fit as single dipoles; provide cfg.dipfit.eye.pos or use an MNI-like coordinate system');
         end
       end
       for t=1:ntime
