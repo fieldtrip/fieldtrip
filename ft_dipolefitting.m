@@ -570,14 +570,40 @@ if strcmp(cfg.nonlinear, 'yes')
       % instead of using dip(t) = ft_inverse_dipolefit(dip(t),...), I am using temporary variables dipin and dipout
       % to prevent errors like "Subscripted assignment between dissimilar structures"
       dipin = dip;
+      % in HArtMuT mode, prepare to refine an ocular source as a symmetric, linked-moment
+      % dipole pair; this is only possible per topography, hence for the moving model
+      eyeconstr = [];
+      if istrue(cfg.dipfit.hartmut)
+        coordsys = ft_getopt(headmodel, 'coordsys', ft_getopt(sens, 'coordsys', 'unknown'));
+        unit     = ft_getopt(headmodel, 'unit',     ft_getopt(sens, 'unit', 'mm'));
+        [dum, eyeaxis, eyecentre, eyeradius] = hartmut_eyemodel(cfg.dipfit.eye, coordsys, unit);
+        if ~isempty(eyeaxis) && ~isempty(eyecentre)
+          axisindx  = find(strcmp({'x', 'y', 'z'}, eyeaxis));
+          eyemirror = ones(1,3); eyemirror(axisindx) = -1;
+          eyeconstr = ft_getopt(cfg.dipfit, 'constr', []);
+          eyeconstr.reduce  = [1 2 3];
+          eyeconstr.expand  = [1 2 3 1 2 3];
+          eyeconstr.mirror  = ones(1,6); eyeconstr.mirror(3+axisindx) = -1;
+          eyeconstr.linkmom = true;
+        end
+      end
       for t=1:ntime
+        thisdip       = dipin(t);
+        thisdipfitopt = dipfitopt;
+        if ~isempty(eyeconstr) && (sum((thisdip.pos(1,:)-eyecentre).^2)<=eyeradius^2 || sum((thisdip.pos(1,:)-eyecentre.*eyemirror).^2)<=eyeradius^2)
+          % the start position lies in an eye, refine it as a symmetric, linked-moment pair
+          thisdip.pos   = [thisdip.pos(1,:); thisdip.pos(1,:).*eyemirror];
+          thisdip.mom   = zeros(6,1);
+          thisdipfitopt = ft_setopt(thisdipfitopt, 'constr', eyeconstr);
+          thisdipfitopt = ft_setopt(thisdipfitopt, 'checkinside', false); % the eye is outside the brain
+        end
         % catch errors due to non-convergence
         try
-          dipout(t) = ft_inverse_dipolefit(dipin(t), sens, headmodel, Vdata(:,t), dipfitopt{:}, leadfieldopt{:});
+          dipout(t) = ft_inverse_dipolefit(thisdip, sens, headmodel, Vdata(:,t), thisdipfitopt{:}, leadfieldopt{:});
           success(t) = 1;
-          if cfg.numdipoles==1
+          if size(dipout(t).pos,1)==1
             ft_info('found minimum after non-linear optimization for topography %d on [%g %g %g]\n', t, dipout(t).pos(1), dipout(t).pos(2), dipout(t).pos(3));
-          elseif cfg.numdipoles==2
+          else
             ft_info('found minimum after non-linear optimization for topography %d on [%g %g %g; %g %g %g]\n', t, dipout(t).pos(1,1), dipout(t).pos(1,2), dipout(t).pos(1,3), dipout(t).pos(2,1), dipout(t).pos(2,2), dipout(t).pos(2,3));
           end
         catch
