@@ -1583,7 +1583,7 @@ if need_coordsystem_json
       end
     end % if emptyroom
 
-  elseif isfield(hdr, 'grad') && ft_senstype(hdr.grad, 'neuromag')
+  elseif isfield(hdr, 'grad') && (ft_senstype(hdr.grad, 'neuromag') || ft_senstype(hdr.grad, 'fieldline_v3'))
 
     if ~issubfield(hdr, 'orig.dig')
       % the data was not read using the default Neuromag import function
