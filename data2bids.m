@@ -1594,17 +1594,17 @@ if need_coordsystem_json
       ft_notice('this seems to be an empty room recording')
       coordsystem_json.MEGCoordinateSystem                 = 'Other';
       coordsystem_json.MEGCoordinateUnits                  = 'm';
-      coordsystem_json.MEGCoordinateSystemDescription      = 'ElektaNeuromag dewar coordinates, orientation RAS';
+      coordsystem_json.MEGCoordinateSystemDescription      = 'NeuromagElekta dewar coordinates, orientation RAS';
     else
       % coordinate system for MEG sensors
-      coordsystem_json.MEGCoordinateSystem                 = 'ElektaNeuromagMEGIN';
+      coordsystem_json.MEGCoordinateSystem                 = 'NeuromagElektaMEGIN';
       coordsystem_json.MEGCoordinateUnits                  = 'm';
-      coordsystem_json.MEGCoordinateSystemDescription      = 'ElektaNeuromag head coordinates, orientation RAS, origin between the ears';
+      coordsystem_json.MEGCoordinateSystemDescription      = 'NeuromagElekta head coordinates, orientation RAS, origin between the ears';
       % coordinate system for head localization coils
       coordsystem_json.HeadCoilCoordinates                 = []; % see below
-      coordsystem_json.HeadCoilCoordinateSystem            = 'ElektaNeuromagMEGIN';
+      coordsystem_json.HeadCoilCoordinateSystem            = 'NeuromagElektaMEGIN';
       coordsystem_json.HeadCoilCoordinateUnits             = 'm';
-      coordsystem_json.HeadCoilCoordinateSystemDescription = 'ElektaNeuromag head coordinates, orientation RAS, origin between the ears';
+      coordsystem_json.HeadCoilCoordinateSystemDescription = 'NeuromagElekta head coordinates, orientation RAS, origin between the ears';
       if isempty(coordsystem_json.HeadCoilCoordinates)
         idxHPI = find([hdr.orig.dig.kind] == 2); % count the kind==2 (HLU in the Elekta/Megin system), usually 4 or 5
         for i=1:length(idxHPI)
@@ -1614,9 +1614,9 @@ if need_coordsystem_json
       end
       % coordinates of the anatomical landmarks (LPA/RPA/NAS)
       coordsystem_json.AnatomicalLandmarkCoordinates                 = []; % see below
-      coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'ElektaNeuromagMEGIN';
+      coordsystem_json.AnatomicalLandmarkCoordinateSystem            = 'NeuromagElektaMEGIN';
       coordsystem_json.AnatomicalLandmarkCoordinateUnits             = 'm';
-      coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'ElektaNeuromag head coordinates, orientation RAS, origin between the ears';
+      coordsystem_json.AnatomicalLandmarkCoordinateSystemDescription = 'NeuromagElekta head coordinates, orientation RAS, origin between the ears';
       if isempty(coordsystem_json.AnatomicalLandmarkCoordinates)
         coordsystem_json = rmfield(coordsystem_json, 'AnatomicalLandmarkCoordinates'); % needed to set the names afterwards
         coordsystem_json.AnatomicalLandmarkCoordinates.lpa = hdr.orig.dig(1).r';
