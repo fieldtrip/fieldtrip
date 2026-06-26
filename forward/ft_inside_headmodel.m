@@ -123,7 +123,9 @@ switch ft_headmodeltype(headmodel)
     switch surface
       case 'brain'
         [pos, tri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'brain');
-        inside = surface_inside(dippos, pos, tri);
+        % surface_inside returns 1, 0, or nan for a degenerate point that lands on the mesh,
+        % the ==1 coerces it to a clean logical so the caller always gets a boolean vector
+        inside = surface_inside(dippos, pos, tri) == 1;
       case {'scalp', 'skin'}
         % a dipole is in the scalp compartment when it is inside the skin but outside the skull
         if ~isfield(headmodel, 'bnd') || numel(headmodel.bnd)<2
@@ -132,7 +134,11 @@ switch ft_headmodeltype(headmodel)
         [skinpos, skintri] = headsurface(headmodel, [], 'inwardshift', inwardshift, 'surface', 'skin');
         order  = surface_nesting(headmodel.bnd, 'outsidefirst');
         skull  = order(2); % the boundary just inside the skin
-        inside = surface_inside(dippos, skinpos, skintri) & ~surface_inside(dippos, headmodel.bnd(skull).pos, headmodel.bnd(skull).tri);
+        % coerce each test to a logical first, a degenerate point gives nan and nan cannot
+        % be combined with the & operator
+        inskin  = surface_inside(dippos, skinpos, skintri) == 1;
+        inskull = surface_inside(dippos, headmodel.bnd(skull).pos, headmodel.bnd(skull).tri) == 1;
+        inside  = inskin & ~inskull;
       otherwise
         ft_error('unsupported surface "%s"', surface);
     end

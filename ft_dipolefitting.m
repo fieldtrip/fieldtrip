@@ -448,6 +448,20 @@ if strcmp(cfg.gridsearch, 'yes')
   end
   
   insideindx = find(sourcemodel.inside);
+
+  if size(sourcemodel.pos,2)==3
+    if ~isfield(sourcemodel, 'leadfield')
+      sourcemodel.leadfield = cell(size(sourcemodel.pos,1), 1);
+    end
+    needindx = insideindx(cellfun(@isempty, sourcemodel.leadfield(insideindx)));
+    if ~isempty(needindx)
+      lfall = ft_compute_leadfield(sourcemodel.pos(needindx,:), sens, headmodel, leadfieldopt{:});
+      for i=1:numel(needindx)
+        sourcemodel.leadfield{needindx(i)} = lfall(:, (3*i-2):(3*i));
+      end
+    end
+  end
+
   ft_progress('init', cfg.feedback, 'scanning grid');
   for i=1:length(insideindx)
     ft_progress(i/length(insideindx), 'scanning grid location %d/%d\n', i, length(insideindx));
@@ -547,6 +561,11 @@ switch cfg.model
     ft_error('unsupported cfg.model');
 end % switch model
 
+% track which moving-model topographies are fit as a HArtMuT symmetric ocular pair, so the
+% final moment estimate keeps the pair linked (mom2 = mommap*mom1) the same way the fit did
+eyelinkmom = false(1, ntime);
+eyemommap  = eye(3);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % perform the non-linear fit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -588,6 +607,7 @@ if strcmp(cfg.nonlinear, 'yes')
           eyeconstr.expand  = [1 2 3 1 2 3];
           eyeconstr.mirror  = ones(1,6); eyeconstr.mirror(3+axisindx) = -1;
           eyeconstr.linkmom = true;
+          eyemommap         = ft_getopt(eyeconstr, 'mommap', eye(3));
         else
           ft_warning('the HArtMuT ocular source positions could not be determined, the eyes are fit as single dipoles; provide cfg.dipfit.eye.pos or use an MNI-like coordinate system');
         end
@@ -601,6 +621,7 @@ if strcmp(cfg.nonlinear, 'yes')
           thisdip.mom   = zeros(6,1);
           thisdipfitopt = ft_setopt(thisdipfitopt, 'constr', eyeconstr);
           thisdipfitopt = ft_setopt(thisdipfitopt, 'checkinside', false); % the eye is outside the brain
+          eyelinkmom(t) = true;
         end
         % catch errors due to non-convergence
         try
@@ -673,7 +694,15 @@ switch cfg.model
           lf = dip(t).lf;
         end
         % compute all details of the final dipole model
-        dip(t).mom = pinv(lf)*Vdata(:,t);
+        if eyelinkmom(t)
+          % a HArtMuT ocular pair shares one moment, mom2 = mommap*mom1, so estimate the
+          % shared moment against the fused leadfield instead of fitting the two independently
+          lfc = lf(:,1:3) + lf(:,4:6)*eyemommap;
+          mc  = pinv(lfc)*Vdata(:,t);
+          dip(t).mom = [mc; eyemommap*mc];
+        else
+          dip(t).mom = pinv(lf)*Vdata(:,t);
+        end
         dip(t).pot = lf*dip(t).mom;
         dip(t).rv  = rv(Vdata(:,t), dip(t).pot);
         Vmodel(:,t) = dip(t).pot;
