@@ -337,7 +337,7 @@ end
 
 if strcmp(cfg.demean, 'yes')
   % optionally perform baseline correction on each trial
-  ft_info('baseline correcting data \n');
+  ft_info('demeaning data per trial\n');
   for trial=1:Ntrials
     data.trial{trial} = ft_preproc_baselinecorrect(data.trial{trial});
   end
