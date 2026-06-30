@@ -49,8 +49,17 @@ function [rej_comp, artifact] = ft_icabrowser(cfg, comp)
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+persistent prev_comp_hash prev_freq
+
 % check if the input data is valid for this function
 comp = ft_checkdata(comp, 'datatype', 'raw+comp', 'hassampleinfo', 'yes');
+comp_hash = ft_hash(removefields(comp, 'cfg'));
+if isequal(comp_hash, prev_comp_hash)
+  sameinputdata = true;
+else
+  sameinputdata  = false;
+  prev_comp_hash = comp_hash;
+end
 
 % set the defaults
 layout        = ft_getopt(cfg, 'layout');
@@ -86,8 +95,8 @@ if ~ismember(freqscale, {'lin', 'log'})
   freqscale = 'lin';
 end
 
-if numel(comp.trial)==1 && isequal(cfg.chunklength, 'trial')
-  fprintf('Using a default chunk length = 2 seconds\n');
+if isscalar(comp.trial) && isequal(cfg.chunklength, 'trial')
+  fprintf('Using a default chunk length = 2 seconds, assuming the single trial input is too long to make sense\n');
   cfg.chunklength = 2;
 end
 
@@ -99,6 +108,9 @@ if ~isequal(cfg.chunklength, 'trial')
   cfgredef.keeppartial = 'yes';
   cfgredef.updatetrialinfo = 'yes';
   newcomp  = ft_redefinetrial(cfgredef, comp);
+
+  % update the blocksize
+  blocksize = cfg.chunklength;
 else
   newcomp = comp;
 end
@@ -113,21 +125,26 @@ for s = 1:numel(newcomp.trial)
 end
 comp_time = 1:size(comp_var,2);
 
-% NEW: precompute the spectra
-fprintf('Computing power spectra\n');
-hasnan = false(numel(newcomp.trial),1);
-for s = 1:numel(newcomp.trial)
-  hasnan(s) = any(~isfinite(newcomp.trial{s}(:)));
+if ~sameinputdata
+  % NEW: precompute the spectra
+  fprintf('Computing power spectra\n');
+  hasnan = false(numel(newcomp.trial),1);
+  for s = 1:numel(newcomp.trial)
+    hasnan(s) = any(~isfinite(newcomp.trial{s}(:)));
+  end
+  cfgfreq = [];
+  cfgfreq.method = 'mtmfft';
+  cfgfreq.taper  = 'hanning';
+  cfgfreq.pad    = 10;
+  cfgfreq.trials = find(~hasnan);
+  if ~isempty(cfg.foilim)
+    cfgfreq.foilim = cfg.foilim;
+  end
+  freq      = ft_freqanalysis(cfgfreq, newcomp);
+  prev_freq = freq;
+else
+  freq = prev_freq;
 end
-cfgfreq = [];
-cfgfreq.method = 'mtmfft';
-cfgfreq.taper  = 'hanning';
-cfgfreq.pad    = 10;
-cfgfreq.trials = find(~hasnan);
-if ~isempty(cfg.foilim)
-  cfgfreq.foilim = cfg.foilim;
-end
-freq = ft_freqanalysis(cfgfreq, newcomp);
 
 % preallocate rejected components
 rej_comp = false(size(comp.label,1),1);
@@ -257,15 +274,16 @@ while err == 0 % KEEP GOING UNTIL THERE IS AN ERROR
     % ------------------------------------------------
     % PLOT POWER SPECTRUM
     % ------------------------------------------------
-    strt = find(freq.freq > 1,1,'first');
-    stp  = find(freq.freq < 200,1,'last');
+    flim = [1 200];
+    strt = find(freq.freq > flim(1), 1, 'first');
+    stp  = find(freq.freq < flim(2), 1, 'last');
     subcomp{2,row} = subplot(numOfPlots,4,row*4-2, 'tag', sprintf('freq_%s', comp.label{compNum}));
     xlabel('Frequency (Hz)'); grid on;
     
     if strcmp(powscale, 'log10')
       dat = log10(freq.powspctrm(compNum, strt:stp));
       plot(freq.freq(strt:stp), dat);
-      set(gca, 'ylim', max(dat)+[-2 0], 'xlim', freq.freq([strt stp]));
+      set(gca, 'ylim', [min(dat) max(dat)], 'xlim', freq.freq([strt stp]));
       ylabel('PSD (dB/Hz)');
     else
       plot(freq.freq(strt:stp),freq.powspctrm(compNum, strt:stp));
@@ -445,7 +463,7 @@ rej_comp = find(rej_comp);
     cfgtc.blocksize     = blocksize;
     cfgtc.showcallinfo  = showcallinfo;
     cfgtc.linecolor     = 'k';
-
+    cfgtc.allowoverlap  = 'yes';
     ft_info off;
     cfgout = ft_databrowser(cfgtc, comp);
     if isfield(cfgout, 'artfctdef') && isfield(cfgout.artfctdef, 'visual')
@@ -518,7 +536,6 @@ rej_comp = find(rej_comp);
     else
       freqscale = 'log';
     end
-    clf;
     uiresume;
   end
 
