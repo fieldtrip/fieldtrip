@@ -169,8 +169,8 @@ sm.inside = false(0,1);
 
 cfge = [];
 cfge.dipfit.eye.radius      = 8;  % mm, small so the candidate grid stays tiny
-cfge.dipfit.eye.interocular = 68; % mm
-cfge.dipfit.eye.offset      = [68 -32]; % mm
+cfge.dipfit.eye.interocular = 70; % mm
+cfge.dipfit.eye.offset      = [72 -25]; % mm
 cfge.dipfit.constr.mommap   = eye(3);
 
 leadfieldopt = {}; % defaults
@@ -233,9 +233,9 @@ assert(ft_inside_headmodel(fitpos, ommodel, 'surface', 'scalp'), 'the muscle sou
 
 %% check 6: a symmetric ocular source comes back as a linked dipole pair
 % simulate a synchronous pair at the default MNI eye centres, then fit moving. The default
-% centre is [-interocular/2, offset(1), offset(2)] = [-34 68 -32] mm, see hartmut_eyemodel;
+% centre is [-interocular/2, offset(1), offset(2)] = [-35 72 -25] mm, see hartmut_eyemodel;
 % hartmut_add_eyes (exercised in check 4) builds it the same way during the fit.
-pL = [-34 68 -32];          % left eye centre, mm
+pL = [-35 72 -25];          % left eye centre, mm
 pR = pL .* [-1 1 1];        % right eye centre
 mom = [0.8 0.2 -0.4]';
 

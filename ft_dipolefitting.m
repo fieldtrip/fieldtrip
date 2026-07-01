@@ -72,7 +72,7 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dipfit.hartmut      = 'yes' or 'no' (default = 'no'), use the HArtMuT extension to also fit sources in the
 %                             scalp compartment, e.g. muscle artefacts, and the eyes as symmetric dipole pairs
 %   cfg.dipfit.eye          = structure controlling the ocular sources of the HArtMuT extension, with fields
-%                             radius (default 22), interocular (default 68) and offset (default [68 -32], the
+%                             radius (default 22), interocular (default 70) and offset (default [72 -25], the
 %                             [anterior superior] offset), all in mm, and an optional field pos with the centre
 %                             of one eye in head coordinates, see also private/hartmut_eyemodel.m
 %
@@ -281,6 +281,10 @@ end
 % this will also update cfg.channel to match the electrodes/gradiometers
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
 
+if istrue(cfg.dipfit.hartmut) && ~ft_senstype(sens, 'eeg')
+  ft_error('the HArtMuT extension is only supported for EEG');
+end
+
 % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and FT_INVERSE_DIPOLEFIT
 leadfieldopt = {};
 leadfieldopt = ft_setopt(leadfieldopt, 'reducerank',     ft_getopt(cfg, 'reducerank'));
@@ -451,7 +455,10 @@ if strcmp(cfg.gridsearch, 'yes')
   
   insideindx = find(sourcemodel.inside);
 
-  if size(sourcemodel.pos,2)==3
+  if istrue(cfg.dipfit.hartmut) && size(sourcemodel.pos,2)==3
+    % HArtMuT mixes precomputed eye leadfields with empty brain and scalp entries, so
+    % batch-compute the missing ones up front; the ordinary fit keeps its lazy per-point
+    % computation in the scan loop below to preserve its memory footprint
     if ~isfield(sourcemodel, 'leadfield')
       sourcemodel.leadfield = cell(size(sourcemodel.pos,1), 1);
     end
