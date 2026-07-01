@@ -18,9 +18,10 @@ function [pos, lraxis, centre, radius] = hartmut_eyemodel(eyecfg, coordsys, unit
 %   radius   = scalar radius of the eye region in head coordinates
 %
 % The candidate positions are returned for a single eye; the partner in the other eye is
-% its mirror image across the midsagittal plane. The default eye geometry is derived from the
-% open-source HArtMuT models HArtMuT_NYhead_small and HArtMuT_mix_Colin27_small, which are both
-% in MNI coordinates and available from https://github.com/harmening/HArtMuT/tree/main/HArtMuTmodels.
+% its mirror image across the midsagittal plane. The default eye geometry is taken from the HArtMuT
+% NYhead (MNI ICBM152) model, available from https://github.com/harmening/HArtMuT/tree/main/HArtMuTmodels;
+% the ICBM152 head has no eye cavities and its eyes sit higher than in the Colin27 head, so the
+% defaults stay clear of the skull when transformed to an individual.
 % The defaults therefore only apply to an MNI-like coordinate system. When neither the eye centre
 % nor the symmetry axis can be determined, the caller should fall back to fitting a single dipole.
 %
@@ -67,10 +68,10 @@ end
 centre = lefteye;
 
 % determine the left-right axis, this is the axis whose two directions are left and right
-[labelx, labely, labelz] = coordsys2label(coordsys, 0, true);
+[labelx, labely, labelz] = coordsys2label(coordsys, 1, true);
 labels = {labelx, labely, labelz};
 for i=1:3
-  if all(ismember(labels{i}, {'L', 'R'}))
+  if all(ismember(labels{i}, {'left', 'right'}))
     lraxis = name{i};
   end
 end

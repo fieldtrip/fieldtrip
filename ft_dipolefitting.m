@@ -249,12 +249,14 @@ if istrue(cfg.dipfit.hartmut)
     % by default HArtMuT scans both the brain and the scalp compartment
     cfg.dipfit.compartment = {'brain', 'scalp'};
   end
-  % the ocular sources are seeded with the default eye geometry, averaged over the HArtMuT
-  % NYhead and Colin27 heads and expressed in mm, see also private/hartmut_eyemodel.m
+  % the ocular sources are seeded with the default eye geometry from the HArtMuT NYhead
+  % (MNI ICBM152) head, in mm; the ICBM152 eyes sit higher than the Colin27 ones, so transforming
+  % these defaults to an individual head is less likely to land inside the skull, see also
+  % private/hartmut_eyemodel.m
   cfg.dipfit.eye             = ft_getopt(cfg.dipfit, 'eye', []);
   cfg.dipfit.eye.radius      = ft_getopt(cfg.dipfit.eye, 'radius', 22);
-  cfg.dipfit.eye.interocular = ft_getopt(cfg.dipfit.eye, 'interocular', 68);
-  cfg.dipfit.eye.offset      = ft_getopt(cfg.dipfit.eye, 'offset', [68 -32]);
+  cfg.dipfit.eye.interocular = ft_getopt(cfg.dipfit.eye, 'interocular', 70);
+  cfg.dipfit.eye.offset      = ft_getopt(cfg.dipfit.eye, 'offset', [72 -25]);
   if strcmp(cfg.model, 'regional')
     ft_warning('the HArtMuT extension fits symmetric ocular dipoles only in the moving model, the eyes are fit as single dipoles in the regional model');
   end
