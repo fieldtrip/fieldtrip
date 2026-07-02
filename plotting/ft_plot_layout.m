@@ -26,7 +26,7 @@ function ft_plot_layout(layout, varargin)
 %   'interpreter' = string, 'none', 'tex' or 'latex' (default = 'tex')
 %
 % The following options control the markers of the sensors. If any is defined, the other two must be defined as well.
-% Further note that if 'chanindx' is used, the number of elements in each choice should correspond to the original 
+% Further note that if 'chanindx' is used, the number of elements in each choice should correspond to the original
 % labels in the layout, and not to the chosen subset.
 %   'pointsymbol' = string with symbol (e.g. 'o' or 'oooxxx')
 %   'pointcolor'  = string with color (e.g. 'k'), or an NX3 matrix of RGB values
@@ -41,7 +41,7 @@ function ft_plot_layout(layout, varargin)
 %
 % See also FT_PREPARE_LAYOUT, FT_PLOT_TOPO
 
-% Copyright (C) 2009-2022, Robert Oostenveld
+% Copyright (C) 2009-2026, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -67,18 +67,18 @@ hpos         = ft_getopt(varargin, 'hpos',         0);
 vpos         = ft_getopt(varargin, 'vpos',         0);
 width        = ft_getopt(varargin, 'width',        []);
 height       = ft_getopt(varargin, 'height',       []);
-point        = ft_getopt(varargin, 'point',        true);
 box          = ft_getopt(varargin, 'box',          true);
 label        = ft_getopt(varargin, 'label',        true);
+point        = ft_getopt(varargin, 'point',        ~istrue(label));
 labeloffset  = ft_getopt(varargin, 'labeloffset',  0);
 labelxoffset = ft_getopt(varargin, 'labelxoffset', labeloffset);
 labelyoffset = ft_getopt(varargin, 'labelyoffset', labeloffset*1.5);
 mask         = ft_getopt(varargin, 'mask',         true);
 outline      = ft_getopt(varargin, 'outline',      true);
 verbose      = ft_getopt(varargin, 'verbose',      false);
-pointsymbol  = ft_getopt(varargin, 'pointsymbol');
-pointcolor   = ft_getopt(varargin, 'pointcolor');
-pointsize    = ft_getopt(varargin, 'pointsize');
+pointsymbol  = ft_getopt(varargin, 'pointsymbol',  '.');
+pointcolor   = ft_getopt(varargin, 'pointcolor',   'b');
+pointsize    = ft_getopt(varargin, 'pointsize',    6);
 
 % these have to do with the font
 fontcolor   = ft_getopt(varargin, 'fontcolor', 'k'); % default is black
@@ -93,7 +93,6 @@ interpreter  = ft_getopt(varargin, 'interpreter', 'none'); % none, tex or latex
 labelrotate   = ft_getopt(varargin, 'labelrotate',  0);
 labelalignh   = ft_getopt(varargin, 'labelalignh',  'center');
 labelalignv   = ft_getopt(varargin, 'labelalignv',  'middle');
-labelcolor    = ft_getopt(varargin, 'labelcolor',   'k');
 
 % convert between true/false/yes/no etc. statements
 point   = istrue(point);
@@ -118,21 +117,10 @@ end
 
 % make a selection of the channels
 if ~isempty(chanindx)
-  nchan = length(layout.label);
   layout.pos    = layout.pos(chanindx,:);
   layout.width  = layout.width(chanindx);
   layout.height = layout.height(chanindx);
   layout.label  = layout.label(chanindx);
-  if numel(pointsymbol)==nchan
-    pointsymbol = pointsymbol(chanindx);
-  end
-  if numel(pointsize)==nchan
-    pointsize = pointsize(chanindx);
-  end
-  if size(pointcolor,1)==nchan
-    pointcolor = pointcolor(chanindx,:); % these are RGB triplets
-  end
-  clear nchan
 end
 
 % the units can be arbitrary (e.g. relative or pixels), so we need to compute the right scaling factor and offset
@@ -176,59 +164,54 @@ Height = layout.height*yScaling;
 Lbl    = layout.label;
 
 if point
-  if ~isempty(pointsymbol) && ~isempty(pointcolor) && ~isempty(pointsize) % if they're all non-empty, don't use the default
-    ncol = size(pointcolor, 1);
-    nsym = numel(pointsymbol);
-    nsiz = numel(pointsize);
-    if (ncol == nsym) && (nsym == nsiz) && nsiz == 1 % One value for all
-      plot(X, Y, 'marker', pointsymbol, 'color', pointcolor, 'markersize', pointsize, 'linestyle', 'none');
-    else % One of the parameters has more than one value, loop
-    % Expand the values to match the number of plotted markers
-      if ncol == 1
-        pointcolor = repmat(pointcolor, numel(X), 1);
-      end
-      if nsym == 1
-        pointsymbol = repmat(pointsymbol, numel(X), 1);
-      end
-      if nsiz == 1
-        pointsize = repmat(pointsize, [numel(X) 1]);
-      end  
-    % Loop
-    for k = 1:numel(X)
-      plot(X(k), Y(k), 'marker', pointsymbol(k), 'markerfacecolor', pointcolor(k, :), 'markersize', pointsize(k), 'color', [0 0 0]);
-    end
-    end
+  % check whether a for loop is required, otherwise the points can be printed in a single shot
+  if size(pointcolor, 1)==1 && isscalar(pointsymbol) && isscalar(pointsize)
+    plot(X, Y, 'marker', pointsymbol, 'markerfacecolor', pointcolor, 'markersize', pointsize, 'linestyle','none');
   else
-    plot(X, Y, 'marker', '.', 'color', 'b', 'linestyle', 'none');
-    plot(X, Y, 'marker', 'o', 'color', 'y', 'linestyle', 'none');
-  end
-end
+    if size(pointcolor, 1)==1
+      pointcolor = repmat(pointcolor, numel(X), 1);
+    end
+    if isscalar(pointsymbol)
+      pointsymbol = repmat(pointsymbol, numel(X), 1);
+    end
+    if isscalar(pointsize)
+      pointsize = repmat(pointsize, numel(X), 1);
+    end
+    for k = 1:numel(X)
+      plot(X(k), Y(k), 'marker', pointsymbol(k), 'markerfacecolor', pointcolor(k, :), 'markersize', pointsize(k), 'linestyle','none');
+    end % for all points
+  end % if for loop needed
+end % if point
 
 if label
   % the MATLAB text function fails if the position for the string is specified in single precision
   X = double(X);
   Y = double(Y);
 
-  % check whether fancy label plotting is needed, this requires a for loop,
-  % otherwise print text in a single shot
-  if numel(labelrotate)==1
-    text(X+labelxoffset, Y+labelyoffset, Lbl , 'interpreter', interpreter, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+  % check whether a for loop is required, otherwise the labels can be printed in a single shot
+  if isscalar(labelrotate) && isscalar(labelxoffset) && isscalar(labelyoffset) && ischar(labelalignh) && ischar(labelalignv)
+    text(X+labelxoffset, Y+labelyoffset, Lbl, 'horizontalalignment', labelalignh, 'verticalalignment', labelalignv, 'rotation', labelrotate, 'interpreter', interpreter, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
   else
-    n = numel(Lbl);
-    if ~iscell(labelalignh)
-      labelalignh = repmat({labelalignh},[n 1]);
+    if isscalar(labelrotate)
+      labelrotate = repmat(labelrotate, size(Lbl));
     end
-    if ~iscell(labelalignv)
-      labelalignv = repmat({labelalignv},[n 1]);
+    if isscalar(labelxoffset)
+      labelxoffset = repmat(labelxoffset, size(Lbl));
     end
-    if numel(Lbl)~=numel(labelrotate)||numel(Lbl)~=numel(labelalignh)||numel(Lbl)~=numel(labelalignv)
-      error('there is something wrong with the input arguments');
+    if isscalar(labelyoffset)
+      labelyoffset = repmat(labelyoffset, size(Lbl));
     end
-    for k = 1:numel(Lbl)
-      h = text(X(k)+labelxoffset, Y(k)+labelyoffset, Lbl{k}, 'interpreter', interpreter, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+    if ischar(labelalignh)
+      labelalignh = repmat({labelalignh}, size(Lbl));
     end
-  end
-end
+    if ischar(labelalignv)
+      labelalignv = repmat({labelalignv}, size(Lbl));
+    end
+    for k=1:numel(Lbl)
+      text(X(k)+labelxoffset(k), Y(k)+labelyoffset(k), Lbl{k}, 'horizontalalignment', labelalignh{k}, 'verticalalignment', labelalignv{k}, 'rotation', labelrotate(k), 'interpreter', interpreter, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight);
+    end % for all labels
+  end % if for loop needed
+end % if label
 
 if box
   line([X-Width/2 X+Width/2 X+Width/2 X-Width/2 X-Width/2]',[Y-Height/2 Y-Height/2 Y+Height/2 Y+Height/2 Y-Height/2]', 'color', [0 0 0]);
