@@ -2,10 +2,9 @@ function [data] = ft_denoise_ssp(cfg, varargin)
 
 % FT_DENOISE_SSP projects out topographies based on ambient noise on
 % Neuromag/Elekta/MEGIN systems. These topographies are estimated during maintenance
-% visits from the engineers of MEGIN.
-% Alternatively, computes projectors from reference data (e.g., empty room) if it
-% is given as an additional input. For best results, make sure to preprocess
-% the reference data the same as the data to denoise.
+% visits from the engineers of MEGIN. Alternatively, it computes the projectors from
+% reference data (e.g., empty room) if it is given as an additional input. For the 
+% best results, make sure to preprocess the reference data the same as the data to denoise.
 %
 % Use as
 %   [data] = ft_denoise_ssp(cfg, data)
@@ -14,16 +13,19 @@ function [data] = ft_denoise_ssp(cfg, varargin)
 % where the input data should come from FT_PREPROCESSING or
 % FT_TIMELOCKANALYSIS and the configuration should contain
 %   cfg.channel    = the channels to be denoised (default = 'all')
-%   cfg.refchannel = the channels used as reference signal (default = 'MEG')
 %   cfg.trials     = 'all' or a selection given as a 1xN vector (default = 'all')
 %   cfg.ssp        = 'all' or a cell array of SSP names to apply (default = 'all')
 %   cfg.updatesens = 'yes' or 'no', whether to update the sensor array with the spatial projector (default = 'yes')
 %
-% If refdata is specified, the configuration should also contain
+% If refdata is specified, this data will be used for the computation of the spatial projectors, by performing a PCA 
+% on-the-fly. In this situation, the configuration should also contain
 %   cfg.numcomponent = number of principal components to project out of the data
 %                      (default = 3)
+%   cfg.refchannel   = the channels used as reference signal (default = 'MEG')
+%   cfg.reftrials    = 'all' or a selection given as a 1xN vector, specifies which trials to use 
+%                      from the reference data (default = 'all')
 %
-% To facilitate data-handling and distributed cmputing you can use
+% To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
 %   cfg.outputfile  =  ...
 % If you specify one of these (or both) the input data will be read from a *.mat
@@ -35,7 +37,7 @@ function [data] = ft_denoise_ssp(cfg, varargin)
 % FT_DENOISE_HFC, FT_DENOISE_PCA, FT_DENOISE_PREWHITEN, FT_DENOISE_SSS,
 % FT_DENOISE_SYNTHETIC, FT_DENOISE_TSR
 
-% Copyright (C) 2004-2022, Gianpaolo Demarchi, Lau Møller Andersen, Robert Oostenveld, Jan-Mathijs Schoffelen
+% Copyright (C) 2004-2026, Gianpaolo Demarchi, Lau Møller Andersen, Robert Oostenveld, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -72,28 +74,26 @@ if ft_abort
   return
 end
 
-% check if the input data is valid for this function
-for i=1:length(varargin)
-  varargin{i} = ft_checkdata(varargin{i}, 'datatype', 'raw');
-end
-
 % check if the input cfg is valid for this function
 cfg = ft_checkconfig(cfg, 'forbidden',  {'trial'}); % prevent accidental typos, see issue 1729
 
 % set the defaults
-cfg.ssp          = ft_getopt(cfg, 'ssp', 'all');
-cfg.trials       = ft_getopt(cfg, 'trials', 'all', 1);
-cfg.updatesens   = ft_getopt(cfg, 'updatesens', 'yes');
+cfg.ssp          = ft_getopt(cfg, 'ssp',          'all');
+cfg.trials       = ft_getopt(cfg, 'trials',       'all', 1);
+cfg.reftrials    = ft_getopt(cfg, 'reftrials',    'all');
+cfg.updatesens   = ft_getopt(cfg, 'updatesens',   'yes');
 cfg.numcomponent = ft_getopt(cfg, 'numcomponent', 3);
-cfg.channel      = ft_getopt(cfg, 'channel', 'all');
-cfg.refchannel   = ft_getopt(cfg, 'channel', 'MEG');
+cfg.component    = ft_getopt(cfg, 'component');
+cfg.channel      = ft_getopt(cfg, 'channel',      'all');
+cfg.refchannel   = ft_getopt(cfg, 'refchannel',   'MEG');
 
+% check if the input data is valid for this function
 if isscalar(varargin)
-  data    = varargin{1};
+  data    = ft_checkdata(varargin{1}, 'datatype', 'raw');
   refdata = [];
 elseif numel(varargin) == 2
-  data    = varargin{1};
-  refdata = varargin{2};
+  data    = ft_checkdata(varargin{1}, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
+  refdata = ft_checkdata(varargin{2}, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
 else
   error('Incorrect number of input arguments.')
 end
@@ -101,12 +101,9 @@ end
 % store the original type of the input data
 dtype = ft_datatype(data);
 
-% check if the input data is valid for this function
-data = ft_checkdata(data, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
-
 % check whether it is neuromag data
 if isempty(refdata) && ~ft_senstype(data, 'neuromag')
-  ft_warning('this function is designed for neuromag data');
+  ft_warning('without additional reference data in the input this function is designed for neuromag data');
 end
 
 % select channels and trials of interest
@@ -116,10 +113,13 @@ data   = ft_selectdata(tmpcfg, data);
 [cfg, data] = rollback_provenance(cfg, data);
 
 if ~isempty(refdata)
-  refdata = ft_checkdata(refdata, 'datatype', 'raw', 'feedback', 'yes', 'hassampleinfo', 'yes');
-  tmpcfg = keepfields(cfg, {'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+  tmpcfg         = keepfields(cfg, {'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   tmpcfg.channel = cfg.refchannel;
-  refdata   = ft_selectdata(tmpcfg, refdata);
+  tmpcfg.trials  = cfg.reftrials;
+  refdata        = ft_selectdata(tmpcfg, refdata);
+
+  % ssp projectors will be computed based on the refdata, requires adjustment of cfg
+  cfg.ssp = {'ssp'};
 end
 
 % keep track of the original order of the channels
@@ -129,22 +129,15 @@ labelold = data.label;
 gradorig = data.grad;
 
 if ~isempty(refdata)
+  selcomp = 1:cfg.numcomponent;
+
   ft_info('computing the "ssp" projector\n');
   % compute numcomponent principal components in the reference data
-  coeff = pca(cell2mat(refdata.trial)','NumComponents',cfg.numcomponent);
+  coeff = pca(cell2mat(refdata.trial)','NumComponents',max(selcomp));
   % compute projector and define montage
-  data.grad.balance.ssp.tra = eye(size(coeff,1))-coeff*transpose(coeff);
+  data.grad.balance.ssp.tra = eye(size(coeff,1))-coeff(:,selcomp)*transpose(coeff(:,selcomp));
   data.grad.balance.ssp.labelold = refdata.label;
   data.grad.balance.ssp.labelnew = refdata.label;
-  if ~isempty(cfg.ssp)
-    if isequal(cfg.ssp, 'all')
-      cfg.ssp = {'ssp'};
-    elseif isequal(cfg.ssp, 'ssp')
-      cfg.ssp = {'ssp'};
-    else
-      ft_error('incorrect specification of cfg.ssp');
-    end
-  end
 end
 
 % first undo/invert the previously applied balancing
