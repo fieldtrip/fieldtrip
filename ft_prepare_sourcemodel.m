@@ -82,6 +82,8 @@ function [sourcemodel, cfg] = ft_prepare_sourcemodel(cfg)
 %                         or tetrahedral mesh (default = 'no')
 %   cfg.spherify        = 'yes' or 'no', scale the source model so that it fits inside a sperical
 %                         volume conduction model (default = 'no')
+%   cfg.orientation     = 'yes' or 'no', determine the orientation of dipoles at the vertices 
+%                         of a triangulated cortical sheet, can be empty (default = [])
 %   cfg.symmetry        = 'x', 'y' or 'z' symmetry for two dipoles, can be empty (default = [])
 %   cfg.headshape       = a filename for the headshape, a structure containing a single surface,
 %                         or a Nx3 matrix with headshape surface points (default = [])
@@ -180,6 +182,7 @@ cfg.movetocentroids   = ft_getopt(cfg, 'movetocentroids', 'no');
 cfg.moveinward        = ft_getopt(cfg, 'moveinward'); % the default is automatic and depends on a triangulation being present
 cfg.checkinside       = ft_getopt(cfg, 'checkinside', 'no'); % default is 'no' since this is a relatively slow procedure. It is also not always required, for example with MEG singlesphere, singleshell, localspheres.
 cfg.feedback          = ft_getopt(cfg, 'feedback', 'text');
+cfg.orientation       = ft_getopt(cfg, 'orientation', []);
 
 % this option was deprecated on 12 Aug 2020
 if isfield(cfg, 'warpmni')
@@ -889,6 +892,18 @@ if ~isempty(cfg.symmetry)
   fprintf('each source describes two dipoles with symmetry along %s axis\n', cfg.symmetry);
   % expand the number of parameters from one (3) to two dipoles (6)
   sourcemodel.pos = sourcemodel.pos(:,expand) .* repmat(mirror, size(sourcemodel.pos,1), 1);
+end
+
+% add the dipole orientations for a cortical sheet
+if ~isempty(cfg.orientation) && istrue(cfg.orientation)
+  if isfield(sourcemodel, 'ori')
+    ft_notice('orientations are already present, not recomputing');
+  elseif ~isfield(sourcemodel, 'tri')
+    ft_error('orientations require a triangulated surface as source model');
+  else
+    ft_info('computing surface orientations for all vertices');
+    sourcemodel.ori = surface_normals(sourcemodel.pos, sourcemodel.tri, 'vertex');
+  end
 end
 
 % do the general cleanup and bookkeeping at the end of the function
