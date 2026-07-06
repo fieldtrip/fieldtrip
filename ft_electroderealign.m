@@ -254,7 +254,9 @@ elec_input = ft_determine_units(elec_input);
 elec_input = ft_datatype_sens(elec_input);
 
 % ensure that channel and electrode positions are the same
-assert(isequaln(elec_input.elecpos, elec_input.chanpos), 'this function requires same electrode and channel positions');
+if isfield(elec_input, 'elecpos') && isfield(elec_input, 'chanpos')
+  assert(isequaln(elec_input.elecpos, elec_input.chanpos), 'this function requires same electrode and channel positions');
+end
 
 % remember the original electrode locations and labels and do all the work with a
 % temporary copy, this involves channel selection and changing to lower case
