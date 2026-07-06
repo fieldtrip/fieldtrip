@@ -218,6 +218,8 @@ if isempty(senssize)
       senssize = 30; % FIXME this is only an estimate
     case 'neuromag122'
       senssize = 35; % FIXME this is only an estimate
+    case 'ctf64'
+      senssize = 20; % Vrba et al (1993) "Whole cortex, 64 channel SQUID biomagnetometer system" 
     case 'ctf151'
       senssize = 20;
     case 'ctf275'
