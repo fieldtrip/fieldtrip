@@ -301,7 +301,7 @@ if cache && exist(headerfile, 'file') && ~isempty(cacheheader)
 end % if cache
 
 % the support for head/dewar coordinates is still limited
-if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_meg4', 'ctf_res4', 'neuromag_fif', 'neuromag_mne'}))
+if strcmp(coordsys, 'dewar') && ~any(strcmp(headerformat, {'fcdc_buffer', 'ctf_ds', 'ctf_old', 'ctf_meg4', 'ctf_res4', 'neuromag_fif', 'neuromag_mne'}))
   ft_error('dewar coordinates are not supported for %s', headerformat);
 end
 
@@ -824,7 +824,7 @@ switch headerformat
     hdr.label        = orig.label;
     % add a gradiometer structure for forward and inverse modelling
     try
-      hdr.grad = ctf2grad(orig);
+      hdr.grad = ctf2grad(orig, strcmp(coordsys, 'dewar'));
     catch
       % this fails if the res4 file is not correctly closed, e.g. during realtime processing
       tmp = lasterror;
