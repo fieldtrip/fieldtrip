@@ -129,10 +129,12 @@ refdata = ft_preprocessing(cfg);
 
 cfg = [];
 cfg.updatesens = 'no';
+cfg.refchannel = ft_channelselection('MEG', refdata.hdr); % FIXME: ft_channelselection with refdata.label, fails to extract channels with 'MEG'
 data_ssp = ft_denoise_ssp(cfg, data, refdata);
 assert(isequal(data_ssp.grad.balance.current, {}));
 
 cfg = [];
+cfg.refchannel = ft_channelselection('MEG', refdata.hdr); % FIXME: ft_channelselection with refdata.label, fails to extract channels with 'MEG'
 data_ssp = ft_denoise_ssp(cfg, data, refdata);
 assert(isequal(data_ssp.grad.balance.current, {'ssp'}));
 
