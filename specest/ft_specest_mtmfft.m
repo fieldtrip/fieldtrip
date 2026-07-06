@@ -238,8 +238,12 @@ else
       tap = tap(1:(end-1), :); % remove the last taper
       
     case 'alpha'
-      ft_error('not yet implemented');
-      
+      tap = cell(1,nfreqoi);
+      for ifreqoi = 1:nfreqoi
+        tap{ifreqoi} = alpha_taper(ndatsample, freqoi(ifreqoi)./ fsample)';
+        tap{ifreqoi} = tap{ifreqoi}./norm(tap{ifreqoi}, 'fro');
+      end
+
     case 'hanning'
       tap = hanning(ndatsample)';
       tap = tap./norm(tap, 'fro');
@@ -281,7 +285,7 @@ end
 
 % compute fft
 st = dbstack;
-if ~((strcmp(taper,'dpss') || strcmp(taper,'sine')) && numel(tapsmofrq)>1) % variable number of slepian tapers not requested
+if ~(ismember(taper, {'dpss' 'sine'}) && numel(tapsmofrq)>1)  && ~isequal(taper, 'alpha') % variable number of slepian/sine tapers not requested, or alpha taper
   str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,ndatsample,ntaper(1));
   if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
     % ft_specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
