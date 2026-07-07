@@ -12,7 +12,10 @@
 #
 # 1. <DIRNAME> points to the directory which contains the subject specific
 #     directory that contains the freesurfer results.
-# 2. <SUBJECTNAME> is the name of the subject specific directory.
+# 2. <SUBJECTNAME> is the name of the subject specific directory. NOTE: if the
+#     freesurfer output has been created by fmriprep it could be that the subjectname
+#     needs to be something like sub-01_ses-mri01. For the output file names, this
+#     string will be truncated at the first '_'
 # 3. <TEMPLATEDIRNAME> is the directory that contains the required template
 #     meshes.
 #
@@ -33,8 +36,8 @@
 set -e
 echo -e "\n START: FS2CaretConvertRegisterNonlinear"
 
-Subject="$2"
-FreeSurferFolder="$1"/"$Subject"
+Subject="${2%_*}"
+FreeSurferFolder="$1"/"$2"
 SurfaceAtlasDIR="$3"
 
 LowResMeshes=4@8@32
