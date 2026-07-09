@@ -137,14 +137,21 @@ end
 % sort them to get the tsv files first in the list, followed by the json files
 filelist = [filelist(endsWith(filelist', 'tsv')) filelist(endsWith(filelist', 'json'))];
 
-% we are searching for a file with the datatype as suffix and that ends with json
+% we are searching for a file with the same suffix and the extension tsv or json
+evidence = zeros(size(filelist));
 for i=1:numel(filelist)
   [p, f, x] = fileparts(filelist{i});
   tmp = split(f, '_');
   % check the file extension, the suffix and the entities of each candidate file
-  if ismember(x, {'.tsv', '.json'}) && strcmp(tmp{end}, suffix) && all(ismember(tmp(1:end-1), entities))
-    ft_info('found matching BIDS sidecar ''%s''', filelist{i})
-    sidecar = filelist{i};
-    break % do not consider any of the other potential matches
+  if ismember(x, {'.tsv', '.json'}) && strcmp(tmp{end}, suffix) && sum(ismember(entities, tmp(1:end-1)))>0
+    % count how many entities of the sidecar match with the data file
+    evidence(i) = sum(ismember(entities, tmp(1:end-1)));
   end
+end
+
+if any(evidence)
+  % take the first sidecar file that has most matching entities
+  [dum, sel] = max(evidence);
+  ft_info('found matching BIDS sidecar ''%s''', filelist{sel});
+  sidecar = filelist{sel};
 end
