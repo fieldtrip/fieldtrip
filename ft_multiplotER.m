@@ -791,6 +791,8 @@ if ~isempty(range)
   cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
   cfg.layout = cfg.topolayout; % use the topographic layout, not the butterfly layout
-
+  if isfield(cfg, 'linecolor') && isequal(cfg.linecolor, 'spatial')
+    cfg = rmfield(cfg, 'linecolor');
+  end
   ft_topoplotER(cfg, varargin{:});
 end
