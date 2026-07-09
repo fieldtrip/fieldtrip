@@ -242,11 +242,14 @@ if ~isempty(maskimage) && strcmp(interplim, 'mask_individual')
   Zi = zeros(size(maskimage));
   for i=1:max(maskimage(:))
     chansel = inside_contour([chanX chanY], mask{i});
-    [Xi, Yi, tmpZi]  = griddata(chanX(chansel)', chanY(chansel), dat(chansel), xi', yi, interpmethod);
-    Zi(maskimage==i) = tmpZi(maskimage==i);
+    offset  = mean(dat(chansel), 'omitnan');
+    [Xi, Yi, tmpZi]  = griddata(chanX(chansel)', chanY(chansel), dat(chansel)-offset, xi', yi, interpmethod);
+    Zi(maskimage==i) = tmpZi(maskimage==i)+offset;
   end
 else
-  [Xi, Yi, Zi] = griddata(chanX', chanY, dat, xi', yi, interpmethod); % interpolate the topographic data
+  offset       = mean(dat, 'omitnan');
+  [Xi, Yi, Zi] = griddata(chanX', chanY, dat-offset, xi', yi, interpmethod); % interpolate the topographic data
+  Zi           = Zi+offset;
 end
 
 if ~isempty(maskimage)
