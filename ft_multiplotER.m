@@ -640,11 +640,13 @@ if istrue(cfg.showscale)
     y = cfg.layout.pos(l,2);
     if strcmp(cfg.viewmode, 'butterfly')
       xticks = zeros(1,0);
+      xrange = xmax-xmin;
+      xstep  = round(100*(xrange./5))./100;
       if xmin<0
-        xticks = flip([-(0:0.1:-xmin) xmin], 2);
+        xticks = flip([-(0:xstep:-xmin) xmin], 2);
       end
       if xmax>0
-        xticks = [xticks(1:end-1) (0:0.1:xmax) xmax];
+        xticks = [xticks(1:end-1) (0:xstep:xmax) xmax];
       end
       plotScales(xticks, [ymin ymax], x, y, chanWidth(1), chanHeight(1), cfg.fontsize);
     else
