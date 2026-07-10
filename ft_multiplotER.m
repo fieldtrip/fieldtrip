@@ -252,10 +252,10 @@ end
 if ischar(cfg.linestyle)
   cfg.linestyle = repmat({cfg.linestyle}, 1, Ndata);
 end
-% check it's length, and lengthen it if does not have enough styles in it
-if (length(cfg.linestyle) > 1) && (length(cfg.linestyle) < Ndata )
+% check its length, and lengthen it if does not have enough styles in it
+if ~isscalar(cfg.linestyle) && length(cfg.linestyle) < Ndata
   ft_error('either specify cfg.linestyle as a cell-array with one cell for each dataset, or only specify one linestyle')
-elseif (length(cfg.linestyle) == 1)
+elseif isscalar(cfg.linestyle)
   cfg.linestyle = repmat(cfg.linestyle, 1, Ndata);
 end
 
@@ -439,6 +439,8 @@ end
 % Read or create the layout that will be used for plotting
 tmpcfg = keepfields(cfg, {'layout', 'channel', 'rows', 'columns', 'commentpos', 'skipcomnt', 'scalepos', 'skipscale', 'projection', 'viewpoint', 'rotate', 'width', 'height', 'elec', 'grad', 'opto', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 if isequal(cfg.viewmode, 'butterfly')
+  cfg.fontsize = max(cfg.fontsize, 15);
+
   % default is to use channel colors matching the spatial locations
   tmpcfg.color = ft_getopt(cfg, 'linecolor', 'spatial');
   % create two layouts, one for butterfly and another for topographic
@@ -636,7 +638,18 @@ if istrue(cfg.showscale)
   if ~isempty(l)
     x = cfg.layout.pos(l,1);
     y = cfg.layout.pos(l,2);
-    plotScales([xmin xmax], [ymin ymax], x, y, chanWidth(1), chanHeight(1), cfg)
+    if strcmp(cfg.viewmode, 'butterfly')
+      xticks = zeros(1,0);
+      if xmin<0
+        xticks = flip([-(0:0.1:-xmin) xmin], 2);
+      end
+      if xmax>0
+        xticks = [xticks(1:end-1) (0:0.1:xmax) xmax];
+      end
+      plotScales(xticks, [ymin ymax], x, y, chanWidth(1), chanHeight(1), cfg.fontsize);
+    else
+      plotScales([xmin xmax], [ymin ymax], x, y, chanWidth(1), chanHeight(1), cfg.fontsize);
+    end
   end
 end
 
@@ -699,27 +712,38 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotScales(hlim, vlim, hpos, vpos, width, height, cfg)
+function plotScales(hticks, vlim, hpos, vpos, width, height, fontsize)
+
+hlim = hticks([1 end]);
 
 % the placement of all elements is identical
 placement = {'hpos', hpos, 'vpos', vpos, 'width', width, 'height', height, 'hlim', hlim, 'vlim', vlim};
 
 ft_plot_box([hlim vlim], placement{:}, 'edgecolor', 'k');
 
-if hlim(1)<=0 && hlim(2)>=0
+if hlim(1)<=0 && hlim(2)>=0 && numel(hticks)<3
   ft_plot_line([0 0], vlim, placement{:}, 'color', 'k');
-  ft_plot_text(0, vlim(1), '0  ', placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', 'FontSize', cfg.fontsize);
+  ft_plot_text(0, vlim(1), '0  ', placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', 'FontSize', fontsize);
 end
 
 if vlim(1)<=0 && vlim(2)>=0
   ft_plot_line(hlim, [0 0], placement{:}, 'color', 'k');
-  ft_plot_text(hlim(1), 0, '0  ', placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'middle', 'FontSize', cfg.fontsize);
+  ft_plot_text(hlim(1), 0, '0  ', placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'middle', 'FontSize', fontsize);
 end
 
-ft_plot_text(hlim(1), vlim(1), [num2str(hlim(1), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'top',    'FontSize', cfg.fontsize);
-ft_plot_text(hlim(2), vlim(1), [num2str(hlim(2), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'FontSize', cfg.fontsize);
-ft_plot_text(hlim(1), vlim(1), [num2str(vlim(1), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom', 'FontSize', cfg.fontsize);
-ft_plot_text(hlim(1), vlim(2), [num2str(vlim(2), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top',    'FontSize', cfg.fontsize);
+if numel(hticks)>2
+  for i = 1:numel(hticks)
+    ft_plot_text(hticks(i), vlim(1), [num2str(hticks(i), 3) ' '], placement{:}, 'rotation', 0, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'FontSize', fontsize);
+  end
+  ft_plot_text(hlim(1), vlim(1), [num2str(vlim(1), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom', 'FontSize', fontsize);
+  ft_plot_text(hlim(1), vlim(2), [num2str(vlim(2), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top',    'FontSize', fontsize);
+else
+  ft_plot_text(hticks(1), vlim(1), [num2str(hticks(1), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'FontSize', fontsize);
+  ft_plot_text(hticks(2), vlim(1), [num2str(hticks(2), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right',  'VerticalAlignment', 'top', 'FontSize', fontsize);
+  ft_plot_text(hlim(1), vlim(1),   [num2str(vlim(1), 3) ' '],   placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top', 'FontSize', fontsize);
+  ft_plot_text(hlim(1), vlim(2),   [num2str(vlim(2), 3) ' '],   placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom',    'FontSize', fontsize);
+end
+
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
