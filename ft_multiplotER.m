@@ -640,15 +640,15 @@ if istrue(cfg.showscale)
     y = cfg.layout.pos(l,2);
     if strcmp(cfg.viewmode, 'butterfly')
       xticks = zeros(1,0);
-      xrange = xmax-xmin;
+      xrange = xmax;
       xstep  = round(100*(xrange./5))./100;
       if xmin<0
-        xticks = flip([-(0:xstep:-xmin) xmin], 2);
+        xticks = flip(-(0:xstep:-xmin), 2);
       end
       if xmax>0
-        xticks = [xticks(1:end-1) (0:xstep:xmax) xmax];
+        xticks = [xticks(1:end-1) (0:xstep:xmax)];
       end
-      plotScales(xticks, [ymin ymax], x, y, chanWidth(1), chanHeight(1), cfg.fontsize);
+      plotScales([xmin xmax], [ymin ymax], x, y, chanWidth(1), chanHeight(1), cfg.fontsize, xticks);
     else
       plotScales([xmin xmax], [ymin ymax], x, y, chanWidth(1), chanHeight(1), cfg.fontsize);
     end
@@ -714,18 +714,18 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-function plotScales(hticks, vlim, hpos, vpos, width, height, fontsize)
-
-hlim = hticks([1 end]);
+function plotScales(hlim, vlim, hpos, vpos, width, height, fontsize, hticks)
 
 % the placement of all elements is identical
 placement = {'hpos', hpos, 'vpos', vpos, 'width', width, 'height', height, 'hlim', hlim, 'vlim', vlim};
 
 ft_plot_box([hlim vlim], placement{:}, 'edgecolor', 'k');
 
-if hlim(1)<=0 && hlim(2)>=0 && numel(hticks)<3
+if hlim(1)<=0 && hlim(2)>=0
   ft_plot_line([0 0], vlim, placement{:}, 'color', 'k');
-  ft_plot_text(0, vlim(1), '0  ', placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', 'FontSize', fontsize);
+  if nargin<8
+    ft_plot_text(0, vlim(1), '0  ', placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'middle', 'FontSize', fontsize);
+  end
 end
 
 if vlim(1)<=0 && vlim(2)>=0
@@ -733,7 +733,7 @@ if vlim(1)<=0 && vlim(2)>=0
   ft_plot_text(hlim(1), 0, '0  ', placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'middle', 'FontSize', fontsize);
 end
 
-if numel(hticks)>2
+if nargin>7
   for i = 1:numel(hticks)
     ft_plot_text(hticks(i), vlim(1), [num2str(hticks(i), 3) ' '], placement{:}, 'rotation', 0, 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'FontSize', fontsize);
   end
