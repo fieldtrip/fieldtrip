@@ -740,10 +740,10 @@ if nargin>7
   ft_plot_text(hlim(1), vlim(1), [num2str(vlim(1), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom', 'FontSize', fontsize);
   ft_plot_text(hlim(1), vlim(2), [num2str(vlim(2), 3) ' '], placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top',    'FontSize', fontsize);
 else
-  ft_plot_text(hticks(1), vlim(1), [num2str(hticks(1), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'FontSize', fontsize);
-  ft_plot_text(hticks(2), vlim(1), [num2str(hticks(2), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right',  'VerticalAlignment', 'top', 'FontSize', fontsize);
-  ft_plot_text(hlim(1), vlim(1),   [num2str(vlim(1), 3) ' '],   placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top', 'FontSize', fontsize);
-  ft_plot_text(hlim(1), vlim(2),   [num2str(vlim(2), 3) ' '],   placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom',    'FontSize', fontsize);
+  ft_plot_text(hlim(1), vlim(1), [num2str(hlim(1), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right', 'VerticalAlignment', 'bottom', 'FontSize', fontsize);
+  ft_plot_text(hlim(2), vlim(1), [num2str(hlim(2), 3) ' '], placement{:}, 'rotation', 90, 'HorizontalAlignment', 'right',  'VerticalAlignment', 'top', 'FontSize', fontsize);
+  ft_plot_text(hlim(1), vlim(1), [num2str(vlim(1), 3) ' '],   placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'top', 'FontSize', fontsize);
+  ft_plot_text(hlim(1), vlim(2), [num2str(vlim(2), 3) ' '],   placement{:}, 'HorizontalAlignment', 'Right', 'VerticalAlignment', 'bottom',    'FontSize', fontsize);
 end
 
 
