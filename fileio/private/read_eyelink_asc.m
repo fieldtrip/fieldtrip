@@ -1,4 +1,4 @@
-function asc = read_eyelink_asc(filename)
+function asc = read_eyelink_asc(filename, asc, begsample, endsample, chanindx)
 
 % READ_EYELINK_ASC reads the header information, input triggers, messages
 % and all data points from an Eyelink *.asc file. The output events are
@@ -8,7 +8,7 @@ function asc = read_eyelink_asc(filename)
 %   asc = read_eyelink_asc(filename)
 
 % Copyright (C) 2010-2015, Robert Oostenveld
-% Copyright (C) 2022, Jan-Mathijs Schoffelen
+% Copyright (C) 2022-2026, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -28,243 +28,344 @@ function asc = read_eyelink_asc(filename)
 %
 % $Id$
 
-% read the whole file at once
-fid = fopen_or_error(filename, 'rt');
-aline = fread(fid, inf, 'char=>char');          % returns a single long string
-fclose(fid);
+needhdr = (nargin==1); % always
+needevt = (nargin==1); % always
+needdat = (nargin==5);
 
-aline(aline==uint8(sprintf('\r'))) = [];        % remove cariage return
-aline = tokenize(aline, uint8(newline));        % split on newline
+if needhdr || needevt
+  % skip this
+  % read the whole file at once
+  fid = fopen_or_error(filename, 'rt');
+  aline = fread(fid, inf, 'char=>char');
+  fclose(fid);
 
-sel = startsWith(aline, '0') | ...
-      startsWith(aline, '1') | ...
-      startsWith(aline, '2') | ...
-      startsWith(aline, '3') | ...
-      startsWith(aline, '4') | ...
-      startsWith(aline, '5') | ...
-      startsWith(aline, '6') | ...
-      startsWith(aline, '7') | ...
-      startsWith(aline, '8') | ...
-      startsWith(aline, '9');
+  aline = splitlines(string(aline(:)'));
+  sel   = startsWith(aline, string(0:9));
 
-datline = aline(sel);
-aline   = aline(~sel);
+  datline = aline(sel);
+  aline   = aline(~sel);
 
-% according to the eyelink documentation, the sample lines have different
-% flavours, depending on how the data was collected (monocular or
-% binocular), and possibly the conversion settings from edf2asc
-% Monocular,                              <time> <xp>  <yp>  <ps>
-% Monocular, with velocity                <time> <xp>  <yp>  <ps>  <xv>  <yv>
-% Monocular, with resolution              <time> <xp>  <yp>  <ps>  <xr>  <yr>
-% Monocular, with velocity and resolution <time> <xp>  <yp>  <ps>  <xv>  <yv>  <xr>  <yr>
-% Binocular,                              <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr>
-% Binocular, with velocity                <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xvl> <yvl> <xvr> <yvr>
-% Binocular, with resolution              <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xr> <yr>
-% Binocular, with velocity and resolution <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xvl> <yvl> <xvr> <yvr><xr> <yr>
-%
-% Then, there may be additional columns, if recorded with cornea reflection
-% mode:
-%
-% MONOCULAR Corneal Reflection (CR) Samples
-% "..." if no warning for sample
-% first character is "I" if sample was interpolated
-% second character is "C" if CR missing
-% third character is "R" if CR recovery in progress
-%
-% BINOCULAR Corneal Reflection (CR) Samples?
-% "....." if no warning for sample
-% first character is "I" if sample was interpolated
-% second character is "C" if LEFT CR missing
-% third character is "R" if LEFT CR recovery in progress
-% fourth character is "C" if RIGHT CR missing
-% fifth character is "R" if RIGHT CR recovery in progress
-%
-% Then, there may be additional columns, if data collection was done in
-% remote mode:
-%
-% Data files recorded using the Remote Mode have extra columns to encode the
-% target distance, position, and eye/target status information. The first three
-% columns are:
-% <target x>: X position of the target in camera coordinate (a value from 0 to 10000).
-% Returns "MISSING_DATA" (-32768) if target is missing.
-% <target y>: Y position of the target in camera coordinate (a value from 0 to 10000).
-% Returns "MISSING_DATA" (-32768) if target is missing.
-% <target distance>: Distance between the target and camera (in millimeters).
-% Returns "MISSING_DATA" (-32768) if target is missing.
-% The next thirteen fields represent warning messages for that sample relating to
-% the target and eye image processing."............." if no warning for target and eye image
-% first character is "M" if target is missing
-% second character is "A" if extreme target angle occurs
-% third character is "N" if target is near eye so that the target window and eye window overlap
-% fourth character is "C" if target is too close
-% fifth character is "F" if target is too far
-% sixth character is "T" if target is near top edge of the camera image
-% seventh character is "B" if target is near bottom edge of the camera image
-% eighth character is "L" if target is near left edge of the camera image
-% ninth character is "R" if target is near right edge of the camera image
-% tenth character is "T" if eye is near top edge of the camera image
-% eleventh character is "B" if eye is near bottom edge of the camera image
-% twelfth character is "L" if eye is near left edge of the camera image
-% thirteenth character is "R" if eye is near right edge of the camera image
-% For a binocular recording, there will be seventeen target/eye status columns,
-% with the last eight columns reporting the warning messages for the left and
-% right eyes separately.
+  % according to the eyelink documentation, the sample lines have different
+  % flavours, depending on how the data was collected (monocular or
+  % binocular), and possibly the conversion settings from edf2asc
+  % Monocular,                              <time> <xp>  <yp>  <ps>
+  % Monocular, with velocity                <time> <xp>  <yp>  <ps>  <xv>  <yv>
+  % Monocular, with resolution              <time> <xp>  <yp>  <ps>  <xr>  <yr>
+  % Monocular, with velocity and resolution <time> <xp>  <yp>  <ps>  <xv>  <yv>  <xr>  <yr>
+  % Binocular,                              <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr>
+  % Binocular, with velocity                <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xvl> <yvl> <xvr> <yvr>
+  % Binocular, with resolution              <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xr> <yr>
+  % Binocular, with velocity and resolution <time> <xpl> <ypl> <psl> <xpr> <ypr> <psr> <xvl> <yvl> <xvr> <yvr><xr> <yr>
+  %
+  % Then, there may be additional columns, if recorded with cornea reflection
+  % mode:
+  %
+  % MONOCULAR Corneal Reflection (CR) Samples
+  % "..." if no warning for sample
+  % first character is "I" if sample was interpolated
+  % second character is "C" if CR missing
+  % third character is "R" if CR recovery in progress
+  %
+  % BINOCULAR Corneal Reflection (CR) Samples?
+  % "....." if no warning for sample
+  % first character is "I" if sample was interpolated
+  % second character is "C" if LEFT CR missing
+  % third character is "R" if LEFT CR recovery in progress
+  % fourth character is "C" if RIGHT CR missing
+  % fifth character is "R" if RIGHT CR recovery in progress
+  %
+  % Then, there may be additional columns, if data collection was done in
+  % remote mode:
+  %
+  % Data files recorded using the Remote Mode have extra columns to encode the
+  % target distance, position, and eye/target status information. The first three
+  % columns are:
+  % <target x>: X position of the target in camera coordinate (a value from 0 to 10000).
+  % Returns "MISSING_DATA" (-32768) if target is missing.
+  % <target y>: Y position of the target in camera coordinate (a value from 0 to 10000).
+  % Returns "MISSING_DATA" (-32768) if target is missing.
+  % <target distance>: Distance between the target and camera (in millimeters).
+  % Returns "MISSING_DATA" (-32768) if target is missing.
+  % The next thirteen fields represent warning messages for that sample relating to
+  % the target and eye image processing."............." if no warning for target and eye image
+  % first character is "M" if target is missing
+  % second character is "A" if extreme target angle occurs
+  % third character is "N" if target is near eye so that the target window and eye window overlap
+  % fourth character is "C" if target is too close
+  % fifth character is "F" if target is too far
+  % sixth character is "T" if target is near top edge of the camera image
+  % seventh character is "B" if target is near bottom edge of the camera image
+  % eighth character is "L" if target is near left edge of the camera image
+  % ninth character is "R" if target is near right edge of the camera image
+  % tenth character is "T" if eye is near top edge of the camera image
+  % eleventh character is "B" if eye is near bottom edge of the camera image
+  % twelfth character is "L" if eye is near left edge of the camera image
+  % thirteenth character is "R" if eye is near right edge of the camera image
+  % For a binocular recording, there will be seventeen target/eye status columns,
+  % with the last eight columns reporting the warning messages for the left and
+  % right eyes separately.
 
-% So, anecdotally, parsing the file is a bit tedious, and not very robust.
-% Reading and converting per line is super slow, so here I chose to pipe
-% the datalines through a checker that removes all '...' '.....'
-% '.............' and '.................' (or containing warning) stuff
-% so that we end up with more or less well behaved data.
+  % So, anecdotally, parsing the file is a bit tedious, and not very robust.
+  % Reading and converting per line is super slow, so here I chose to pipe
+  % the datalines through a checker that removes all '...' '.....'
+  % '.............' and '.................' (or containing warning) stuff
+  % so that we end up with more or less well behaved data.
 
 
-% check if the formatting for all datlines is similar
-seltab = char(datline)==sprintf('\t');
-ntab   = sum(seltab,2);
+  % check if the formatting for all datlines is similar
+  ntab   = count(datline, sprintf('\t'));
 
-% check whether all lines have the same number of columns
-assert(all(ntab==ntab(1)));
+  % check whether all lines have the same number of columns
+  assert(all(ntab==ntab(1)));
+  tstamps = double(extractBefore(datline, sprintf('\t')));
+  udelta  = unique(diff(tstamps));
+  if udelta(1)==0 && udelta(2)==1
+    % anecdotally, the edf2asc has converted a 2kHz file, but rounded the
+    % time stamps...
+    ft_warning('it looks like a 2 kHz file with rounded off time stamps, this may lead to a 0.5 ms inaccuracy in the timing of the events');
+    Fs1 = 2000;
 
-% identify the chunks of consecutive '...' and comments
-str = char(datline)';
-str(end+1, :) = sprintf('\t');
-siz = size(str);
-str = uint8(str(:)');
+    ft_info('updating timestamps');
+    sel = [false;diff(tstamps)==0];
+    tstamps(sel) = tstamps(sel)+0.5;
+  elseif udelta(1)>=1
+    Fs1 = 1000/udelta(1); % this is a guess
+  end
 
-boolval = str==46 | (str>=65&str<=90); % dots or capital letters
-begsmp  = find(boolval==1 & [0 boolval(1:end-1)]==0);
-endsmp  = find(boolval==1 & [boolval(2:end) 1]==0);
-sel     = ~ismember(endsmp-begsmp+1, [3 5 13 17]);
-boolval(begsmp(sel)) = false;
-str(boolval) = 32;
+  % create a mapping from the time stamps to samples in the data
+  tstamps_samples = (Fs1./1000).*(tstamps-tstamps(1)) + 1;
+  samples         = nan(1, max(tstamps_samples));
+  samples(tstamps_samples) = 1:numel(tstamps_samples);
 
-str = reshape(char(str), siz); % now all the warnings etc should have been removed
-datline = cellstr(str(1:end-1,:)');
+  % create a mapping from samples in the data to discontinuous trials
+  trialidx = cumsum([1;double(diff(tstamps_samples)>1)]);
 
-% check again if the formatting for all datlines is similar
-nline  = numel(datline);
-seltab = char(datline)==sprintf('\t');
-ntab   = sum(seltab,2);
+  asc = [];
+  asc.filename = filename;
+  asc.datline  = datline; % don't parse it for now
+  asc.tstamps  = tstamps;
+  asc.samples  = samples(:);
+  asc.trialidx = trialidx;
 
-% check whether all lines have the same number of columns
-assert(all(ntab==ntab(1)));
+  % make tables for the events sfix, ssacc, sblink etc
+  selsfix   = startsWith(aline, 'SFIX');
+  selssacc  = startsWith(aline, 'SSACC');
+  selsblink = startsWith(aline, 'SBLINK');
+  selection = {selsfix selssacc selsblink};
+  fn        = {'sfix' 'ssacc' 'sblink'};
+  for i  = find(cellfun(@sum, selection))
+    s        = extractAfter(aline(selection{i}), " ");
+    s        = split(s, " ");
+    stime    = double(s(:,end)); % in ms, possibly rounded off (if Fs=2000)
+    sample   = timestamp2samples(stime, tstamps, samples, Fs1);
+    eye      = s(:,1);
+    asc.(fn{i}) = table(eye, stime, sample);
+  end
 
-fmt = repmat('%s ', [1 ntab(1)+1]);
-fmt = fmt(1:end-1);
+  selefix   = startsWith(aline, 'EFIX');
+  if sum(selefix)
+    s   = extractAfter(aline(selefix), " ");
+    eye = extractBefore(s, " ");
+    s   = double(split(extractAfter(s, " "), sprintf('\t')));
+    if size(s,2)==6
+      varnames = {'stime', 'etime', 'dur', 'axp', 'ayp', 'aps'};
+    elseif size(s,2)==8
+      varnames = {'stime', 'etime', 'dur', 'axp', 'ayp', 'aps', 'xr', 'yr'};
+    else
+      ft_error('unknown number of columns in efix');
+    end
+    s_smp    = timestamp2samples(s(:,1:3), tstamps, samples, Fs1);
+    asc.efix = cat(2, table(eye), array2table(s, 'VariableNames', varnames), ...
+      array2table(s_smp, 'VariableNames', {'sample' 'sample_end' 'sample_duration'}));
+  end
 
-% convert datline in a long string again
-datline = char(datline)';
-datline(end+1, :) = sprintf('\t');
-datline = datline(:)';
+  seleblink  = startsWith(aline, 'EBLINK');
+  if sum(seleblink)
+    s   = extractAfter(aline(seleblink), " ");
+    eye = extractBefore(s, " ");
+    s   = double(split(extractAfter(s, " "), sprintf('\t')));
+    s_smp    = timestamp2samples(s(:,1:3), tstamps, samples, Fs1);
+    asc.eblink = cat(2, table(eye), array2table(s, 'VariableNames', {'stime', 'etime', 'dur'}), ...
+      array2table(s_smp, 'VariableNames', {'sample' 'sample_end' 'sample_duration'}));
+  end
 
-C   = textscan(datline, fmt, nline, 'Delimiter', sprintf('\t'));
-dat = zeros(nline, numel(C)) + nan;
-for i=1:numel(C)
-  notok = strcmp(C{i}, '.')|strcmp(C{i}, '  ')|strcmp(C{i}, '     ')|cellfun('isempty', C{i})|startsWith(C{i}, '. ');
-  ok    = ~notok;
-  tmp = reshape([char(C{i}(ok))';repmat(' ',1,sum(ok))],[],1)';
+  selesacc   = startsWith(aline, 'ESACC');
+  if sum(selesacc)
+    s   = extractAfter(aline(selesacc), " ");
+    eye = extractBefore(s, " ");
+    s   = double(split(extractAfter(s, " "), sprintf('\t')));
+    if size(s,2)==9
+      varnames = {'stime', 'etime', 'dur', 'sxp', 'syp', 'exp', 'eyp', 'ampl', 'pv'};
+    elseif size(s,2)==11
+      varnames = {'stime', 'etime', 'dur', 'sxp', 'syp', 'exp', 'eyp', 'ampl', 'pv', 'xr', 'yr'};
+    else
+      ft_error('unknown number of columns in esacc');
+    end
+    s_smp    = timestamp2samples(s(:,1:3), tstamps, samples, Fs1);
+    asc.esacc = cat(2, table(eye), array2table(s, 'VariableNames', varnames), ...
+      array2table(s_smp, 'VariableNames', {'sample' 'sample_end' 'sample_duration'}));
+  end
 
-  % convert to floats, much faster than str2double
-  if sum(ok)
-    tmp = textscan(tmp, '%f');
-    dat(ok, i) = tmp{1};
+  selinput   = startsWith(aline, 'INPUT');
+  if sum(selinput)
+    s      = extractAfter(aline(selinput), sprintf('\t'));
+    s      = double(split(s, sprintf('\t')));
+    sample = timestamp2samples(s(:,1), tstamps, samples, Fs1);
+    asc.input = array2table([s sample],'VariableNames', {'stime' 'value' 'sample'});
+  end
+
+  selhdr     = startsWith(aline, '**');
+  if sum(selhdr)
+    asc.header = char(aline(selhdr));
+  end
+
+  selmsg     = startsWith(aline, 'MSG');
+  if sum(selmsg)
+    s = extractAfter(aline(selmsg), sprintf('\t'));
+    stime   = double(extractBefore(s, " "));
+    sample  = timestamp2samples(stime, tstamps, samples, Fs1);
+    message = extractAfter(s, " ");
+    asc.msg = cat(2, array2table(stime), table(message), array2table(sample));
   end
 end
-asc.dat = dat';
 
-% remove any all-nan rows
-asc.dat(sum(~isfinite(asc.dat),2)==size(asc.dat,2), :) = [];
+if needhdr
+  hdr.nChans              = ntab(1)+1;
+  hdr.nSamples            = numel(tstamps);
+  hdr.nSamplesPre         = 0;
+  hdr.nTrials             = 1;
+  hdr.FirstTimeStamp      = tstamps(1);
 
-selsfix    = startsWith(aline, 'SFIX');
-selefix    = startsWith(aline, 'EFIX');
-selssacc   = startsWith(aline, 'SSACC');
-selesacc   = startsWith(aline, 'ESACC');
-selsblink  = startsWith(aline, 'SBLINK');
-seleblink  = startsWith(aline, 'EBLINK');
-selmsg     = startsWith(aline, 'MSG');
-selhdr     = startsWith(aline, '**');
-selinput   = startsWith(aline, 'INPUT');
-
-asc.sfix   = tocell(aline(selsfix)); % convert cell-vector of lines into a cell array
-asc.efix   = tocell(aline(selefix));
-asc.ssacc  = tocell(aline(selssacc));
-asc.esacc  = tocell(aline(selesacc));
-asc.sblink = tocell(aline(selsblink));
-asc.eblink = tocell(aline(seleblink));
-asc.msg    = tocell(aline(selmsg), 1);
-asc.header = char(aline(selhdr));
-asc.input  = tocell(aline(selinput));
-
-% convert the cell-arrays into tables
-if ~isempty(asc.sfix),   asc.sfix   = totable(asc.sfix(:, 2:end),   {'eye' 'stime'}); end
-if ~isempty(asc.sblink), asc.sblink = totable(asc.sblink(:, 2:end), {'eye' 'stime'}); end
-if ~isempty(asc.ssacc),  asc.ssacc  = totable(asc.ssacc(:, 2:end),  {'eye' 'stime'}); end
-if ~isempty(asc.input),  asc.input  = totable(asc.input(:, 2:end),  {'timestamp', 'value'}, [1 2]); end
-
-% these lines may have been formatted in different ways
-if ~isempty(asc.efix)
-  try
-    asc.efix = totable(asc.efix(:,2:end), {'eye', 'stime', 'etime', 'dur', 'axp', 'ayp', 'aps'});
-  catch
-    asc.efix = totable(asc.efix(:,2:end), {'eye', 'stime', 'etime', 'dur', 'axp', 'ayp', 'aps', 'xr', 'yr'});
+  sel = startsWith(asc.msg.message,"RECCFG");
+  msg = split(asc.msg.message(sel), " ");
+  if sum(sel)==1
+    % if there's only a single msg, then the above yields a column
+    msg = msg(:)';
   end
-end
-if ~isempty(asc.eblink)
-  asc.eblink = totable(asc.eblink(:,2:end), {'eye', 'stime', 'etime', 'dur'});
-end
-if ~isempty(asc.esacc)
-  try
-    asc.esacc = totable(asc.esacc(:,2:end), {'eye', 'stime', 'etime', 'dur', 'sxp', 'syp', 'exp', 'eyp', 'ampl', 'pv'});
-  catch
-    asc.esacc = totable(asc.esacc(:,2:end), {'eye', 'stime', 'etime', 'dur', 'sxp', 'syp', 'exp', 'eyp', 'ampl', 'pv', 'xr', 'yr'});
+  Fs  = double(msg(:,3));
+  assert(all(Fs==Fs(1)) && Fs(1)==Fs1);
+
+  hdr.TimeStampPerSample  = 1;
+  hdr.Fs                  = Fs(1); 
+  
+  % give this warning only once
+  ft_warning('creating fake channel names');
+  hdr.label{1} = 'timestamps';
+  for i=2:hdr.nChans
+    hdr.label{i} = sprintf('chan%02d', i-1);
   end
+  asc.hdr = hdr;
 end
 
-% try to also convert the messages into a table, don't know how uniform
-% this is in general, but the below assumes a 3-column matrix
-if ~isempty(asc.msg)
-  try
-    asc.msg = totable(asc.msg(:,2:end), {'stime', 'message'}, 1);
+if needevt
+  % convert all metadata in to events
+  %type, timestamp, value, duration, duration, offset
+  
+  % events with 'eye' as value, but no duration
+  fn = {'sfix' 'ssacc' 'sblink'};
+  event = cell(0,1);
+  for i = 1:numel(fn)
+    if isfield(asc, fn{i})
+      t = asc.(fn{i});
+      t = renamevars(t, {'eye', 'stime'}, {'value', 'timestamp'});
+      t.value = convertStringsToChars(t.value);
+      t = t(:, contains(t.Properties.VariableNames, {'value' 'timestamp' 'sample'}));
+      n = size(t,1);
+      type   = repmat(fn(i), n, 1);
+      offset = repmat({[]},  n, 1);
+      duration = repmat({[]}, n, 1);
+      t = cat(2, t, table(type), table(offset), table(duration));
+      event{end+1} = table2struct(t);
+    end
   end
-end
 
-function lineout = convertline(linein, msgflag)
-
-% split the line by horizontal tabs, and the first output element
-% thereof by spaces. 
-
-%tmp     = strrep(linein, sprintf('\t'), ' ');
-lineout = strsplit(linein, '\t');
-lineout = [strsplit(lineout{1}, ' ') lineout(2:end)];
-if msgflag
-  tmp = strsplit(lineout{2}, ' ');
-  lineout = [lineout(1) tmp(1) {sprintf('%s ', tmp{2:end})}];
-end
-
-function tableout = totable(cellin, fnames, convert)
-
-if nargin<3
-  convert = 2:numel(fnames);
-end
-
-% convert into table, and do a str2double conversion for the numeric data,
-% assuming only the first variable to be kept as a string
-
-tableout = cell2table(cellin, 'VariableNames', fnames);
-for k = convert
-  tableout.(fnames{k}) = str2double(tableout.(fnames{k}));
-end
-
-function cellout = tocell(textin, msgflag)
-
-if nargin<2
-  msgflag = false;
-end
-
-cellout = {};
-for k = 1:numel(textin)
-  tline   = convertline(textin{k}, msgflag); 
-  if k==1
-    cellout = cell(numel(textin), numel(tline));
+  % events with 'eye' as value, but with duration
+  fn = {'efix' 'eblink' 'esacc'};
+  for i = 1:numel(fn)
+    if isfield(asc, fn{i})
+      t = asc.(fn{i});
+      t = renamevars(t, {'eye', 'stime' 'sample_duration'}, {'value', 'timestamp' 'duration'});
+      t.value = convertStringsToChars(t.value);
+      t = t(:, ismember(t.Properties.VariableNames, {'value' 'timestamp' 'duration' 'sample'}));
+      n = size(t,1);
+      type   = repmat(fn(i), n, 1);
+      offset = repmat({[]},  n, 1);
+      t = cat(2, t, table(type), table(offset));
+      event{end+1} = table2struct(t);
+    end
   end
-  cellout(k,:) = tline;
+  
+  % other type of events: input
+  if isfield(asc, 'input')
+    t = asc.input;
+    t = renamevars(t, {'stime'}, {'timestamp'});
+    t = t(:, contains(t.Properties.VariableNames, {'value' 'timestamp' 'sample'}));
+    n = size(t,1);
+    type   = repmat({'input'}, n, 1);
+    offset = repmat({[]},  n, 1);
+    duration = repmat({[]}, n, 1);
+    t = cat(2, t, table(type), table(offset), table(duration));
+    event{end+1} = table2struct(t);
+  end
+
+  % other type of events: msg
+  if isfield(asc, 'msg')
+    t = asc.msg;
+    t = renamevars(t, {'message' 'stime'}, {'value' 'timestamp'});
+    t = t(:, contains(t.Properties.VariableNames, {'value' 'timestamp' 'sample'}));
+    sel = isfinite(t.sample) & ~startsWith(t.value, '!');
+    t = t(sel,:);
+    t.value = convertStringsToChars(t.value);
+
+    n = size(t,1);
+    type   = repmat({'msg'}, n, 1);
+    offset = repmat({[]},  n, 1);
+    duration = repmat({[]}, n, 1);
+    t = cat(2, t, table(type), table(offset), table(duration));
+    event{end+1} = table2struct(t);
+  end
+
+  event = cat(1, event{:});
+  [srt, ix] = sort([event.sample]);
+  event = event(ix);
+
+  asc.event = event;
+end
+
+if needdat
+  datline = asc.datline(begsample:endsample);
+  ntab    = count(datline, sprintf('\t'));
+
+  % check whether all lines have the same number of columns
+  assert(all(ntab==ntab(1)));
+
+  % identify the chunks of consecutive '...' and comments
+  chunks = 0:100000:numel(datline);
+  asc.dat = nan(ntab(1)+1, numel(datline));
+  idy = true(ntab(1)+1,1);
+  for i = 1:numel(chunks)
+    fprintf('parsing the numeric data in chunk %d/%d\n', i, numel(chunks));
+    idx = [(chunks(i)+1) chunks(i)+100000];
+    idx(idx>numel(datline)) = numel(datline);
+    d   = split(datline(idx(1):idx(2)), sprintf('\t'));
+    asc.dat(:,idx(1):idx(2)) = double(d(:,idy))';
+  end
+  asc.dat = asc.dat(chanindx,:);
+end
+
+
+function out = timestamp2samples(in, tstamps, samples, fs)
+
+out = nan(size(in));
+for i = 1:min(size(in,2), 2)
+  indx = (fs/1000).*(in(:, i) - tstamps(1)) + 1;
+  if ~all(indx==round(indx))
+    ft_warning('rounding off time stamps to the nearest sample indices');
+    indx = round(indx);
+  end
+  out(indx>0 & indx<=numel(samples), i) = samples(indx(indx>0 & indx<=numel(samples)));
+end
+% assume 3d column always to be duration
+if size(in,2)==3
+  out(:, 3)   = (fs/1000).*in(:, 3);
 end
