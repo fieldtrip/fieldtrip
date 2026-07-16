@@ -8,7 +8,7 @@ function asc = read_eyelink_asc(filename, asc, begsample, endsample, chanindx)
 %   asc = read_eyelink_asc(filename)
 
 % Copyright (C) 2010-2015, Robert Oostenveld
-% Copyright (C) 2022, Jan-Mathijs Schoffelen
+% Copyright (C) 2022-2026, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -233,11 +233,15 @@ if needhdr
   hdr.nChans              = ntab(1)+1;
   hdr.nSamples            = numel(tstamps);
   hdr.nSamplesPre         = 0;
-  hdr.nTrials             = sum(diff(tstamps_samples)>1)+1;
+  hdr.nTrials             = 1;
   hdr.FirstTimeStamp      = tstamps(1);
 
   sel = startsWith(asc.msg.message,"RECCFG");
   msg = split(asc.msg.message(sel), " ");
+  if sum(sel)==1
+    % if there's only a single msg, then the above yields a column
+    msg = msg(:)';
+  end
   Fs  = double(msg(:,3));
   assert(all(Fs==Fs(1)) && Fs(1)==Fs1);
 
@@ -261,58 +265,66 @@ if needevt
   fn = {'sfix' 'ssacc' 'sblink'};
   event = cell(0,1);
   for i = 1:numel(fn)
-    t = asc.(fn{i});
-    t = renamevars(t, {'eye', 'stime'}, {'value', 'timestamp'});
-    t.value = convertStringsToChars(t.value);
+    if isfield(asc, fn{i})
+      t = asc.(fn{i});
+      t = renamevars(t, {'eye', 'stime'}, {'value', 'timestamp'});
+      t.value = convertStringsToChars(t.value);
+      t = t(:, contains(t.Properties.VariableNames, {'value' 'timestamp' 'sample'}));
+      n = size(t,1);
+      type   = repmat(fn(i), n, 1);
+      offset = repmat({[]},  n, 1);
+      duration = repmat({[]}, n, 1);
+      t = cat(2, t, table(type), table(offset), table(duration));
+      event{end+1} = table2struct(t);
+    end
+  end
+
+  % events with 'eye' as value, but with duration
+  fn = {'efix' 'eblink' 'esacc'};
+  for i = 1:numel(fn)
+    if isfield(asc, fn{i})
+      t = asc.(fn{i});
+      t = renamevars(t, {'eye', 'stime' 'sample_duration'}, {'value', 'timestamp' 'duration'});
+      t.value = convertStringsToChars(t.value);
+      t = t(:, ismember(t.Properties.VariableNames, {'value' 'timestamp' 'duration' 'sample'}));
+      n = size(t,1);
+      type   = repmat(fn(i), n, 1);
+      offset = repmat({[]},  n, 1);
+      t = cat(2, t, table(type), table(offset));
+      event{end+1} = table2struct(t);
+    end
+  end
+  
+  % other type of events: input
+  if isfield(asc, 'input')
+    t = asc.input;
+    t = renamevars(t, {'stime'}, {'timestamp'});
     t = t(:, contains(t.Properties.VariableNames, {'value' 'timestamp' 'sample'}));
     n = size(t,1);
-    type   = repmat(fn(i), n, 1);
+    type   = repmat({'input'}, n, 1);
     offset = repmat({[]},  n, 1);
     duration = repmat({[]}, n, 1);
     t = cat(2, t, table(type), table(offset), table(duration));
     event{end+1} = table2struct(t);
   end
 
-  % events with 'eye' as value, but with duration
-  fn = {'efix' 'eblink' 'esacc'};
-  for i = 1:numel(fn)
-    t = asc.(fn{i});
-    t = renamevars(t, {'eye', 'stime' 'sample_duration'}, {'value', 'timestamp' 'duration'});
+  % other type of events: msg
+  if isfield(asc, 'msg')
+    t = asc.msg;
+    t = renamevars(t, {'message' 'stime'}, {'value' 'timestamp'});
+    t = t(:, contains(t.Properties.VariableNames, {'value' 'timestamp' 'sample'}));
+    sel = isfinite(t.sample) & ~startsWith(t.value, '!');
+    t = t(sel,:);
     t.value = convertStringsToChars(t.value);
-    t = t(:, ismember(t.Properties.VariableNames, {'value' 'timestamp' 'duration' 'sample'}));
+
     n = size(t,1);
-    type   = repmat(fn(i), n, 1);
+    type   = repmat({'msg'}, n, 1);
     offset = repmat({[]},  n, 1);
-    t = cat(2, t, table(type), table(offset));
+    duration = repmat({[]}, n, 1);
+    t = cat(2, t, table(type), table(offset), table(duration));
     event{end+1} = table2struct(t);
   end
-  
-  % other type of events: input
-  t = asc.input;
-  t = renamevars(t, {'stime'}, {'timestamp'});
-  t = t(:, contains(t.Properties.VariableNames, {'value' 'timestamp' 'sample'}));
-  n = size(t,1);
-  type   = repmat({'input'}, n, 1);
-  offset = repmat({[]},  n, 1);
-  duration = repmat({[]}, n, 1);
-  t = cat(2, t, table(type), table(offset), table(duration));
-  event{end+1} = table2struct(t);
-  
-  % other type of events: msg
-  t = asc.msg;
-  t = renamevars(t, {'message' 'stime'}, {'value' 'timestamp'});
-  t = t(:, contains(t.Properties.VariableNames, {'value' 'timestamp' 'sample'}));
-  sel = isfinite(t.sample) & ~startsWith(t.value, '!');
-  t = t(sel,:);
-  t.value = convertStringsToChars(t.value);
-  
-  n = size(t,1);
-  type   = repmat({'msg'}, n, 1);
-  offset = repmat({[]},  n, 1);
-  duration = repmat({[]}, n, 1);
-  t = cat(2, t, table(type), table(offset), table(duration));
-  event{end+1} = table2struct(t);
-  
+
   event = cat(1, event{:});
   [srt, ix] = sort([event.sample]);
   event = event(ix);
@@ -347,6 +359,10 @@ function out = timestamp2samples(in, tstamps, samples, fs)
 out = nan(size(in));
 for i = 1:min(size(in,2), 2)
   indx = (fs/1000).*(in(:, i) - tstamps(1)) + 1;
+  if ~all(indx==round(indx))
+    ft_warning('rounding off time stamps to the nearest sample indices');
+    indx = round(indx);
+  end
   out(indx>0 & indx<=numel(samples), i) = samples(indx(indx>0 & indx<=numel(samples)));
 end
 % assume 3d column always to be duration
