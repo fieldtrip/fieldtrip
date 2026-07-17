@@ -381,7 +381,8 @@ if isempty(cfg.mvpa.neighbours)
           else
             cfg.mvpa.neighbours{ix} = eye(cfg.dim(timdim));
           end
-          cfg.mvpa.neighbours{ix} = cfg.mvpa.neighbours{ix}(1:cfg.tstep:end,:);
+          offset = round(cfg.timwin/2);
+          cfg.mvpa.neighbours{ix} = cfg.mvpa.neighbours{ix}(offset:cfg.tstep:end-offset,:);
         case 'freq'
           % create boolean neighbour matrix for freq
           freqdim = strcmp(dimtok, 'freq');
@@ -447,7 +448,7 @@ stat = [];
 if ~isempty(cfg.time)
   time = cfg.time;
   if cfg.tstep>1
-    time = time(1:cfg.tstep:end);
+    time = time(offset:cfg.tstep:end-offset);
   end
 end
 
@@ -468,10 +469,13 @@ for mm = 1:numel(cfg.mvpa.metric)
         dimnames{i} = ['train' dimnames{i}];
       end
     end
-
+    
     % some assumptions check
     assert(isequal(dimnames{1}, 'repetition') && isequal(dimnames{2}, 'fold'));
-    
+    if isfield(cfg.mvpa, 'cf') 
+      dimnames = [dimnames(1:2) {'model'} dimnames(3:end)];
+    end
+
     if numel(cfg.mvpa.metric)>1
       siz = size(result.perf{mm});
     else
