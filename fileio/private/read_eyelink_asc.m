@@ -45,6 +45,16 @@ if needhdr || needevt
   datline = aline(sel);
   aline   = aline(~sel);
 
+  % The contents of a sample line can be decoded by the lines starting with
+  % SAMPLES, this at least gives the recorded eye(s), whether position columns
+  % reflect GAZE (or HREF), and whether additional columns for VEL and/or
+  % RES are present. Also, the presence of INPUT is specified. With
+  % tracking mode CR, it is assumed that there's subsequently a column with
+  % dots (some of which might have been replaced by some characters). Then,
+  % the file may have been recorded in REMOTE MODE, in which a bunch of
+  % extra numeric columns + comments may be present.
+  %
+  %
   % according to the eyelink documentation, the sample lines have different
   % flavours, depending on how the data was collected (monocular or
   % binocular), and possibly the conversion settings from edf2asc
@@ -226,33 +236,160 @@ if needhdr || needevt
     sample  = timestamp2samples(stime, tstamps, samples, Fs1);
     message = extractAfter(s, " ");
     asc.msg = cat(2, array2table(stime), table(message), array2table(sample));
+
+    sel = startsWith(asc.msg.message,"RECCFG");
+    msg = split(asc.msg.message(sel), " ");
+    if sum(sel)==1
+      % if there's only a single msg, then the above yields a column
+      msg = msg(:)';
+    end
+    Fs  = double(msg(:,3));
+    assert(all(Fs==Fs(1)) && Fs(1)==Fs1);
+    trackingmode = msg(:,2);
+    assert(all(strcmp(trackingmode, trackingmode{1})));
+    trackingmode = char(trackingmode{1});
+    eyesrecorded = msg(:,end);
+    assert(all(strcmp(eyesrecorded, eyesrecorded{1})));
+    eyesrecorded = char(eyesrecorded{1});
+
+    asc.fsample      = Fs(1);
+    asc.trackingmode = trackingmode;
+    asc.eyesrecorded = eyesrecorded;
   end
+
+  selstart = startsWith(aline, 'START');
+  if sum(selstart)
+    s = extractAfter(aline(selstart), sprintf('\t'));
+    starttime = double(extractBefore(s, sprintf('\t')));
+    content   = extractAfter(s, sprintf('\t'));
+  end
+
+  selend = startsWith(aline, 'END');
+  if sum(selend)
+    s = extractAfter(aline(selend), sprintf('\t'));
+    endtime = double(extractBefore(s, sprintf('\t')));
+    s = extractAfter(s, sprintf('\t'));
+    assert(numel(starttime)==numel(endtime));
+    asc.block = cat(2, array2table(starttime), array2table(endtime), table(content));
+  end
+
+  selsamples = startsWith(aline, 'SAMPLE');
+  if sum(selsamples)
+    s = extractAfter(aline(selsamples), sprintf('\t'));
+    assert(all(strcmp(s, s(1)))); % mixed mode is not supported currently
+    
+    % parse the samples line to be able to 'guess' what's in there
+    s = split(s(1), sprintf('\t'))';
+     
+    asc.datatype = char(s{1});
+    if strcmp(s{2}, 'LEFT') && strcmp(s{3}, 'RIGHT')
+      eyesrecorded = 'LR';
+      s = s(4:end);
+    elseif strcmp(s{2}, 'LEFT')
+      eyesrecorded = 'L';
+      s = s(3:end);
+    elseif strcmp(s{2}, 'RIGHT')
+      eyesrecorded = 'R';
+      s = s(3:end);
+    end
+
+    % verify
+    if isfield(asc, 'eyesrecorded')
+      assert(isequal(asc.eyesrecorded, eyesrecorded));
+    end
+
+    rate = find(strcmp(s, 'RATE'));
+    if ~isempty(rate)
+      Fs = double(s(rate+1));
+      if isfield(asc, 'fsample')
+        assert(isequal(asc.fsample, Fs));
+      else
+        asc.fsample = Fs;
+      end
+    end
+    s(rate+[0 1]) = [];
+ 
+    tracking = find(strcmp(s, 'TRACKING'));
+    if ~isempty(tracking)
+      tm = char(s(tracking+1));
+      if isfield(asc, 'trackingmode')
+        assert(isequal(asc.trackingmode, tm));
+      else
+        asc.trackingmode = tm;
+      end
+    end
+    s(tracking+[0 1]) = [];
+    
+    asc.hasvelocity   = any(strcmp(s, 'VEL'));
+    asc.hasresolution = any(strcmp(s, 'RES'));
+    asc.hasinput      = any(strcmp(s, 'INPUT'));
+  end
+
 end
 
 if needhdr
-  hdr.nChans              = ntab(1)+1;
+  ismonocular = isscalar(asc.eyesrecorded);
+  
+  label = {'timestamps'};
+  if ismonocular
+    label{end+1, 1} = 'xp';
+    label{end+1}    = 'yp';
+    label{end+1}    = 'ps';
+  else
+    label{end+1, 1} = 'xpl';
+    label{end+1}    = 'ypl';
+    label{end+1}    = 'psl';
+    label{end+1}    = 'xpr';
+    label{end+1}    = 'ypr';
+    label{end+1}    = 'psr';
+  end
+  if asc.hasvelocity
+    if ismonocular
+      label{end+1, 1} = 'xv';
+      label{end+1}    = 'yv';
+    else
+      label{end+1, 1} = 'xvl';
+      label{end+1}    = 'yvl';
+      label{end+1}    = 'xvr';
+      label{end+1}    = 'yvr';
+    end
+  end
+  if asc.hasresolution
+    label{end+1} = 'xr';
+    label{end+1} = 'yr';
+  end
+  if asc.hasinput
+    label{end+1} = 'input';
+  end
+  if isfield(asc, 'trackingmode')
+    % check whether tracking mode was CR, which adds an extra column to the datline
+    iscr = strcmp(asc.trackingmode, 'CR');
+  else
+    iscr = false;
+  end
+  if ntab(1)+1==numel(label)+double(iscr)
+    % this is a data file which does not contain potential extra columns of numeric data
+  else
+    % this is a data file obtained in 'remote' mode, with additional extra
+    % columns of numeric data, after a comment column
+    istart = numel(label)+1;
+    for i=istart:(ntab(1)+1)
+      label{i} = sprintf('extra%01d',i-istart+1);
+    end
+  end
+  hdr.label               = label;
+  hdr.nChans              = numel(label);
   hdr.nSamples            = numel(tstamps);
   hdr.nSamplesPre         = 0;
   hdr.nTrials             = 1;
   hdr.FirstTimeStamp      = tstamps(1);
-
-  sel = startsWith(asc.msg.message,"RECCFG");
-  msg = split(asc.msg.message(sel), " ");
-  if sum(sel)==1
-    % if there's only a single msg, then the above yields a column
-    msg = msg(:)';
-  end
-  Fs  = double(msg(:,3));
-  assert(all(Fs==Fs(1)) && Fs(1)==Fs1);
-
   hdr.TimeStampPerSample  = 1;
-  hdr.Fs                  = Fs(1); 
+  hdr.Fs                  = asc.fsample; 
   
   % give this warning only once
-  ft_warning('creating fake channel names');
-  hdr.label{1} = 'timestamps';
+  hdr.chanunit{1} = 'ms';
   for i=2:hdr.nChans
-    hdr.label{i} = sprintf('chan%02d', i-1);
+    hdr.chanunit{i,1} = 'unknown';
   end
   asc.hdr = hdr;
 end
@@ -344,7 +481,6 @@ if needdat
   asc.dat = nan(ntab(1)+1, numel(datline));
   idy = true(ntab(1)+1,1);
   for i = 1:numel(chunks)
-    fprintf('parsing the numeric data in chunk %d/%d\n', i, numel(chunks));
     idx = [(chunks(i)+1) chunks(i)+100000];
     idx(idx>numel(datline)) = numel(datline);
     d   = split(datline(idx(1):idx(2)), sprintf('\t'));
