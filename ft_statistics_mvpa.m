@@ -213,6 +213,7 @@ cfg.freqwin           = ft_getopt(cfg, 'freqwin',      []);
 cfg.neighbours        = ft_getopt(cfg, 'neighbours',   []);
 cfg.connectivity      = ft_getopt(cfg, 'connectivity', []); % the default is dealt with below
 cfg.time              = ft_getopt(cfg, 'time',         []);
+cfg.freq              = ft_getopt(cfg, 'freq',         []);
 
 cfg.mvpa              = ft_getopt(cfg, 'mvpa',       []);
 cfg.mvpa.model        = ft_getopt(cfg.mvpa, 'model', []);
@@ -447,9 +448,13 @@ stat = [];
 % preliminary, for if time has been defined in the cfg, and if a searchlight was requested
 if ~isempty(cfg.time)
   time = cfg.time;
-  if cfg.tstep>1
+  if ~isempty(cfg.timwin) && cfg.timwin>1
     time = time(offset:cfg.tstep:end-offset);
   end
+end
+
+if ~isempty(cfg.freq)
+  freq = cfg.freq;
 end
 
 for mm = 1:numel(cfg.mvpa.metric)
@@ -530,6 +535,9 @@ for mm = 1:numel(cfg.mvpa.metric)
     end
     if exist('time', 'var') && any(contains(dimnames, 'time'))
       time = time(selelem{find(contains(dimnames,'time'),1,'first')-2});
+    end
+    if exist('freq', 'var') && any(contains(dimnames, 'freq'))
+      freq = freq(selelem{find(contains(dimnames,'freq'),1,'first')-2});
     end
     out = outcat; clear outcat
     out = cell2mat(out);
@@ -613,7 +621,7 @@ if isfield(cfg, 'latency') && ((isfield(cfg,'avgovertime') && strcmp(cfg.avgover
   time = mean(cfg.latency);
 end
 if isfield(cfg, 'frequency')
-  frequency = mean(cfg.frequency);
+  freq = mean(cfg.frequency);
 end
 
 if exist('label', 'var')
@@ -624,7 +632,7 @@ if exist('label', 'var')
   end
 end
 if exist('outdimord', 'var'), cfg.dimord  = dimord; end % stat.dimord is overwritten by cfg.dimord in the caller, hence it's useless to set stat.dimord here
-if exist('frequency', 'var'), stat.freq   = frequency; end
+if exist('frequency', 'var'), stat.freq   = freq; end
 if exist('time', 'var'),      stat.time   = time; end
 
 % helper functions

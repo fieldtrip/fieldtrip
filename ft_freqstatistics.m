@@ -130,6 +130,13 @@ if strcmp(cfg.correctm, 'cluster') && length(varargin{1}.label)>1
   cfg.neighbours = ft_prepare_neighbours(tmpcfg);
 end
 
+if isequal(cfg.method,'mvpa')
+  if isfield(varargin{1}, 'time')
+    cfg.time = varargin{1}.time;
+  end
+  cfg.freq = varargin{1}.freq;
+end
+
 dimord = getdimord(varargin{1}, cfg.parameter);
 dimtok = tokenize(dimord, '_');
 dimsiz = getdimsiz(varargin{1}, cfg.parameter, numel(dimtok));
@@ -217,8 +224,14 @@ end
 % describe the dimensions of the output data
 stat.dimord = cfg.dimord;
 
-% copy the descripive fields into the output
-stat = copyfields(varargin{1}, stat, {'freq', 'time', 'label', 'elec', 'grad', 'opto'});
+% copy the descriptive fields into the output, but only if these are not
+% present (and possibly updated by the statmethod-function
+fieldstobecopied = {'freq' 'time' 'label' 'elec', 'grad', 'opto'};
+if isfield(stat, 'freq'),  fieldstobecopied = fieldstobecopied(~ismember(fieldstobecopied, 'freq'));  end
+if isfield(stat, 'time'),  fieldstobecopied = fieldstobecopied(~ismember(fieldstobecopied, 'time'));  end
+if isfield(stat, 'label'), fieldstobecopied = fieldstobecopied(~ismember(fieldstobecopied, 'label')); end
+
+stat = copyfields(varargin{1}, stat, fieldstobecopied);
 
 % these were only present to inform the low-level functions
 cfg = removefields(cfg, {'dim', 'dimord'});

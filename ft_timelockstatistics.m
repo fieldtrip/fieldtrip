@@ -256,7 +256,7 @@ for i=1:length(fn)
   end
 end
 
-% copy the descripive fields into the output, but only if these are not
+% copy the descriptive fields into the output, but only if these are not
 % present (and possibly updated by the statmethod-function
 fieldstobecopied = {'time' 'label' 'elec', 'grad', 'opto'};
 if isfield(stat, 'time'),  fieldstobecopied = fieldstobecopied(~ismember(fieldstobecopied, 'time'));  end

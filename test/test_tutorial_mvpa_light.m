@@ -66,6 +66,7 @@ cfg.mvpa            = [];
 cfg.mvpa.classifier = 'multiclass_lda';
 cfg.mvpa.metric     = 'accuracy';
 cfg.mvpa.k          = 3;
+cfg.mvpa.repeat     = 1;
 
 % Let us unpack this:
 %
@@ -237,6 +238,7 @@ neighbours = ft_prepare_neighbours(cfg);
   cfg.design        = [ones(nFIC,1); 2*ones(nFC,1)];
   cfg.latency       = [0.3, 0.7];
   cfg.avgovertime   = 'yes';
+  cfg.mvpa.repeat   = 1;
 
   cfg.neighbours  = neighbours;
 
@@ -290,6 +292,7 @@ cfg.method           = 'mvpa';
 cfg.features         = 'chan';
 cfg.generalize       = 'time';
 cfg.design           = [ones(nFIC,1); 2*ones(nFC,1)];
+cfg.mvpa.repeat      = 1;
 
 stat = ft_timelockstatistics(cfg, dataFIC_LP, dataFC_LP);
 
@@ -332,6 +335,7 @@ cfg = [] ;
 cfg.method        = 'mvpa';
 cfg.features      = 'chan';
 cfg.design        = [ones(nFIC,1); 2*ones(nFC,1)];
+cfg.mvpa.repeat   = 1;
 
 stat = ft_freqstatistics(cfg, freqFIC, freqFC);
 
@@ -373,6 +377,7 @@ cfg.method        = 'mvpa';
 cfg.features      = 'chan';
 cfg.design        = [ones(nFIC,1); 2*ones(nFC,1)];
 cfg.timwin        = 5;
+cfg.mvpa.repeat   = 1;
 
 stat = ft_freqstatistics(cfg, freqFIC, freqFC);
 
