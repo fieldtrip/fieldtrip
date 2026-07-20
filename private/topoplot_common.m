@@ -1030,6 +1030,9 @@ if ~isempty(ident) && isfield(info.(ident), 'commenth') && ~isempty(info.(ident)
   end
 end
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION to select components
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function data = select_component(data, indx)
 
 % Add a pseudo-axis with the component numbers
@@ -1037,7 +1040,8 @@ data.comp = 1:size(data.topo,2);
 
 % make a selection of components
 data.comp  = data.comp(indx);
+data.compdimord = 'comp';
 data.topo  = data.topo(:,indx);
-data.label = data.topolabel;
 data.topodimord = 'chan_comp';
+data.label = data.topolabel;
 data = removefields(data, {'topolabel', 'unmixing', 'unmixingdimord'}); % not needed any more
