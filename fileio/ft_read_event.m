@@ -1183,18 +1183,7 @@ switch eventformat
     end
 
   case 'eyelink_asc'
-    if isempty(hdr)
-      hdr = ft_read_header(filename, 'headerformat', headerformat);
-    end
-    if isfield(hdr.orig, 'input')
-      % this is inefficient, since it keeps the complete data in memory
-      % but it does speed up subsequent read operations without the user
-      % having to care about it
-      asc = hdr.orig;
-    else
-      asc = read_eyelink_asc(filename);
-    end
-    event = asc.event;
+    [hdr, event] = read_eyelink_asc(filename); % hdr and event are both returned in FT-style
 
   case 'fcdc_global'
     event = event_queue;

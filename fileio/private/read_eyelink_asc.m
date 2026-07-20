@@ -1,11 +1,15 @@
-function asc = read_eyelink_asc(filename, asc, begsample, endsample, chanindx)
+function varargout = read_eyelink_asc(filename, hdr, begsample, endsample, chanindx)
 
 % READ_EYELINK_ASC reads the header information, input triggers, messages
-% and all data points from an Eyelink *.asc file. The output events are
-% represented as matlab tables (after Aug 2022)
+% and optional data points from an Eyelink *.asc file. The output is either
+% a pair of FieldTrip compatible hdr and event structures, or a data structure
+% containing the low-level header information, and the requested data
+% matrix
 %
 % Use as
-%   asc = read_eyelink_asc(filename)
+%   [hdr, event] = read_eyelink_asc(filename)
+% or
+%   [asc] = read_eyelink_asc(filename, hdr, begsample, endsample, chanindx) 
 
 % Copyright (C) 2010-2015, Robert Oostenveld
 % Copyright (C) 2022-2026, Jan-Mathijs Schoffelen
@@ -28,12 +32,24 @@ function asc = read_eyelink_asc(filename, asc, begsample, endsample, chanindx)
 %
 % $Id$
 
-needhdr = (nargin==1); % always
-needevt = (nargin==1); % always
+persistent previous_filename asc;
+
+
+if ~isempty(previous_filename) && isequal(previous_filename, filename)
+  usecache = true;
+else
+  usecache = false;
+end
+
+if isempty(previous_filename)
+  previous_filename = filename;
+end
+
+needhdr = (nargin==1);
+needevt = (nargin==1);
 needdat = (nargin==5);
 
-if needhdr || needevt
-  % skip this
+if ~usecache
   % read the whole file at once
   fid = fopen_or_error(filename, 'rt');
   aline = fread(fid, inf, 'char=>char');
@@ -152,11 +168,12 @@ if needhdr || needevt
 
   asc = [];
   asc.filename = filename;
-  asc.datline  = datline; % don't parse it for now
+  asc.datline  = datline;
+  asc.datncol  = ntab(1)+1;
   asc.tstamps  = tstamps;
   asc.samples  = samples(:);
   asc.trialidx = trialidx;
-
+  
   % make tables for the events sfix, ssacc, sblink etc
   selsfix   = startsWith(aline, 'SFIX');
   selssacc  = startsWith(aline, 'SSACC');
@@ -324,7 +341,6 @@ if needhdr || needevt
     asc.hasresolution = any(strcmp(s, 'RES'));
     asc.hasinput      = any(strcmp(s, 'INPUT'));
   end
-
 end
 
 if needhdr
@@ -367,22 +383,22 @@ if needhdr
   else
     iscr = false;
   end
-  if ntab(1)+1==numel(label)+double(iscr)
+  if asc.datncol==numel(label)+double(iscr)
     % this is a data file which does not contain potential extra columns of numeric data
   else
     % this is a data file obtained in 'remote' mode, with additional extra
     % columns of numeric data, after a comment column
     istart = numel(label)+1;
-    for i=istart:(ntab(1)+1)
+    for i=istart:(asc.datncol)
       label{i} = sprintf('extra%01d',i-istart+1);
     end
   end
   hdr.label               = label;
   hdr.nChans              = numel(label);
-  hdr.nSamples            = numel(tstamps);
+  hdr.nSamples            = numel(asc.tstamps);
   hdr.nSamplesPre         = 0;
   hdr.nTrials             = 1;
-  hdr.FirstTimeStamp      = tstamps(1);
+  hdr.FirstTimeStamp      = asc.tstamps(1);
   hdr.TimeStampPerSample  = 1;
   hdr.Fs                  = asc.fsample; 
   
@@ -391,7 +407,8 @@ if needhdr
   for i=2:hdr.nChans
     hdr.chanunit{i,1} = 'unknown';
   end
-  asc.hdr = hdr;
+  hdr.orig = removefields(asc, {'datline' 'tstamps' 'samples' 'trialidx'});
+  varargout{1} = hdr;
 end
 
 if needevt
@@ -464,29 +481,32 @@ if needevt
 
   event = cat(1, event{:});
   [srt, ix] = sort([event.sample]);
-  event = event(ix);
-
-  asc.event = event;
+  varargout{2} = event(ix);
 end
 
 if needdat
-  datline = asc.datline(begsample:endsample);
-  ntab    = count(datline, sprintf('\t'));
+  datline_ = asc.datline(begsample:endsample);
+  ntab     = count(datline_, sprintf('\t'));
 
   % check whether all lines have the same number of columns
   assert(all(ntab==ntab(1)));
 
   % identify the chunks of consecutive '...' and comments
-  chunks = 0:100000:numel(datline);
-  asc.dat = nan(ntab(1)+1, numel(datline));
+  chunks = 0:100000:numel(datline_);
+  asc.dat = nan(ntab(1)+1, numel(datline_));
   idy = true(ntab(1)+1,1);
   for i = 1:numel(chunks)
     idx = [(chunks(i)+1) chunks(i)+100000];
-    idx(idx>numel(datline)) = numel(datline);
-    d   = split(datline(idx(1):idx(2)), sprintf('\t'));
+    idx(idx>numel(datline_)) = numel(datline_);
+    d   = split(datline_(idx(1):idx(2)), sprintf('\t'));
     asc.dat(:,idx(1):idx(2)) = double(d(:,idy))';
   end
-  asc.dat = asc.dat(chanindx,:);
+  asc.dat       = asc.dat(chanindx,:);
+  asc.begsample = begsample;
+  asc.endsample = endsample;
+  asc.chanindx  = chanindx;
+
+  varargout{1} = asc;
 end
 
 

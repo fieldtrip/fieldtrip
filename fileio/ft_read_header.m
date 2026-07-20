@@ -970,18 +970,8 @@ switch headerformat
     hdr.orig        = orig;
 
   case 'eyelink_asc'
-    asc = read_eyelink_asc(filename);
-    hdr = asc.hdr;
-
-    % remember all header and data details upon request, which save time
-    % reading in the data once more
-    if cache
-      hdr.orig = asc;
-    else
-      % remember the original header details
-      hdr.orig = removefields(asc, {'dat' 'hdr' 'datline'});
-    end
-
+    hdr = read_eyelink_asc(filename);
+    
   case  'spmeeg_mat'
     hdr = read_spmeeg_header(filename);
 
