@@ -4,7 +4,14 @@ function elec = opto2elec(opto)
 %
 % See also GRAD2ELEC
 
-elec = keepfields(opto, {'unit', 'coordsys'});
+elec = keepfields(opto, {'label', 'unit', 'coordsys'});
 elec.type = 'eeg';
-elec.label = opto.label;
-elec.elecpos = opto.optopos;
+if isfield(grad, 'tra')
+  weight = abs(opto.tra);
+  for i=1:numel(opto.label)
+    weight(i,:) = weight(i,:) / norm(weight(i,:));
+  end
+  elec.elecpos = weight * opto.optopos;
+else
+  elec.elecpos = opto.optopos;
+end
