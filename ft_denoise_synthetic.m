@@ -84,7 +84,7 @@ end
 % check whether there are reference channels in the input data
 hasref = ~isempty(ft_channelselection('MEGREF', data.label));
 if ~hasref
-  ft_error('synthetic gradients can only be computed when the input data contains reference channels');
+  ft_warning('synthetic gradients can only be computed when the input data contains reference channels');
 end
 
 % select trials of interest
@@ -95,7 +95,6 @@ data   = ft_selectdata(tmpcfg, data);
 
 % remember the original channel ordering
 labelold = data.label;
-
 
 % first undo/invert the previously applied balancing
 while ~isempty(data.grad.balance.current)
@@ -116,12 +115,14 @@ end
 
 % then apply the desired balancing
 if ~strcmp(cfg.gradient, 'none')
-  bname = cfg.gradient;
+  bname   = cfg.gradient;
   montage = data.grad.balance.(bname);
   fprintf('applying the "%s" projection\n', bname);
-  data      = ft_apply_montage(data,      montage, 'keepunused', 'yes');
-  data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'no');
-  data.grad.balance.current{end+1} = bname;
+  data = ft_apply_montage(data, montage, 'keepunused', 'yes');
+  if istrue(cfg.updatesens)
+    data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'no');
+    data.grad.balance.current{end+1} = bname;
+  end
 end
 
 % reorder the channels to stay close to the original ordering
