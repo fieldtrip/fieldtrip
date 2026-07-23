@@ -11,6 +11,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'chantype'        = string or cell-array with strings, for example 'megmag' (default = 'all')
 %   'chanindx'        = logical vector or vector of indices with the channels to plot (default is all)
 %   'label'           = whether to show the channel label, can be 'off', 'label', 'number' (default = 'off')
+%   'labeloffset'     = number, how much to shift the label away from the actual sensor location (default is automatic)
 %   'axes'            = true/false, whether to plot the axes of the 3D coordinate system (default = false)
 %   'unit'            = string, convert the sensor array to the specified geometrical units (default = [])
 %   'fontcolor'       = string, color specification (default = 'k')
@@ -47,7 +48,7 @@ function hs = ft_plot_sens(sens, varargin)
 %   'edgealpha'       = transparency, between 0 and 1 (default = 1)
 %
 % The following options apply when the orientation is plotted as a line segment per channel
-%   'linecolor'       = [r g b] values or string, or Nx3 matrix for color of orientation line, 
+%   'linecolor'       = [r g b] values or string, or Nx3 matrix for color of orientation line,
 %                       default is the default matlab colororder
 %   'linewidth'       = scalar, width of the orientation line (default = 1)
 %   'linelength'      = scalar, length of the orientation line in mm (default = 20)
@@ -69,7 +70,7 @@ function hs = ft_plot_sens(sens, varargin)
 % FT_PLOT_TOPO3D
 
 % Copyright (C) 2009-2024, Robert Oostenveld, Arjen Stolk
-% Copyright (C) 2025, Robert Oostenveld, Arjen Stolk, Jan-Mathijs Schoffelen
+% Copyright (C) 2025-2026, Robert Oostenveld, Arjen Stolk, Jan-Mathijs Schoffelen
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -94,6 +95,7 @@ sens = ft_datatype_sens(sens);
 
 % get the optional input arguments
 label           = ft_getopt(varargin, 'label', 'off');
+labeloffset     = ft_getopt(varargin, 'labeloffset', []);
 chantype        = ft_getopt(varargin, 'chantype');
 chanindx        = ft_getopt(varargin, 'chanindx');
 unit            = ft_getopt(varargin, 'unit');
@@ -219,7 +221,7 @@ if isempty(senssize)
     case 'neuromag122'
       senssize = 35; % FIXME this is only an estimate
     case 'ctf64'
-      senssize = 20; % Vrba et al (1993) "Whole cortex, 64 channel SQUID biomagnetometer system" 
+      senssize = 20; % Vrba et al (1993) "Whole cortex, 64 channel SQUID biomagnetometer system"
     case 'ctf151'
       senssize = 20;
     case 'ctf275'
@@ -264,7 +266,7 @@ if ~isempty(chantype) || ~isempty(chanindx)
     chansel2 = find(chanindx); % ensure it is a list of indices
     chansel = intersect(chansel1, chansel2);
   end
-  
+
   % remove the channels that are not selected
   sens.label    = sens.label(chansel);
   sens.chanpos  = sens.chanpos(chansel,:);
@@ -285,7 +287,7 @@ if ~isempty(chantype) || ~isempty(chanindx)
   if isfield(sens, 'chanunitold')
     sens.chanunitold  = sens.chanunitold(chansel);
   end
-  
+
   % remove the magnetometer and gradiometer coils that are not in one of the selected channels
   if isfield(sens, 'tra') && isfield(sens, 'coilpos')
     sens.tra     = sens.tra(chansel,:);
@@ -294,7 +296,7 @@ if ~isempty(chantype) || ~isempty(chanindx)
     sens.coilori = sens.coilori(coilsel,:);
     sens.tra     = sens.tra(:,coilsel);
   end
-  
+
   % FIXME note that I have not tested this on any complicated electrode definitions
   % remove the electrodes that are not in one of the selected channels
   if isfield(sens, 'tra') && isfield(sens, 'elecpos')
@@ -303,7 +305,7 @@ if ~isempty(chantype) || ~isempty(chanindx)
     sens.elecpos = sens.elecpos(elecsel,:);
     sens.tra     = sens.tra(:,elecsel);
   end
-  
+
 end % selecting channels and coils
 
 % start with empty return values
@@ -335,7 +337,7 @@ if istrue(individual)
   else
     ori = [];
   end
-  
+
 else
   % determine the position of each channel, which is for example the mean of
   % two bipolar electrodes, or the bottom coil of a axial gradiometer, or
@@ -350,7 +352,7 @@ else
   else
     ori = [];
   end
-  
+
 end % if istrue(individual)
 
 if isempty(ori)
@@ -361,7 +363,7 @@ if isempty(ori)
   elseif isfield(sens, 'elecori') && (~isfield(sens, 'tra') || isequal(sens.tra, eye(length(sens.label))))
     % one-to-one mapping between electrodes and channels
     ori = sens.elecori;
-  
+
   elseif isfield(sens, 'optoori') && (~isfield(sens, 'tra') || isequal(sens.tra, eye(length(sens.label))))
     % one-to-one mapping between optodes and channels
     ori = sens.optoori;
@@ -412,7 +414,7 @@ if isempty(ori)
     % this only works if all positions are defined
     tri = projecttri(pos, 'delaunay');
     ori = surface_normals(pos, tri);
-    
+
   elseif size(pos,1)>4
     % determine orientations by fitting a sphere to the sensors
     try
@@ -429,7 +431,7 @@ if isempty(ori)
   else
     ori = nan(size(pos));
   end
-  
+
 end % if empty(ori)
 
 if mean(isnan(ori(:)))>0.25
@@ -502,16 +504,16 @@ switch sensshape
       % if the marker is '.' it will show points that do not depend on the size, in all other cases (e.g. 'o') the size is relevant
       hs = scatter3(pos(:,1), pos(:,2), pos(:,3), senssize.^2, facecolor, marker);
     end
-    
+
   case 'sphere'
     plotsens(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-    
+
   case 'disc'
     plotsens(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-    
+
   case 'circle'
     plotsens(pos, ori, [], senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-    
+
   case 'square'
     % determine the rotation-around-the-axis of each sensor
     % this is only applicable for neuromag planar gradiometers
@@ -521,7 +523,7 @@ switch sensshape
       for i=1:nchan
         poscoil = find(sens.tra(i,:)>0);
         negcoil = find(sens.tra(i,:)<0);
-        if numel(poscoil)==1 && numel(negcoil)==1
+        if isscalar(poscoil) && isscalar(negcoil)
           % planar gradiometer
           direction = sens.coilpos(poscoil,:)-sens.coilpos(negcoil,:);
           direction = direction/norm(direction);
@@ -535,36 +537,36 @@ switch sensshape
     else
       chandir = [];
     end
-    
+
     plotsens(pos, ori, chandir, senssize, sensshape, 'edgecolor', edgecolor, 'facecolor', facecolor, 'edgealpha', edgealpha, 'facealpha', facealpha);
-    
+
   otherwise
     ft_error('incorrect shape');
 end % switch
 
 if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
-  
-  % determine the offset for the labels
-  if strcmp(sensshape, 'point')
-    % determine the median of the distance to the nearest neighbour
-    sensdist = triu(dist(sens.chanpos'),1);
-    sensdist(sensdist==0) = Inf;
-    sensdist = min(sensdist,[], 2);
-    sensdist = median(sensdist);
-    % the offset is based on distance between sensors
-    offset = 0.5 * sensdist;
-    % it should not be larger than 20 mm
-    offset = min(offset, 20*ft_scalingfactor('mm', sens.unit));
-  else
-    % the offset is based on size of the sensors
-    offset = 1.5 * senssize;
-  end
-  
-  if isinf(offset)
-    % this happens in case there is only one sensor and the size has not been specified
-    offset = 10*ft_scalingfactor('mm', sens.unit); % displace the label by 10 mm
-  end
-  
+
+  if isempty(labeloffset)
+    % determine the offset for the labels
+    if strcmp(sensshape, 'point') && size(sens.chanpos,1)>1
+      % determine the median of the distance to the nearest neighbour
+      sensdist = triu(dist(sens.chanpos'),1);
+      sensdist(sensdist==0) = Inf;
+      sensdist = min(sensdist,[], 2);
+      sensdist = median(sensdist);
+      % the offset is based on distance between sensors
+      labeloffset = 0.5 * sensdist;
+      % it should not be larger than 20 mm
+      labeloffset = min(labeloffset, 20 * ft_scalingfactor('mm', sens.unit));
+    elseif strcmp(sensshape, 'point') && size(sens.chanpos,1)==1
+      % the offset cannot be determined from the distance between sensors, displace it by 10 mm
+      labeloffset = 10 * ft_scalingfactor('mm', sens.unit);
+    else
+      % the offset is based on size of the sensors
+      labeloffset = 1.5 * senssize;
+    end
+  end % if empty
+
   for i=1:size(pos,1)
     switch label
       case {'on', 'yes', 'label', 'labels'}
@@ -591,9 +593,9 @@ if ~isempty(label) && ~any(strcmp(label, {'off', 'no'}))
         ft_error('unsupported value for option ''label''');
     end % switch
     % shift the label with a certain offset
-    x = pos(i,1) + offset * ori(i,1);
-    y = pos(i,2) + offset * ori(i,2);
-    z = pos(i,3) + offset * ori(i,3);
+    x = pos(i,1) + labeloffset * ori(i,1);
+    y = pos(i,2) + labeloffset * ori(i,2);
+    z = pos(i,3) + labeloffset * ori(i,3);
     text(x, y, z, str, 'color', fontcolor, 'fontunits', fontunits, 'fontsize', fontsize, 'fontname', fontname, 'fontweight', fontweight, 'horizontalalignment', 'center', 'verticalalignment', 'middle', 'interpreter', 'none');
   end % for each channel
 end % if label
@@ -682,7 +684,7 @@ for i=1:nsens
   r1 = rotate([0 th 0]);
   r2 = rotate([0 0 ph]);
   t  = translate(senspos(i,:));
-  
+
   % determine the initial rotation of the coil as homogenous transformation matrix
   if isempty(sensdir)
     % none of the coils needs to be rotated around their axis, this applies to circular coils
@@ -699,7 +701,7 @@ for i=1:nsens
     rh = atan2(y, x)*180/pi;
     r0 = rotate([0 0 rh]);
   end
-  
+
   switch sensshape
     case {'sphere' 'disc'}
       % construct a single mesh with separate triangles for all sensors
@@ -714,7 +716,7 @@ for i=1:nsens
       mesh.poly(i,:)  = sel;                              % this is a polygon connecting all edge points
       mesh.tri        = [];
   end
-  
+
 end % for each sensor
 
 % use either poly or tri for plotting
