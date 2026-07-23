@@ -142,14 +142,14 @@ end
 
 % first undo/invert the previously applied balancing
 while ~isempty(data.grad.balance.current)
-  this_name    = data.grad.balance.current{end};
-  this_montage = ft_inverse_montage(data.grad.balance.(this_name));
-  fprintf('reverting the "%s" projection\n', this_name);
-  data      = ft_apply_montage(data,      this_montage, 'keepunused', 'yes');
-  data.grad = ft_apply_montage(data.grad, this_montage, 'keepunused', 'no');
+  bname    = data.grad.balance.current{end};
+  montage = ft_inverse_montage(data.grad.balance.(bname));
+  fprintf('reverting the "%s" projection\n', bname);
+  data      = ft_apply_montage(data,      montage, 'keepunused', 'yes');
+  data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'no');
   data.grad.balance.current = data.grad.balance.current(1:end-1); % remove this from the list
 
-  if strcmp(this_name, 'planar')
+  if strcmp(bname, 'planar')
     if isfield(data.grad, 'type') && ~isempty(strfind(data.grad.type, '_planar'))
       % remove the _planar postfix from the MEG sensor type
       data.grad.type = sens.type(1:(end-7));
@@ -157,21 +157,27 @@ while ~isempty(data.grad.balance.current)
   end
 end
 
-if isequal(cfg.ssp, 'all')
+% it should be a cell-array
+if ischar(cfg.ssp)
+  cfg.ssp = {cfg.ssp};
+end
+
+if isequal(cfg.ssp, {'all'})
   cfg.ssp = setdiff(fieldnames(data.grad.balance), {'current'});
 elseif isequal(cfg.ssp, 'none')
   cfg.ssp = {};
 end
 
 % then apply the desired balancing
-desired = cfg.ssp;
-for i=1:numel(desired)
-  this_name    = desired{i};
-  this_montage = data.grad.balance.(this_name);
-  fprintf('applying the "%s" projection\n', this_name);
-  data      = ft_apply_montage(data,      this_montage, 'keepunused', 'yes');
-  data.grad = ft_apply_montage(data.grad, this_montage, 'keepunused', 'no');
-  data.grad.balance.current{end+1} = this_name;
+for i=1:numel(cfg.ssp)
+  bname   = cfg.ssp{i};
+  montage = data.grad.balance.(bname);
+  fprintf('applying the "%s" projection\n', bname);
+  data = ft_apply_montage(data, montage, 'keepunused', 'yes');
+  if istrue(cfg.updatesens)
+    data.grad = ft_apply_montage(data.grad, montage, 'keepunused', 'no');
+    data.grad.balance.current{end+1} = bname;
+  end
 end
 
 % reorder the channels to stay close to the original ordering
@@ -183,11 +189,6 @@ if numel(selnew)==numel(labelold)
   data.label = data.label(selnew);
 else
   ft_warning('channel ordering might have changed');
-end
-
-if ~istrue(cfg.updatesens)
-  % revert to the original gradiometer definition
-  data.grad = gradorig;
 end
 
 % convert back to input type if necessary
