@@ -164,7 +164,7 @@ if ~isempty(cfg.headshape)
   delete(fig);
 
   % make the final selection
-  selected = make_selection(elec, opt.selected);
+  selected = select_elec(elec, opt.selected);
   % store the selection in the output cfg
   cfg.channel = elec.label(opt.selected);
 
@@ -174,20 +174,20 @@ else
 
   % make the final selection
   [selchan, selsens] = match_str(cfg.channel, elec.label);
-  selected = make_selection(elec, selsens);
+  selected = select_elec(elec, selsens);
 end % if headshape
 
 switch convert
   case 'elec'
     % nothing to do
   case 'grad'
-    % make the final selection
+    % make the final selection in the grad structure
     [selchan, selsens] = match_str(cfg.channel, grad.label);
-    selected = select_elec(grad, selsens);
+    selected = select_grad(grad, selsens);
   case 'opto'
-    % make the final selection
+    % make the final selection in the opto structure
     [selchan, selsens] = match_str(cfg.channel, opto.label);
-    selected = select_elec(opto, selsens);
+    selected = select_opto(opto, selsens);
   otherwise
     ft_error('unsupported input data')
 end
