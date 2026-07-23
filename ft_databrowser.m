@@ -480,7 +480,7 @@ if Ntrials == 0
   ft_error('no trials to display');
 end
 
-% determine the vertical scaling
+% determine the initial vertical scaling
 if ischar(cfg.ylim)
   if hasdata
     sel = 1;
@@ -489,16 +489,20 @@ if ischar(cfg.ylim)
     end
     % the first trial is used to determine the vertical scaling
     dat = data.trial{sel}(chansel,:);
+    tim = data.time{sel};
   else
     % read one second (or one block) of data to determine the vertical scaling
     begsample = 1;
     endsample = min(round(hdr.Fs), hdr.nSamples);
     dat = ft_read_data(cfg.datafile, 'header', hdr, 'begsample', begsample, 'endsample', endsample, 'chanindx', chansel, 'checkboundary', strcmp(cfg.continuous, 'no'), 'dataformat', cfg.dataformat, headeropt{:});
+    tim = ((begsample:endsample)-1)/hdr.Fs;
   end % if hasdata
   % convert the data to another numeric precision, i.e. double, single or int32
   if ~isempty(cfg.precision)
     dat = cast(dat, cfg.precision);
   end
+  % apply the initial preprocessing
+  [dat, lab, tim] = preproc(dat, hdr.label(chansel), tim, cfg.preproc);
   minval = min(dat(:));
   maxval = max(dat(:));
   switch cfg.ylim
@@ -507,7 +511,7 @@ if ischar(cfg.ylim)
       scalefac = 10^(fix(log10(maxabs)));
       if scalefac==0
         % this happens if the data is all zeros
-        scalefac=1;
+        scalefac = 1;
       end
       maxabs   = (round(maxabs / scalefac * 100) / 100) * scalefac;
       cfg.ylim = [-maxabs maxabs];
@@ -524,7 +528,7 @@ if ischar(cfg.ylim)
   if strcmp(cfg.viewmode, 'vertical') || strcmp(cfg.viewmode, 'component')
     % it is OK to have some overlap between the traces in vertical and component viewmodes
     % but butterfly plots should stay within the min/max boundaries
-    scale_adjust = 5;
+    scale_adjust = min(Nchans, 5);
     cfg.ylim = cfg.ylim/scale_adjust;
   end
 else
