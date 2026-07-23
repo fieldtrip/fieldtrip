@@ -125,6 +125,10 @@ elseif isnumeric(desired)
   % change the numeric index into the channel name
   channel = datachannel(desired);
   return
+elseif islogical(desired)
+  % change the boolean vector into a list of channel names
+  channel = datachannel(desired);
+  return
 elseif ischar(desired)
   % ensure that a single input argument like 'all' also works
   desired = {desired};
