@@ -345,9 +345,9 @@ if strcmp(cfg.method, 'template')
   elec.label = elec.label(datsel);
   elec.elecpos   = elec.elecpos(datsel,:);
   for i=1:Ntarget
+    % sort the electrodes consistent with the configuration
     [cfgsel, datsel] = match_str(cfg.channel, target(i).label);
-    target(i).label   = target(i).label(datsel);
-    target(i).elecpos = target(i).elecpos(datsel,:);
+    target(i) = select_elec(target(i), datsel);
   end
   
   % compute the average of the target electrode positions
