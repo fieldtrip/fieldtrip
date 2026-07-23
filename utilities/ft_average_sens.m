@@ -34,10 +34,9 @@ function [asens, afiducials] = ft_average_sens(sens, varargin)
 % $Id$
 
 % get the optional input arguments
-% fileformat = ft_getopt(varargin, 'fileformat');
-weights       = ft_getopt(varargin, 'weights');
-fiducials     = ft_getopt(varargin, 'fiducials');
-fb            = ft_getopt(varargin, 'feedback');
+weights   = ft_getopt(varargin, 'weights');
+fiducials = ft_getopt(varargin, 'fiducials');
+fb        = ft_getopt(varargin, 'feedback');
 
 toplot = ~isempty(fb);
 nsens  = numel(sens);
