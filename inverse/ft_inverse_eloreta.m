@@ -70,7 +70,6 @@ end
 keepfilter      = ft_getopt(varargin, 'keepfilter', 'no');
 keepmom         = ft_getopt(varargin, 'keepmom', 'yes');
 keepleadfield   = ft_getopt(varargin, 'keepleadfield', 'no');
-lambda          = ft_getopt(varargin, 'lambda', 0.05);
 
 % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD
 leadfieldopt = {};
@@ -119,6 +118,9 @@ if hasmom
 end
 
 if hasfilter
+  % default should be empty here
+  lambda = ft_getopt(varargin, 'lambda');
+
   % check that the options normalize/reducerank/etc are not specified
   assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
   % check that lambda is not specified
@@ -126,11 +128,15 @@ if hasfilter
   ft_info('using precomputed filters\n');
   sourcemodel.filter = sourcemodel.filter(originside);
 elseif hasleadfield
+  lambda = ft_getopt(varargin, 'lambda', 0.05);
+
   % check that the options normalize/reducerank/etc are not specified
   assert(all(cellfun(@isempty, leadfieldopt(2:2:end))), 'the options for computing the leadfield must all be empty/default');
   ft_info('using precomputed leadfields\n');
   sourcemodel.leadfield = sourcemodel.leadfield(originside);
 else
+  lambda = ft_getopt(varargin, 'lambda', 0.05);
+
   ft_info('computing forward model on the fly\n');
   if hasmom
     for i=size(sourcemodel.pos,1)
