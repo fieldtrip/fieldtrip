@@ -37,6 +37,10 @@ function [estimate] = ft_inverse_dipolefit(sourcemodel, sens, headmodel, dat, va
 %   constr.reduce     = vector, used for symmetric dipole models
 %   constr.expand     = vector, used for symmetric dipole models
 %   constr.sequential = boolean, fit different dipoles to sequential slices of the data
+%   constr.linkmom    = boolean, link the moment of a symmetric pair so they share one
+%                       moment (mom2 = mommap*mom1), used for ocular sources in HArtMuT
+%   constr.mommap     = 3x3 matrix, maps the first moment onto the second for linkmom
+%                       (default = eye(3), i.e. identical moments for synchronous eyes)
 %
 % The maximum likelihood estimation implements
 % - Lutkenhoner B. "Dipole source localization by means of maximum likelihood
@@ -120,6 +124,19 @@ constr.symmetry   = ft_getopt(constr, 'symmetry', false);
 constr.fixedori   = ft_getopt(constr, 'fixedori', false);
 constr.rigidbody  = ft_getopt(constr, 'rigidbody', false);
 constr.sequential = ft_getopt(constr, 'sequential', false);
+constr.linkmom    = ft_getopt(constr, 'linkmom', false);
+constr.mommap     = ft_getopt(constr, 'mommap', eye(3));
+
+if constr.linkmom
+  % a linked-moment symmetric source shares a single moment between the two mirrored
+  % dipoles, i.e. mom2 = mommap*mom1, which models synchronously moving eyes
+  if ~constr.symmetry
+    ft_error('the linkmom constraint requires a symmetric dipole pair, see cfg.symmetry');
+  end
+  if constr.fixedori || constr.rigidbody || constr.sequential
+    ft_error('the linkmom constraint is not supported together with fixedori, rigidbody or sequential constraints');
+  end
+end
 
 if isempty(optimfun)
   % determine whether the MATLAB Optimization toolbox is available and can be used
@@ -323,6 +340,12 @@ if ~isempty(mleweight)
   % maximum likelihood estimation using the weigth matrix
   if constr.sequential
     ft_error('not supported');
+  elseif constr.linkmom
+    % fit a single moment shared by the mirrored pair, then expand it to both dipoles
+    lfc = lf(:,1:3) + lf(:,4:6)*constr.mommap;
+    mc  = pinv(lfc'*mleweight*lfc)*lfc'*mleweight*dat;
+    mom = [mc; constr.mommap*mc];
+    dif = dat - lf*mom;
   else
     mom = pinv(lf'*mleweight*lf)*lf'*mleweight*dat;  % Lutkenhoner equation 5
     dif = dat - lf*mom;
@@ -357,6 +380,11 @@ else
       framesel = (1:numframe) + numframe*(i-1);  % 1:numframe for the first, (numframe+1):(2*numframe) for the second, ...
       mom(dipsel,framesel) = pinv(lf(:,dipsel))*dat(:,framesel);
     end
+  elseif constr.linkmom
+    % fit a single moment shared by the mirrored pair, then expand it to both dipoles
+    lfc = lf(:,1:3) + lf(:,4:6)*constr.mommap;
+    mc  = pinv(lfc)*dat;
+    mom = [mc; constr.mommap*mc];
   else
     mom = pinv(lf)*dat;
   end
