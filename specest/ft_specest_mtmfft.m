@@ -149,7 +149,7 @@ if isnumeric(freqoiinput)
   if numel(freqoiinput) ~= numel(freqoi) % freqoi will not contain double frequency bins when requested
     ft_warning('output frequencies are different from input frequencies, multiples of the same bin were requested but not given');
   else
-    if any(abs(freqoiinput-freqoi) >= eps*1e6)
+    if any(abs(freqoiinput-freqoi) >= eps*1e9)
       ft_warning('output frequencies are different from input frequencies');
     end
   end
