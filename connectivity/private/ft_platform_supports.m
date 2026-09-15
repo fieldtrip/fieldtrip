@@ -134,11 +134,6 @@ switch what
     root_dir = fileparts(which('ft_defaults'));
     if ~isempty(root_dir)
       external_stats_dir = fullfile(root_dir, 'external', 'stats');
-      % these files are only used by the other functions in the external/stats directory
-      exclude_mfiles = {
-        'common_size.m'
-        'iscomplex.m'
-        };
       tf = has_all_functions_in_dir(external_stats_dir, exclude_mfiles);
     else
       % this probably only works for MATLAB, not for Octave
