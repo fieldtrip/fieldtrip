@@ -304,7 +304,7 @@ switch toolbox
   case 'COMM'
     dependency = {has_license('communication_toolbox'), 'de2bi', 'fskmod', 'pskmod'};       % also check the availability of a toolbox license
   case 'SIGNAL'
-    dependency = {has_license('signal_toolbox'), 'window', 'hanning'};                      % also check the availability of a toolbox license
+    dependency = {has_license('signal_toolbox'), 'medfilt1', 'freqz'};                      % these must not be functions that external/signal provides
   case 'IMAGES'
     dependency = {has_license('image_toolbox'), 'imerode', 'imdilate'};                     % also check the availability of a toolbox license
   case 'VISION'
