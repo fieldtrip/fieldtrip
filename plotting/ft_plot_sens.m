@@ -267,43 +267,13 @@ if ~isempty(chantype) || ~isempty(chanindx)
     chansel = intersect(chansel1, chansel2);
   end
 
-  % remove the channels that are not selected
-  sens.label    = sens.label(chansel);
-  sens.chanpos  = sens.chanpos(chansel,:);
-  sens.chantype = sens.chantype(chansel);
-  sens.chanunit = sens.chanunit(chansel);
-  if isfield(sens, 'chanori')
-    sens.chanori  = sens.chanori(chansel,:);
-  end
-  if isfield(sens, 'chanposold')
-    sens.chanposold  = sens.chanposold(chansel,:);
-  end
-  if isfield(sens, 'labelold')
-    sens.labelold  = sens.labelold(chansel);
-  end
-  if isfield(sens, 'chantypeold')
-    sens.chanposold  = sens.chantypeold(chansel);
-  end
-  if isfield(sens, 'chanunitold')
-    sens.chanunitold  = sens.chanunitold(chansel);
-  end
-
-  % remove the magnetometer and gradiometer coils that are not in one of the selected channels
-  if isfield(sens, 'tra') && isfield(sens, 'coilpos')
-    sens.tra     = sens.tra(chansel,:);
-    coilsel      = any(sens.tra~=0,1);
-    sens.coilpos = sens.coilpos(coilsel,:);
-    sens.coilori = sens.coilori(coilsel,:);
-    sens.tra     = sens.tra(:,coilsel);
-  end
-
-  % FIXME note that I have not tested this on any complicated electrode definitions
-  % remove the electrodes that are not in one of the selected channels
-  if isfield(sens, 'tra') && isfield(sens, 'elecpos')
-    sens.tra     = sens.tra(chansel,:);
-    elecsel      = any(sens.tra~=0,1);
-    sens.elecpos = sens.elecpos(elecsel,:);
-    sens.tra     = sens.tra(:,elecsel);
+  % make the selection using a helper function
+  if iseeg
+    sens = select_elec(sens, chansel);
+  elseif ismeg
+    sens = select_grad(sens, chansel);
+  elseif isnirs
+    sens = select_opto(sens, chansel);
   end
 
 end % selecting channels and coils

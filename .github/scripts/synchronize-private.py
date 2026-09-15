@@ -1926,6 +1926,18 @@ sync_lists = [
     'fileio/private/write_ctf_shm.m',
     'src/write_ctf_shm.m'
   ],
+  [
+    'private/select_elec.m',
+    'plotting/private/select_elec.m'
+  ],
+  [
+    'private/select_grad.m',
+    'plotting/private/select_grad.m'
+  ],
+  [
+    'private/select_opto.m',
+    'plotting/private/select_opto.m'
+  ]
 ]
 
 if __name__ == "__main__":
