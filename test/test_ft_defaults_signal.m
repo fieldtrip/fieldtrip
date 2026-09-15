@@ -5,6 +5,9 @@ function test_ft_defaults_signal
 % DEPENDENCY ft_hastoolbox ft_defaults
 % DATA no
 
+global ft_default
+ft_default = [];
+
 % external/signal must stay on the path when the Signal Processing Toolbox is
 % licensed but not installed, across repeated re-initialisation of ft_defaults
 
