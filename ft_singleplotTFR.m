@@ -190,10 +190,12 @@ else
 end
 
 % set the figure window title, if not defined by user
-if isempty(cfg.figurename) && ~isempty(dataname)
-  cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ', dataname));
-else
-  cfg.figurename = sprintf('%s:', mfilename);
+if isempty(cfg.figurename)
+  if ~isempty(dataname)
+    cfg.figurename = sprintf('%s: %s', mfilename, join_str(', ', dataname));
+  else
+    cfg.figurename = sprintf('%s:', mfilename);
+  end
 end
 
 makesubplots = false;
