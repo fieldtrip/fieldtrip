@@ -85,7 +85,7 @@ if ischar(cfg.tissue)
   cfg.tissue = {cfg.tissue};
 end
 
-if numel(cfg.tissue)>1 && numel(cfg.numvertices)==1
+if numel(cfg.tissue)>1 && isscalar(cfg.numvertices)
   % use the same number of vertices for each tissue
   cfg.numvertices = repmat(cfg.numvertices, size(cfg.tissue));
 end
