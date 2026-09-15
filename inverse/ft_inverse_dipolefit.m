@@ -39,13 +39,18 @@ function [estimate] = ft_inverse_dipolefit(sourcemodel, sens, headmodel, dat, va
 %   constr.sequential = boolean, fit different dipoles to sequential slices of the data
 %
 % The maximum likelihood estimation implements
-% - Lutkenhoner B. "Dipole source localization by means of maximum likelihood
+%   Lutkenhoner B. "Dipole source localization by means of maximum likelihood
 %   estimation I. Theory and simulations" Electroencephalogr Clin Neurophysiol. 1998
 %   Apr;106(4):314-21.
 %
+% The rigidbody constraint implements
+%   Pfeiffer C, Andersen LM, Lundqvist D, Hämäläinen M, Schneiderman JF, Oostenveld R.
+%   "Localizing on-scalp MEG sensors using an array of magnetic dipole coils" PLoS
+%   One. 2018 doi: 10.1371/journal.pone.0191111
+%
 % See also FT_DIPOLEFITTING, FT_SOURCEANALYSIS, FT_PREPARE_HEADMODEL, FT_PREPARE_SOURCEMODEL
 
-% Copyright (C) 2003-2016, Robert Oostenveld
+% Copyright (C) 2003-2026, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -240,7 +245,7 @@ elseif constr.symmetry
   param = param(constr.reduce);
   
 elseif constr.rigidbody
-  constr.coilpos = param;    % store the head localizer coil positions
+  constr.dippos = param;     % store the HPI magnetic dipole positions
   param = [0 0 0 0 0 0];     % start with an initial translation and rotation of zero
 end
 
@@ -257,8 +262,8 @@ elseif constr.symmetry
   param  = constr.mirror .* param(constr.expand);
   
 elseif constr.rigidbody
-  numdip    = numel(constr.coilpos)/3;
-  pos       = reshape(constr.coilpos, 3, numdip); % convert from vector into 3xN matrix
+  numdip    = numel(constr.dippos)/3;             % the to-be-localized object is an array of HPI magnetic dipoles
+  pos       = reshape(constr.dippos, 3, numdip);  % convert from vector into 3xN matrix
   pos(4,:)  = 1;
   transform = rigidbody(param);                   % this is a 4x4 homogenous transformation matrix
   pos       = transform * pos;                    % apply the homogenous transformation matrix
