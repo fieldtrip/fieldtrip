@@ -247,7 +247,7 @@ if strcmp(dtype, 'comp')
       cfg.component = 1:size(comp.topo,2);
     end
     cfg.component(cfg.component>size(comp.topo,2)) = [];
-   
+
     varargin = cell(1,numel(cfg.component));
     for i=1:numel(cfg.component)
       varargin{i} = select_component(comp, cfg.component(i));
@@ -285,7 +285,7 @@ switch dtype
     xparam = 'comp';
     yparam = '';
     cfg.parameter = ft_getopt(cfg, 'parameter', 'topo');
-    
+
   otherwise
     % if the input data is not one of the standard data types, or if the functional
     % data is just one value per channel: in this case xparam, yparam are not defined
@@ -325,7 +325,7 @@ if all(isbivariate)
 elseif any(isbivariate)
   ft_error('a mixture of bivariate and univariate input is not allowed');
 end
- 
+
 makesubplots = false;
 if Ndata==1 && isequal(cfg.figure, 'subplot')
   % overrule this setting
@@ -333,7 +333,7 @@ if Ndata==1 && isequal(cfg.figure, 'subplot')
 elseif Ndata>1 && isequal(cfg.figure, 'subplot')
   makesubplots = true;
 end
-  
+
 for indx=1:Ndata
   if makesubplots
     if indx==1
@@ -356,7 +356,7 @@ for indx=1:Ndata
   else
     dataname = cfg.dataname;
   end
-  
+
   data = varargin{indx};
   dimord = getdimord(data, cfg.parameter);
   dimtok = tokenize(dimord, '_');
@@ -368,14 +368,14 @@ for indx=1:Ndata
       cfg.title = sprintf('%s component %d', dataname, data.comp);
     end
   end
-    
+
   % parse cfg.channel
   if isfield(cfg, 'channel') && isfield(data, 'label')
     cfg.channel = ft_channelselection(cfg.channel, data.label);
   elseif isfield(cfg, 'channel') && isfield(data, 'labelcmb')
     cfg.channel = ft_channelselection(cfg.channel, unique(data.labelcmb(:)));
   end
-  
+
   % Apply baseline correction
   if ~strcmp(cfg.baseline, 'no')
     % keep mask-parameter if it is set
@@ -393,7 +393,7 @@ for indx=1:Ndata
       data.(cfg.maskparameter) = tempmask;
     end
   end
-  
+
   % time and/or frequency should NOT be selected and averaged here, since a singleplot might follow in interactive mode
   tmpcfg = keepfields(cfg, {'channel', 'trials', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
   if hasrpt
@@ -407,7 +407,7 @@ for indx=1:Ndata
   ft_warning(ws);
   % restore the provenance information
   [cfg, data] = rollback_provenance(cfg, data);
-  
+
   if isfield(tmpvar, cfg.maskparameter) && ~isfield(data, cfg.maskparameter)
     % the mask parameter is not present after ft_selectdata, because it is
     % not included in all input arguments. Make the same selection and copy
@@ -416,16 +416,16 @@ for indx=1:Ndata
     data.(cfg.maskparameter) = tmpvar.(cfg.maskparameter);
   end
   clear tmpvar tmpcfg hastime hasrpt
-  
+
   % ensure that the preproc specific options are located in the cfg.preproc
   % substructure, but also ensure that the field 'refchannel' remains at the
   % highest level in the structure. This is a little hack by JM because the field
   % refchannel can relate to connectivity or to an EEG reference.
-  
+
   if isfield(cfg, 'refchannel'), refchannelincfg = cfg.refchannel; cfg = rmfield(cfg, 'refchannel'); end
   cfg = ft_checkconfig(cfg, 'createsubcfg',  {'preproc'});
   if exist('refchannelincfg', 'var'), cfg.refchannel  = refchannelincfg; end
-  
+
   if ~isempty(cfg.preproc)
     % preprocess the data, i.e. apply filtering, baselinecorrection, etc.
     fprintf('applying preprocessing options\n');
@@ -434,16 +434,16 @@ for indx=1:Ndata
     end
     data = ft_preprocessing(cfg.preproc, data);
   end
-  
+
   % Apply channel-type specific scaling
   fn = fieldnames(cfg);
   fn = setdiff(fn, {'skipscale', 'showscale', 'gridscale'}); % these are for the layout and plotting, not for CHANSCALE_COMMON
   fn = fn(endsWith(fn, 'scale') | startsWith(fn, 'mychan') | strcmp(fn, 'channel') | strcmp(fn, 'parameter'));
   tmpcfg = keepfields(cfg, fn);
   data = chanscale_common(tmpcfg, data);
-  
+
   %% Section 3: select the data to be plotted and determine min/max range
-  
+
   % Create time-series of small topoplots
   if ~ischar(cfg.xlim) && length(cfg.xlim)>2 %&& any(ismember(dimtok, 'time'))
     % Switch off interactive mode:
@@ -461,7 +461,7 @@ for indx=1:Ndata
     end
     return
   end
-  
+
   % Get physical min/max range of x
   if ~isempty(xparam)
     if strcmp(cfg.xlim, 'maxmin')
@@ -477,7 +477,7 @@ for indx=1:Ndata
     xmax = data.(xparam)(xmaxindx);
     selx = xminindx:xmaxindx;
   end
-  
+
   % Get physical min/max range of y
   if ~isempty(yparam)
     if strcmp(cfg.ylim, 'maxmin')
@@ -493,7 +493,7 @@ for indx=1:Ndata
     ymax = data.(yparam)(ymaxindx);
     sely = yminindx:ymaxindx;
   end
-  
+
   % Take subselection of channels, this only works if the interactive mode is switched off
   if exist('selchannel', 'var')
     sellab = match_str(data.label, selchannel);
@@ -502,7 +502,7 @@ for indx=1:Ndata
     sellab = 1:numel(data.label);
     label  = data.label;
   end
-  
+
   % Make data vector with one scalar value for each channel
   dat = data.(cfg.parameter);
   % get dimord dimensions
@@ -511,7 +511,7 @@ for indx=1:Ndata
   zdim = setdiff(1:ndims(dat), [ydim xdim]);
   % and permute
   dat = permute(dat, [zdim(:)' ydim xdim]);
-  
+
   if ~isempty(yparam)
     % time-frequency data
     dat = dat(sellab, sely, selx);
@@ -524,7 +524,7 @@ for indx=1:Ndata
     dat = nanmean(dat, 2);
   end
   dat = dat(:);
-  
+
   if isfield(data, cfg.maskparameter)
     % Make mask vector with one value for each channel
     msk = data.(cfg.maskparameter);
@@ -534,7 +534,7 @@ for indx=1:Ndata
     zdim = setdiff(1:ndims(dat), [ydim xdim]);
     % and permute
     msk = permute(msk, [zdim(:)' ydim xdim]);
-    
+
     if ~isempty(yparam)
       % time-frequency data
       msk = msk(sellab, sely, selx);
@@ -544,31 +544,31 @@ for indx=1:Ndata
       % time or frequency data
       msk = msk(sellab, selx);
     end
-    
+
     if size(msk,2)>1 || size(msk,3)>1
       ft_warning('no masking possible for average over multiple latencies or frequencies -> cfg.maskparameter cleared')
       msk = [];
     end
-    
+
   else
     msk = [];
   end
-  
+
   % Select the channels in the data that match with the layout:
   [seldat, sellay] = match_str(label, cfg.layout.label);
   if isempty(seldat)
     ft_error('labels in data and labels in layout do not match');
   end
-  
+
   dat = dat(seldat);
   if ~isempty(msk)
     msk = msk(seldat);
   end
-  
+
   % Select x and y coordinates and labels of the channels in the data
   chanX = cfg.layout.pos(sellay,1);
   chanY = cfg.layout.pos(sellay,2);
-  
+
   % Get physical min/max range of z:
   if strcmp(cfg.zlim, 'maxmin')
     zmin = min(dat);
@@ -586,7 +586,7 @@ for indx=1:Ndata
     zmin = cfg.zlim(1);
     zmax = cfg.zlim(2);
   end
-  
+
   % Construct comment
   switch cfg.comment
     case {'auto' 'auto_nodate'}
@@ -631,7 +631,7 @@ for indx=1:Ndata
     otherwise
       comment = cfg.comment; % allow custom comments (e.g., ft_clusterplot specifies custom comments)
   end % switch comment
-  
+
   if ~isempty(cfg.refchannel)
     if iscell(cfg.refchannel)
       comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel{:});
@@ -639,19 +639,19 @@ for indx=1:Ndata
       comment = sprintf('%s\nreference=%s %s', comment, cfg.refchannel);
     end
   end
-  
+
   % open a new figure, or add it to the existing one
   open_figure(keepfields(cfg, {'figure', 'position', 'visible', 'renderer', 'figurename', 'title'}));
-  
+
   % apply the same colormap to all figures
   if ~isempty(cfg.colormap)
     set(gcf,  'colormap', cfg.colormap);
   end
-  
+
   % Draw topoplot
   cla
   hold on
-  
+
   % check for nans
   nanInds = isnan(dat);
   if strcmp(cfg.interpolatenan, 'yes') && any(nanInds)
@@ -668,7 +668,7 @@ for indx=1:Ndata
     end
     msk(nanInds) = false;
   end
-  
+
   % Set ft_plot_topo specific options
   if strcmp(cfg.interplimits, 'head')
     interplimits = 'mask';
@@ -683,7 +683,7 @@ for indx=1:Ndata
   if strcmp(cfg.style, 'fill');            style = 'isofill';     end
   if strcmp(cfg.style, 'straight_imsat');  style = 'imsat';       end
   if strcmp(cfg.style, 'both_imsat');      style = 'imsatiso';    end
-  
+
   % Draw plot
   if strcmp(cfg.style, 'blank')
     ft_plot_layout(cfg.layout, 'box', 'no', 'label', 'no', 'point', 'no')
@@ -703,7 +703,7 @@ for indx=1:Ndata
     end
     ft_plot_topo(chanX, chanY, dat, opt{:});
   end
-  
+
   % For Highlight (channel-selection)
   for icell = 1:length(cfg.highlight)
     if ~strcmp(cfg.highlight{icell}, 'off')
@@ -726,7 +726,7 @@ for indx=1:Ndata
           templay.label{ichan} = num2str(match_str(data.label, templay.label{ichan}));
         end
       end
-      
+
       ft_plot_layout(templay, 'box', 'no', 'label', labelflg, 'point', ~labelflg, ...
         'pointsymbol',  cfg.highlightsymbol{icell}, ...
         'pointcolor',   cfg.highlightcolor{icell}, ...
@@ -737,7 +737,7 @@ for indx=1:Ndata
         'labelalignv', 'middle');
     end
   end % for icell
-  
+
   % For Markers (all channels)
   switch cfg.marker
     case {'off', 'no'}
@@ -785,17 +785,17 @@ for indx=1:Ndata
     otherwise
       ft_error('incorrect value for cfg.marker');
   end
-  
+
   if isfield(cfg, 'vector')
     % FIXME this is not documented
     vecX = nanmean(real(data.(cfg.vector)(:,selx)), 2);
     vecY = nanmean(imag(data.(cfg.vector)(:,selx)), 2);
-    
+
     % scale quiver relative to largest gradiometer sample
     k = 0.15/max([max(abs(real(data.(cfg.vector)(:)))) max(abs(imag(data.(cfg.vector)(:))))]);
     quiver(chanX, chanY, k*vecX, k*vecY, 0, 'red');
   end
-  
+
   % Write comment
   if strcmp(cfg.comment, 'no')
     comment_handle = [];
@@ -809,7 +809,7 @@ for indx=1:Ndata
   else
     comment_handle = [];
   end
-  
+
   % Set colour axis
   if ~strcmp(cfg.style, 'blank')
     if zmin==zmax
@@ -818,7 +818,7 @@ for indx=1:Ndata
       clim([zmin zmax]);
     end
   end
-  
+
   % Plot colorbar
   if isfield(cfg, 'colorbar')
     if strcmp(cfg.colorbar, 'yes')
@@ -829,7 +829,7 @@ for indx=1:Ndata
       ylabel(c, cfg.colorbartext);
     end
   end
-  
+
   % set the figure window title, but only if the user has not changed it
   if isempty(get(gcf, 'Name'))
     if isfield(cfg, 'funcname')
@@ -846,21 +846,21 @@ for indx=1:Ndata
       set(gcf, 'NumberTitle', 'off');
     end
   end
-  
+
   axis off
   hold off
   axis equal
-  
+
   if strcmp('yes', cfg.hotkeys)
     %  Attach data and cfg to figure and attach a key listener to the figure
     set(gcf, 'KeyPressFcn', {@key_sub, zmin, zmax})
   end
-  
+
   % add the cfg/data/channel information to the figure under identifier linked to this axis,
   % this is now also needed in non-interactive mode for the post-hoc clim management
   ident                    = ['axh' num2str(round(sum(clock.*1e6)))]; % unique identifier for this axis
   set(gca, 'tag',ident);
-     
+
   info                     = guidata(gcf);
   info.(ident).x           = cfg.layout.pos(:, 1);
   info.(ident).y           = cfg.layout.pos(:, 2);
@@ -903,7 +903,7 @@ for indx=1:Ndata
       ft_warning('unsupported dimord "%s" for interactive plotting', dimord);
     end
   end
-  
+
 end % for numel(varargin)
 
 if Ndata>1 && ~isequal(cfg.figure, 'yes')
@@ -950,10 +950,10 @@ if ~isempty(label)
     cfg = rmfield(cfg, 'zlim');
   end
   fprintf('selected cfg.channel = {%s}\n', join_str(', ', cfg.channel));
-  % ensure that the new figure appears at the same position, and also that 
+  % ensure that the new figure appears at the same position, and also that
   cfg.figure = 'yes';
   cfg.position = get(gcf, 'Position');
-  
+
   selchan = match_str(datvarargin{1}.label, cfg.channel);
   cfg.linecolor = linecolor(selchan, :, :); % make a subselection for the correct inheritance of the line colors
   ft_singleplotER(cfg, datvarargin{:});
