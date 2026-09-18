@@ -706,7 +706,7 @@ cfg.rotx(selT8) = -90;
 % ... the remainder would be the same as before
 
 %
-for i=1:numel(elec1020.label)
+for i=1:numel(elec.label)
     elec.elecori(i,:) = elec.elecpos(i,:) - [0 0 40];
     elec.elecori(i,:) = elec.elecori(i,:) / norm(elec.elecori(i,:)); % unit length
 end
@@ -736,7 +736,7 @@ correction = {
     };
 
 cfg = [];
-cfg.elec = elec1020;
+cfg.elec = elec;
 cfg.channel = chansel;  % subset of 19 locations
 cfg.rotx = outcfg.rotx; % 19x1 vector
 cfg.roty = outcfg.roty; % 19x1 vector
@@ -805,9 +805,10 @@ cfg.elec = elec;
 cfg.channel = chansel;
 cfg.template = opm_single;
 cfg.outwardshift = 2 + 1 + 5; % IMPORTANT see below
-[outcfg, opm_all] = ft_sensorplacement(cfg, headshape);
+[outcfg, all_opm] = ft_sensorplacement(cfg, headshape);
 
 %
+lab = {};
 grad = [];
 grad.label = {};
 grad.coilpos = zeros(0,3);
