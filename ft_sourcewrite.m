@@ -10,7 +10,7 @@ function ft_sourcewrite(cfg, source)
 % cfg is a structure that should contain
 %
 %   cfg.filename  = string, filename without the extension
-%   cfg.filetype  = string, can be 'nifti', 'gifti' or 'cifti' (default is automatic)
+%   cfg.filetype  = string, can be 'nifti', 'nifti_gz', 'gifti' or 'cifti' (default is automatic)
 %   cfg.parameter = string, functional parameter to be written to file
 %   cfg.precision = string, can be 'single', 'double', etc.
 %
@@ -121,7 +121,7 @@ if isempty(cfg.filetype)
 end
 
 switch (cfg.filetype)
-  case 'nifti'
+  case {'nifti' 'nifti_gz'}
     if numel(cfg.filename)<=4 || ~strcmp(cfg.filename(end-3:end), '.nii');
       cfg.filename = cat(2, cfg.filename, '.nii');
     end
