@@ -411,7 +411,7 @@ if needpos
     prob = 0;
     for i=1:Nrand
       % compare all clusters simultaneosuly
-      prob = prob + any(posdistribution(:,i)>stat(:));
+      prob = prob + any(posdistribution(:,i)>=stat(:));
     end
     if isequal(cfg.numrandomization, 'all')
       prob = prob/Nrand;
@@ -430,9 +430,9 @@ if needpos
     prob = zeros(1,Nobspos);
     for j = 1:Nobspos
       if isequal(cfg.numrandomization, 'all')
-        prob(j) = sum(posdistribution(j,:)>stat(j))/Nrand;
+        prob(j) = sum(posdistribution(j,:)>=stat(j))/Nrand;
       else % the minimum possible p-value should not be 0, but 1/N
-        prob(j) = (sum(posdistribution(j,:)>stat(j)) + 1)/(Nrand + 1);
+        prob(j) = (sum(posdistribution(j,:)>=stat(j)) + 1)/(Nrand + 1);
       end
       % collect the probabilities in one large array
       prb_pos(posclusobs==j) = prob(j);
@@ -444,9 +444,9 @@ if needpos
     prob = zeros(1,Nobspos);
     for j = 1:Nobspos
       if isequal(cfg.numrandomization, 'all')
-        prob(j) = sum(posdistribution>stat(j))/Nrand;
+        prob(j) = sum(posdistribution>=stat(j))/Nrand;
       else % the minimum possible p-value should not be 0, but 1/N
-        prob(j) = (sum(posdistribution>stat(j)) + 1)/(Nrand + 1);
+        prob(j) = (sum(posdistribution>=stat(j)) + 1)/(Nrand + 1);
       end
       % collect the probabilities in one large array
       prb_pos(posclusobs==j) = prob(j);
@@ -491,7 +491,7 @@ if needneg
     prob = 0;
     for i=1:Nrand
       % compare all clusters simultaneosuly
-      prob = prob + any(negdistribution(:,i)<stat(:));
+      prob = prob + any(negdistribution(:,i)<=stat(:));
     end
     if isequal(cfg.numrandomization, 'all')
       prob = prob/Nrand;
@@ -510,9 +510,9 @@ if needneg
     prob = zeros(1,Nobsneg);
     for j = 1:Nobsneg
       if isequal(cfg.numrandomization, 'all')
-        prob(j) = sum(negdistribution(j,:)<stat(j))/Nrand;
+        prob(j) = sum(negdistribution(j,:)<=stat(j))/Nrand;
       else % the minimum possible p-value should not be 0, but 1/N
-        prob(j) = (sum(negdistribution(j,:)<stat(j)) + 1)/(Nrand + 1);
+        prob(j) = (sum(negdistribution(j,:)<=stat(j)) + 1)/(Nrand + 1);
       end
       % collect the probabilities in one large array
       prb_neg(negclusobs==j) = prob(j);
@@ -524,9 +524,9 @@ if needneg
     prob = zeros(1,Nobsneg);
     for j = 1:Nobsneg
       if isequal(cfg.numrandomization, 'all')
-        prob(j) = sum(negdistribution<stat(j))/Nrand;
+        prob(j) = sum(negdistribution<=stat(j))/Nrand;
       else % the minimum possible p-value should not be 0, but 1/N
-        prob(j) = (sum(negdistribution<stat(j)) + 1)/(Nrand + 1);
+        prob(j) = (sum(negdistribution<=stat(j)) + 1)/(Nrand + 1);
       end
       % collect the probabilities in one large array
       prb_neg(negclusobs==j) = prob(j);
