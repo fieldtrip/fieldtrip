@@ -33,12 +33,12 @@ function [dat] = ft_fetch_data(data, varargin)
 if true
   p = inputParser;
   p.KeepUnmatched = true;
-  addOptional(p, 'header', []);
-  addOptional(p, 'begsample', []);
-  addOptional(p, 'endsample', []);
-  addOptional(p, 'chanindx', []);
-  addOptional(p, 'allowoverlap', false);
-  addOptional(p, 'skipcheckdata', false);
+  addParameter(p, 'header', []);
+  addParameter(p, 'begsample', []);
+  addParameter(p, 'endsample', []);
+  addParameter(p, 'chanindx', []);
+  addParameter(p, 'allowoverlap', false);
+  addParameter(p, 'skipcheckdata', false);
   parse(p,varargin{:});
   hdr           = p.Results.header;
   begsample     = p.Results.begsample;
