@@ -27,8 +27,9 @@ function [c, v, n] = ft_connectivity_psi(inputdata, varargin)
 %   'hasjack'		= boolean, specifying whether the repetitions represent leave-one-out samples (allowing for a variance estimate)
 %   'feedback'  = 'none', 'text', 'textbar', 'dial', 'etf', 'gui' type of feedback showing progress of computation, see FT_PROGRESS
 %   'dimord'		= string, specifying how the input matrix should be interpreted
-%   'powindx'   = ?
-%   'normalize' = ?
+%   'powindx'   = Nx2 linear indexing matrix that indexes for each combination the row of the corresponding autospectra
+%   'normalize' = string, 'no'/'yes' that specifies whether the coherency products are to be normalised to 1 before integrating 
+%                 across the specified bandwidth
 %
 % See also CONNECTIVITY, FT_CONNECTIVITYANALYSIS
 
@@ -66,23 +67,24 @@ if isempty(dimord)
 end
 
 if (length(strfind(dimord, 'chan'))~=2 || contains(dimord, 'pos')>0) && ~isempty(powindx)
-  %crossterms are not described with chan_chan_therest, but are linearly indexed
-
+  % cross terms are not described with chan_chan_therest, but are linearly indexed
+ 
   siz = size(inputdata);
 
   outsum = zeros(siz(2:end));
   outssq = zeros(siz(2:end));
-  pvec   = [2 setdiff(1:numel(siz),2)];
+  pvec   = [2 setdiff(1:numel(siz),2)]; % this assumes the spatial dimension (i.e. the one containing the combinations to be 2) 
 
   ft_progress('init', feedback, 'computing metric...');
-  %first compute coherency and then phaseslopeindex
   for j = 1:siz(1)
     ft_progress(j/siz(1), 'computing metric for replicate %d from %d\n', j, siz(1));
     c      = reshape(inputdata(j,:,:,:,:), siz(2:end));
     p1     = abs(reshape(inputdata(j,powindx(:,1),:,:,:), siz(2:end)));
     p2     = abs(reshape(inputdata(j,powindx(:,2),:,:,:), siz(2:end)));
 
-    p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), nbin, normalize), pvec);
+    % compute coherency
+    coherency = c./sqrt(p1.*p2);
+    p         = ipermute(phaseslope(permute(coherency, pvec), nbin, normalize), pvec);
 
     outsum = outsum + p;
     outssq = outssq + p.^2;
@@ -90,7 +92,7 @@ if (length(strfind(dimord, 'chan'))~=2 || contains(dimord, 'pos')>0) && ~isempty
   ft_progress('close');
 
 elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
-  %crossterms are described by chan_chan_therest
+  %cross terms are described by chan_chan_therest
 
   siz = size(inputdata);
 
@@ -110,13 +112,18 @@ elseif length(strfind(dimord, 'chan'))==2 || length(strfind(dimord, 'pos'))==2
     c      = reshape(inputdata(j,:,:,:,:,:,:), siz(2:end));
     p1     = p1(:,ones(1,siz(3)),:,:,:,:);
     p2     = p2(ones(1,siz(2)),:,:,:,:,:);
-    p      = ipermute(phaseslope(permute(c./sqrt(p1.*p2), pvec), nbin, normalize), pvec);
+
+    % compute coherency
+    coherency = c./sqrt(p1.*p2);
+    p         = ipermute(phaseslope(permute(coherency, pvec), nbin, normalize), pvec);
     p(isnan(p)) = 0;
+    
     outsum = outsum + p;
     outssq = outssq + p.^2;
   end
   ft_progress('close');
-
+else
+  ft_error('incorrect input for this function');
 end
 
 n = siz(1);
@@ -138,23 +145,42 @@ end
 
 function [y] = phaseslope(x, n, norm)
 
+% helper function to compute the phaseslope index as per Nolte 2008.
+% There's a poorly documented normalize option as well, which seems to
+% intend to normalize the coherency products by the product of their
+% magnitudes. Up until september 2026, this was incorrectly implemented it
+% seems, since the normalizer was computed after taking the conjugate
+% product of neighboring frequency bins (and subsequently doing the
+% multiplication of neighboring frequency bins again). This has been
+% changed along with PR2610 that fixed an issue with respect to the
+% computation that included the upper edge frequency bin.
+
 m   = size(x, 1); % total number of frequency bins
 y   = zeros(size(x));
-x(1:end-1,:,:,:,:) = conj(x(1:end-1,:,:,:,:)).*x(2:end,:,:,:,:);
 
 if strcmp(norm, 'yes')
-  coh = zeros(size(x));
-  coh(1:end-1,:,:,:,:) = (abs(x(1:end-1,:,:,:,:)) .* abs(x(2:end,:,:,:,:))) + 1;
-  %FIXME why the +1? get the coherence
-  for k = 1:m
-    begindx = max(1,k-n);
-    endindx = min(m,k+n);
-    y(k,:,:,:,:) = imag(nansum(x(begindx:endindx,:,:,:,:)./coh(begindx:endindx,:,:,:,:),1));
-  end
+  % the denominator is the product of the abs(coh) of neighbour frequency bins
+  denom = zeros(size(x));
+  denom(1:end-1,:,:,:,:) = abs(x(1:end-1,:,:,:,:) .* abs(x(2:end,:,:,:,:))) + 1;
+  
+  % FIXME why the +1 ? In this way the normalization seems to correct for the number of
+  % bins in the integration band + the sum of the product of the
+  % coherencies...
 else
-  for k = 1:m
-    begindx = max(1,k-n);
-    endindx = min(m,k+n);
-    y(k,:,:,:,:) = imag(nansum(x(begindx:endindx,:,:,:,:),1));
-  end
+  denom = ones(size(x));
+end
+
+% conjugate multiplication gives the phase difference between consecutive
+% bins and the product of the magnitude of the coherencies
+x(1:end-1,:,:,:,:) = conj(x(1:end-1,:,:,:,:)).*x(2:end,:,:,:,:);
+
+% the last element holds no product (there is no bin above it); zero it so
+% that windows reaching the highest bin do not add the raw coherency there
+x(end,:,:,:,:) = 0;
+
+for k = 1:m
+  begindx = max(1,k-n);
+  endindx = min(m,k+n);
+  indx    = begindx:endindx;
+  y(k,:,:,:,:) = imag(sum(x(indx,:,:,:,:)./denom(indx,:,:,:,:), 1, 'omitnan'));
 end
