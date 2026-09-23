@@ -174,6 +174,15 @@ else
         case 'dpss'
           tmp = dpss(nsmp_up, 1); % take the first Slepian 
           tmp = tmp(:,1)';
+        case {'sine' 'sine_old' 'alpha'}
+          ft_error('taper = %s is not implemented in ft_specest_irasa', taper);
+        otherwise
+          % create the taper and ensure that it is normalized
+          if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
+            tmp = window(taper, nsmp_up)';
+          else
+            tmp = window(taper, nsmp_up, tapopt)';
+          end
       end
       tap{ih,1} = tmp./norm(tmp, 'fro');% for upsampled subsets
 
@@ -184,6 +193,15 @@ else
         case 'dpss'
           tmp = dpss(nsmp_down, 1);
           tmp = tmp(:,1)';
+        case {'sine' 'sine_old' 'alpha'}
+          ft_error('taper = %s is not implemented in ft_specest_irasa', taper);
+        otherwise
+          % create the taper and ensure that it is normalized
+          if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
+            tmp = window(taper, nsmp_down)';
+          else
+            tmp = window(taper, nsmp_down, tapopt)';
+          end
       end
       tap{ih+nhset,1} = tmp./norm(tmp, 'fro');% for downsampled subsets
     end
