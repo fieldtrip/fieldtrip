@@ -41,7 +41,7 @@ else
   usecache = false;
 end
 
-if isempty(previous_filename)
+if isempty(previous_filename) || ~isequal(previous_filename, filename)
   previous_filename = filename;
 end
 
