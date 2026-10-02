@@ -356,11 +356,11 @@ switch cfg.method
     end
     
   case 'irasa'
-    cfg.taper    = ft_getopt(cfg, 'taper',  'hanning'); % Undocumented: dpss is also allowed, in which case the first Slepian with a half time bandwidth product of 1 is used
+    cfg.taper    = ft_getopt(cfg, 'taper',  'hanning'); % Undocumented: dpss is also allowed
     cfg.taperopt = ft_getopt(cfg, 'taperopt');
     cfg.mtmadapt = ft_getopt(cfg, 'mtmadapt', 'mean');
-    cfg.output   = ft_getopt(cfg, 'output', 'fractal');
-    cfg.pad      = ft_getopt(cfg, 'pad',    'nextpow2');
+    cfg.output   = ft_getopt(cfg, 'output',   'fractal');
+    cfg.pad      = ft_getopt(cfg, 'pad',      'nextpow2');
     if ~isequal(cfg.taper, 'hanning')
       ft_warning('the original irasa method uses hanning tapers');
     end
@@ -368,10 +368,8 @@ switch cfg.method
       ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
     end
     % check for foi above Nyquist
-    if isfield(cfg, 'foi')
-      if any(cfg.foi > (data.fsample/2))
-        ft_error('frequencies in cfg.foi are above Nyquist')
-      end
+    if isfield(cfg, 'foi') && any(cfg.foi > (data.fsample/2))
+      ft_error('frequencies in cfg.foi are above Nyquist')
     end
     cfg.nwindow      = ft_getopt(cfg, 'nwindow', 10); % as per the original implementation, but is there a reason to do a pwelch type of analysis with multiple epochs, I suspect that the original implementation was based on continuous data to begin with?
     cfg.windowlength = ft_getopt(cfg, 'windowlength', 'auto'); % 'auto' uses the heuristic in the paper, can also be 'all', or a scalar, see ft_specest_irasa
@@ -380,7 +378,9 @@ switch cfg.method
     if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
       ft_error('you must specify a smoothing parameter with taper = dpss');
     end
-
+    if startsWith(cfg.mfunc, 'none') && isequal(cfg.output, 'fractal')
+      cfg.keeptapers = 'yes';
+    end
   case 'wavelet'
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
