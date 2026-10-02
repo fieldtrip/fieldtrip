@@ -254,9 +254,11 @@ end
 
 % flip dimensions such that the number of trials comes first and then reshape because MVPA-Light expects the 
 % original multi-dimensional array
-dat = reshape(dat.', [size(dat,2) cfg.dim]);
 if docrossdecode
-  dat2 = reshape(dat2.', [size(dat2,2) cfg.dim]); % FIXME this assumes same cfg.dim applies
+  dat2 = reshape(dat2.', [size(dat2,2) cfg.dim{2}]);
+  dat  = reshape(dat.',  [size(dat,2)  cfg.dim{1}]);
+else
+  dat = reshape(dat.', [size(dat,2) cfg.dim]);
 end
 
 %% defaults for cfg.features
@@ -372,18 +374,28 @@ if isempty(cfg.mvpa.neighbours)
             cfg.neighbours = channelconnectivity(tmp_cfg);
             cfg.neighbours = logical(double(cfg.neighbours) + eye(size(cfg.neighbours))); % include source channel
           end
-          cfg.mvpa.neighbours{ix} = cfg.neighbours;
-        case 'time'
-          timdim = strcmp(dimtok, 'time');
-          if ~isempty(cfg.timwin)
-            % create boolean neighbour matrix for time
-            T = ones(cfg.dim(timdim));
-            cfg.mvpa.neighbours{ix} = T - triu(T, floor(cfg.timwin./2)+1) - tril(T, -floor(cfg.timwin./2)-1) > 0;
-          else
-            cfg.mvpa.neighbours{ix} = eye(cfg.dim(timdim));
+          cfg.mvpa.neighbours{1,ix} = cfg.neighbours;
+          if docrossdecode
+            cfg.mvpa.neighbours{2,ix} = cfg.neighbours;
           end
-          offset = round(cfg.timwin/2);
-          cfg.mvpa.neighbours{ix} = cfg.mvpa.neighbours{ix}(offset:cfg.tstep:end-offset,:);
+        case 'time'
+          if docrossdecode
+            thisdim = cfg.dim;
+          else
+            thisdim = {cfg.dim};
+          end
+          for iy = 1:numel(thisdim)
+            timdim = strcmp(dimtok, 'time');
+            if ~isempty(cfg.timwin)
+              % create boolean neighbour matrix for time
+              T = ones(thisdim{iy}(timdim));
+              cfg.mvpa.neighbours{iy,ix} = T - triu(T, floor(cfg.timwin./2)+1) - tril(T, -floor(cfg.timwin./2)-1) > 0;
+            else
+              cfg.mvpa.neighbours{iy,ix} = eye(cfg.dim(timdim));
+            end
+            offset = round(cfg.timwin/2);
+            cfg.mvpa.neighbours{iy,ix} = cfg.mvpa.neighbours{iy,ix}(offset:cfg.tstep:end-offset,:);
+          end
         case 'freq'
           % create boolean neighbour matrix for freq
           freqdim = strcmp(dimtok, 'freq');
