@@ -356,10 +356,11 @@ switch cfg.method
     end
     
   case 'irasa'
-    cfg.taper    = ft_getopt(cfg, 'taper',  'hanning'); % Undocumented: dpss is also allowed, in which case the first Slepian with a half time bandwidth product of 1 is used
+    cfg.taper    = ft_getopt(cfg, 'taper',  'hanning'); % Undocumented: dpss is also allowed
     cfg.taperopt = ft_getopt(cfg, 'taperopt');
-    cfg.output   = ft_getopt(cfg, 'output', 'fractal');
-    cfg.pad      = ft_getopt(cfg, 'pad',    'nextpow2');
+    cfg.mtmadapt = ft_getopt(cfg, 'mtmadapt', 'mean');
+    cfg.output   = ft_getopt(cfg, 'output',   'fractal');
+    cfg.pad      = ft_getopt(cfg, 'pad',      'nextpow2');
     if ~isequal(cfg.taper, 'hanning')
       ft_warning('the original irasa method uses hanning tapers');
     end
@@ -367,15 +368,19 @@ switch cfg.method
       ft_warning('consider using cfg.pad=''nextpow2'' for the irasa method');
     end
     % check for foi above Nyquist
-    if isfield(cfg, 'foi')
-      if any(cfg.foi > (data.fsample/2))
-        ft_error('frequencies in cfg.foi are above Nyquist')
-      end
+    if isfield(cfg, 'foi') && any(cfg.foi > (data.fsample/2))
+      ft_error('frequencies in cfg.foi are above Nyquist')
     end
     cfg.nwindow      = ft_getopt(cfg, 'nwindow', 10); % as per the original implementation, but is there a reason to do a pwelch type of analysis with multiple epochs, I suspect that the original implementation was based on continuous data to begin with?
     cfg.windowlength = ft_getopt(cfg, 'windowlength', 'auto'); % 'auto' uses the heuristic in the paper, can also be 'all', or a scalar, see ft_specest_irasa
     cfg.hset         = ft_getopt(cfg, 'hset', []); % use the default in the lower level function
     cfg.mfunc        = ft_getopt(cfg, 'mfunc', 'median');
+    if isequal(cfg.taper, 'dpss') && not(isfield(cfg, 'tapsmofrq'))
+      ft_error('you must specify a smoothing parameter with taper = dpss');
+    end
+    if startsWith(cfg.mfunc, 'none') && isequal(cfg.output, 'fractal')
+      cfg.keeptapers = 'yes';
+    end
   case 'wavelet'
     cfg.width  = ft_getopt(cfg, 'width',  7);
     cfg.gwidth = ft_getopt(cfg, 'gwidth', 3);
@@ -470,7 +475,7 @@ elseif strcmp(cfg.keeptrials, 'yes') &&  strcmp(cfg.keeptapers, 'yes')
   keeprpt = 4;
 end
 if strcmp(cfg.keeptrials, 'yes') && strcmp(cfg.keeptapers, 'yes')
-  if ~strcmp(cfg.output, 'fourier')
+  if ~(strcmp(cfg.output, 'fourier') || strcmp(cfg.method, 'irasa')) 
     ft_error('Keeping trials AND tapers is only possible with fourier as the output.');
   end
 end
@@ -580,13 +585,14 @@ options = {'pad', cfg.pad, 'padtype', cfg.padtype, 'freqoi', cfg.foi, 'polyorder
 
 % tapsmofrq compatibility between functions (make it into a vector if it's not)
 if isfield(cfg, 'tapsmofrq')
+  cfg.ntaper = ft_getopt(cfg, 'ntaper', []);
   if strcmp(cfg.method, 'mtmconvol') && isscalar(cfg.tapsmofrq) && length(cfg.foi) ~= 1
     cfg.tapsmofrq = ones(length(cfg.foi),1) * cfg.tapsmofrq;
-  elseif strcmp(cfg.method, 'mtmfft') && length(cfg.tapsmofrq) ~= 1
-    ft_warning('cfg.tapsmofrq should be a single number when cfg.method = mtmfft, now using only the first element')
+  elseif (strcmp(cfg.method, 'mtmfft') || strcmp(cfg.method, 'irasa')) && length(cfg.tapsmofrq) ~= 1
+    ft_warning(sprintf('cfg.tapsmofrq should be a single number when cfg.method = %s, now using only the first element', cfg.method))
     cfg.tapsmofrq = cfg.tapsmofrq(1);
   end
-  options = cat(2, options, {'tapsmofrq', cfg.tapsmofrq});
+  options = cat(2, options, {'tapsmofrq', cfg.tapsmofrq, 'weightopt', cfg.mtmadapt 'ntaper', cfg.ntaper});
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -630,12 +636,25 @@ for itrial = 1:ntrials
       end
       
     case 'mtmfft'
-      [spectrum,ntaper,foi,df] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, 'weightopt', cfg.mtmadapt, options{:}, 'feedback', fbopt, 'verbose', verbose);
+      if isequal(cfg.taper, 'dpss')
+        switch cfg.mtmadapt
+          case {'mean' 'eig'}
+            other = {};
+          case 'adapt'
+            other = cell(1,1); % spec
+          case 'qiinv'
+            other = cell(1,4); % spec, qispec, slope, quad
+        end
+      else
+        other = {};
+      end
+      [spectrum,ntaper,foi,df,other{:}] = ft_specest_mtmfft(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, options{:}, 'feedback', fbopt, 'verbose', verbose);
       hastime = false;
       
     case 'irasa'
-      [spectrum,ntaper,foi] = ft_specest_irasa(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, 'hset', cfg.hset, 'nwindow', cfg.nwindow, 'windowlength', cfg.windowlength, 'mfunc', cfg.mfunc, options{:}, 'feedback', fbopt, 'verbose', verbose);
-      hastime = false;
+      [spectrum,ntaper,foi, hset] = ft_specest_irasa(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, 'hset', cfg.hset, 'nwindow', cfg.nwindow, 'windowlength', cfg.windowlength, 'mfunc', cfg.mfunc, options{:}, 'feedback', fbopt, 'verbose', verbose);
+      cfg.hset = hset;
+      hastime  = false;
       
     case 'wavelet'
       [spectrum,foi,toi] = ft_specest_wavelet(dat, time, 'timeoi', cfg.toi, 'width', cfg.width, 'gwidth', cfg.gwidth, options{:}, 'feedback', fbopt, 'verbose', verbose);
@@ -759,11 +778,21 @@ for itrial = 1:ntrials
       if powflg, powspctrm     = zeros(nchan,nfoi,ntoi,cfg.precision);             end
       if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
+
+      if powflg && isequal(cfg.taper, 'dpss') && isequal(cfg.mtmadapt, 'qiinv')
+        slopespctrm = zeros(nchan,nfoi,ntoi,cfg.precision);
+        quadspctrm  = zeros(nchan,nfoi,ntoi,cfg.precision);
+      end
       dimord    = 'chan_freq';
     elseif keeprpt == 2 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'no'
       if powflg, powspctrm     = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);                                                           end
       if csdflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(nan(ntrials,nchan,nfoi,ntoi,cfg.precision),nan(ntrials,nchan,nfoi,ntoi,cfg.precision));       end
+
+      if powflg && isequal(cfg.taper, 'dpss') && isequal(cfg.mtmadapt, 'qiinv')
+        slopespctrm = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);
+        quadspctrm  = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);
+      end
       dimord    = 'rpt_chan_freq';
     elseif keeprpt == 4 % cfg.keeptrials, 'yes' &&  cfg.keeptapers, 'yes'% estimate total number of tapers potentially needed
       % compute the total number of tapers needed
@@ -852,8 +881,19 @@ for itrial = 1:ntrials
       
       acttap = logical([ones(max(ntaper(ifoi)),1);zeros(size(spectrum,1)-max(ntaper(ifoi)),1)]);
       if powflg
-        if strcmp(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
+        if isequal(cfg.method, 'irasa') % ft_specest_irasa outputs power and not amplitude
           powdum = spectrum(acttap,:,foiind(ifoi),acttboi);
+        elseif isequal(cfg.method, 'mtmfft') && isequal(cfg.taper, 'dpss')
+          switch cfg.mtmadapt
+            case 'adapt'
+              powdum = shiftdim(other{1}, -1);
+            case 'qiinv'
+              powdum = shiftdim(other{2}, -1);
+              slopedum = shiftdim(other{3}, -1);
+              quaddum  = shiftdim(other{4}, -1);
+            otherwise
+              powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
+          end
         else
           powdum = abs(spectrum(acttap,:,foiind(ifoi),acttboi)) .^2;
         end
@@ -888,6 +928,10 @@ for itrial = 1:ntrials
           
           if powflg
             powspctrm(:,ifoi,acttboi) = powspctrm(:,ifoi,acttboi) + (reshape(mean(powdum,1),[nchan numel(ifoi) nacttboi]) ./ ntrials);
+            if exist('slopespctrm', 'var')
+              slopespctrm(:,ifoi,acttboi) = slopespctrm(:,ifoi,acttboi) + (reshape(mean(slopedum,1),[nchan numel(ifoi) nacttboi]) ./ ntrials);
+              quadspctrm(:,ifoi,acttboi)  = quadspctrm(:,ifoi,acttboi)  + (reshape(mean(quaddum,1),[nchan numel(ifoi) nacttboi]) ./ ntrials);
+            end
           end
           if fftflg
             fourierspctrm(:,ifoi,acttboi) = fourierspctrm(:,ifoi,acttboi) + (reshape(mean(fourierdum,1),[nchan numel(ifoi) nacttboi]) ./ ntrials);
@@ -900,6 +944,10 @@ for itrial = 1:ntrials
           if powflg
             powspctrm(itrial,:,ifoi,acttboi) = reshape(mean(powdum,1),[nchan numel(ifoi) nacttboi]);
             powspctrm(itrial,:,ifoi,~acttboi) = NaN;
+            if exist('slopespctrm', 'var')
+              slopespctrm(itrial,:,ifoi,acttboi) = reshape(mean(slopedum,1),[nchan numel(ifoi) nacttboi]);
+              quadspctrm(itrial,:,ifoi,acttboi)  = reshape(mean(quaddum,1), [nchan numel(ifoi) nacttboi]);
+            end
           end
           if fftflg
             fourierspctrm(itrial,:,ifoi,acttboi) = reshape(mean(fourierdum,1), [nchan numel(ifoi) nacttboi]);
@@ -919,8 +967,7 @@ for itrial = 1:ntrials
           acttimboiind = reshape(acttimboiind, [1 ntoi]);
           dof(itrial,ifoi,acttimboiind) = 2.*ntaper(ifoi) + dof(itrial,ifoi,acttimboiind);
         elseif isequal(cfg.method, 'mtmfft')
-          % if mtmfft, df is already provided
-          if isequal(cfg.mtmadapt, 'adapt')
+          if isequal(cfg.taper, 'dpss') && (isequal(cfg.mtmadapt, 'adapt') || isequal(cfg.mtmadapt, 'qiinv'))
             dof(itrial,:,ifoi) = df(:,ifoi);
           else
             dof(itrial,ifoi) = df(ifoi);
@@ -1113,6 +1160,11 @@ if powflg
     
   else
     freq.powspctrm = powspctrm;
+  end
+
+  if exist('slopespctrm', 'var')
+    freq.slopespctrm = slopespctrm;
+    freq.quadspctrm  = quadspctrm;
   end
 end
 if fftflg
