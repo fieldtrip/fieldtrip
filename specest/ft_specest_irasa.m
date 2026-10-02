@@ -1,4 +1,4 @@
-function [spectrum, ntaper, freqoi] = ft_specest_irasa(dat, time, varargin)
+function [spectrum, ntaper, freqoi, hset] = ft_specest_irasa(dat, time, varargin)
 
 % FT_SPECEST_IRASA separates the fractal components from the orginal power spectrum
 % using Irregular-Resampling Auto-Spectral Analysis (IRASA)
@@ -30,6 +30,19 @@ function [spectrum, ntaper, freqoi] = ft_specest_irasa(dat, time, varargin)
 %
 % See also FT_FREQANALYSIS, FT_SPECEST_MTMFFT, FT_SPECEST_MTMCONVOL, FT_SPECEST_TFR, FT_SPECEST_HILBERT, FT_SPECEST_WAVELET
 
+% undocumented options
+%   taper     = string, type of taper to use, default 'hanning'
+%   tapopt    = additional taper options, if the corresponding taper
+%                 function has additional options 
+%   tapsmofrq = scalar, smoothing parameter (when taper = 'dpss')
+%   weightopt = string, adaptive weighting method (when taper = 'dpss'), default 'mean'
+%   ntaper    = scalar, number of tapers to use (when taper = 'dpss'), influences
+%                 bias/variance trade off
+%   mfunc     = string, specifying how to deal with the individual
+%                 resampled fft's, default 'median'. (median_nomean,
+%                 none_mean, none_individual, median_dpss, trimmean)
+
+% Copyright (C) 2026, Jan-Mathijs Schoffelen
 % Copyright (C) 2019-2020, Rui Liu, Arjen Stolk
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
@@ -51,7 +64,7 @@ function [spectrum, ntaper, freqoi] = ft_specest_irasa(dat, time, varargin)
 % $Id$
 
 % these are for speeding up computation of tapers on subsequent calls
-persistent previous_argin previous_tap
+persistent previous_argin previous_tap previous_lambda
 
 % get the optional input arguments
 freqoi    = ft_getopt(varargin, 'freqoi', 'all');
@@ -67,6 +80,27 @@ windowlength = ft_getopt(varargin, 'windowlength', 'auto');
 taper     = ft_getopt(varargin, 'taper', 'hanning');
 mfunc     = ft_getopt(varargin, 'mfunc', 'median');
 tapopt    = ft_getopt(varargin, 'taperopt');
+tapsmofrq = ft_getopt(varargin, 'tapsmofrq');
+weightopt = ft_getopt(varargin, 'weightopt', 'mean');
+ntaper    = ft_getopt(varargin, 'ntaper', []);
+
+if strcmp(taper, 'dpss')
+  switch weightopt
+    case 'mean'
+      adaptflag = 0;
+    case 'eig'
+      adaptflag = 1;
+    case 'adapt'
+      adaptflag = 2;
+    case 'qiinv'
+      %adaptflag = 3;
+      ft_error('weightopt ''qiinv'' specified for dpss-tapering is currently not supported');
+    otherwise
+      ft_error('unknown weightopt specified for dpss-tapering');
+  end
+elseif ~strcmp(weightopt, 'mean')
+  ft_warning('no dpss tapers are specified, so the value %s of weightopt does not have an effect', weightopt);
+end
 
 % the original implementation uses a windowed (pwelch like) estimation technique,
 % where - per epoch - the data are chunked into 10 sub-windows, with a length of
@@ -155,11 +189,13 @@ if isnumeric(freqoiinput)
   end
 end
 
+
 % determine whether tapers need to be computed
-current_argin = {output, time, endnsample, freqoi}; % reasoning: if time and endnsample are equal, it's the same length trial, if the rest is equal then the requested output is equal
+current_argin = {output, time, endnsample, freqoi, taper, hset, tapsmofrq, nwindow, ntaper}; % reasoning: if time and endnsample are equal, it's the same length trial, if the rest is equal then the requested output is equal
 if isequal(current_argin, previous_argin)
   % don't recompute tapers
   tap = previous_tap;
+  lambda = previous_lambda;
 else
   if strcmp(output, 'fractal')
     % (re)compute tapers, 1:mid are upsample tapers, mid+1:end are downsample tapers
@@ -171,165 +207,256 @@ else
       switch taper
         case 'hanning'
           tmp = hanning(nsmp_up)';
+          tmp = tmp./norm(tmp, 'fro');
+          tmplambda = 1; % not needed
         case 'dpss'
-          tmp = dpss(nsmp_up, 1); % take the first Slepian 
-          tmp = tmp(:,1)';
+          nw = nsmp*(tapsmofrq./fsample);
+          [tmp, tmplambda] = dpss(nsmp_up, nw);
+          if isempty(ntaper)
+            ntaper = size(tmp,2)-1;
+          else
+            ntaper = min(ntaper, size(tmp,2)-1);
+          end
+          tmp = tmp(:,1:ntaper)';
+          tmplambda = tmplambda(1:ntaper);
+
         case {'sine' 'sine_old' 'alpha'}
           ft_error('taper = %s is not implemented in ft_specest_irasa', taper);
         otherwise
           % create the taper and ensure that it is normalized
           if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
             tmp = window(taper, nsmp_up)';
+            tmp = tmp./norm(tmp, 'fro');
           else
             tmp = window(taper, nsmp_up, tapopt)';
+            tmp = tmp./norm(tmp, 'fro');
           end
+          tmplambda = 1;
       end
-      tap{ih,1} = tmp./norm(tmp, 'fro');% for upsampled subsets
+      tap{ih,1}    = tmp;% for upsampled subsets
+      lambda{ih,1} = tmplambda;
 
       nsmp_down = size(resample(zeros(windownsample,1), d, n),1);
       switch taper  
         case 'hanning'
           tmp = hanning(nsmp_down)';
+          tmp = tmp./norm(tmp, 'fro');
         case 'dpss'
-          tmp = dpss(nsmp_down, 1);
-          tmp = tmp(:,1)';
+          nw  = windownsample*(tapsmofrq./fsample);
+          [tmp, tmplambda] = dpss(nsmp_down, nw);
+          tmp = tmp(:,1:ntaper)';
+          tmplambda = tmplambda(1:ntaper);
+
         case {'sine' 'sine_old' 'alpha'}
           ft_error('taper = %s is not implemented in ft_specest_irasa', taper);
         otherwise
           % create the taper and ensure that it is normalized
           if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
             tmp = window(taper, nsmp_down)';
+            tmp = tmp./norm(tmp, 'fro');
           else
             tmp = window(taper, nsmp_down, tapopt)';
+            tmp = tmp./norm(tmp, 'fro');
           end
       end
-      tap{ih+nhset,1} = tmp./norm(tmp, 'fro');% for downsampled subsets
+      tap{ih+nhset,1}    = tmp;% for downsampled subsets
+      lambda{ih+nhset,1} = tmplambda;
     end
   elseif strcmp(output, 'original')
     switch taper
       case 'hanning'
         tap = hanning(windownsample)';
+        tap = tap./norm(tap, 'fro');
+        lambda = 1; % not needed
+
       case 'dpss'
-        tmp = dpss(windownsample, 1);
-        tap = tmp(:,1)';
+        nw  = windownsample*(tapsmofrq./fsample);
+        [tmp, lambda] = dpss(windownsample, nw);
+        tap = tmp(:,1:ntaper)';
+        lambda = lambda(1:ntaper);
       case {'sine' 'sine_old' 'alpha'}
         ft_error('taper = %s is not implemented in ft_specest_irasa', taper);
       otherwise
         % create the taper and ensure that it is normalized
         if isempty(tapopt) % some windowing functions don't support nargin>1, and window.m doesn't check it
-          tap = window(taper, ndatsample)';
+          tap = window(taper, windownsample)';
+          tap = tap./norm(tap, 'fro');
         else
-          tap = window(taper, ndatsample, tapopt)';
+          tap = window(taper, windownsample, tapopt)';
+          tap = tap./norm(tap, 'fro');
         end
+        lambda = 1;
     end
-    tap = tap./norm(tap, 'fro');
+    tap = {tap};
+    lambda = {lambda};
   end
 end
 
 % set ntaper
-if strcmp(output, 'fractal')
-  ntaper = repmat(size(tap,2),1,nfreqoi); % pretend there's only one taper
-elseif strcmp(output, 'original')
-  ntaper = repmat(size(tap,1),1,nfreqoi);
-end
+ntaper = size(tap{1},1);
 
 % feedback of computing progress
 if isempty(fbopt)
   fbopt.i = 1;
   fbopt.n = 1;
 end
-str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,nsmp,ntaper(1));
+str = sprintf('nfft: %d samples, datalength: %d samples, %d tapers',endnsample,nsmp,ntaper);
 st  = dbstack;
 if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis')
-  % specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+  % ft_specest_irasa has been called by ft_freqanalysis, meaning that ft_progress has been initialised
   ft_progress(fbopt.i./fbopt.n, ['processing trial %d/%d ',str,'\n'], fbopt.i, fbopt.n);
 elseif verbose
   fprintf([str, '\n']);
 end
 
-% compute irasa or fft
-spectrum = cell(ntaper(1),1);
-for itap = 1:ntaper(1)
-  %%%%%%%% IRASA %%%%%%%%%%
-  if strcmp(output,'fractal')
+%%%%%%%% IRASA %%%%%%%%%%
+if strcmp(output,'fractal')
+  if isequal(mfunc, 'none_individual')
+    pow  = zeros(nchan,nfreqboi,nhset*2);
+  elseif isequal(mfunc, 'median_dpss')
+    pow  = zeros(nchan, nfreqboi*ntaper, nhset);
+  else
     pow  = zeros(nchan,nfreqboi,nhset);
-    for ih = 1:nhset % loop resampling ratios hset
-      upow = zeros(nchan,nfreqboi);
-      dpow = zeros(nchan,nfreqboi);
-      [n, d] = rat(hset(ih)); % n > d
-      for k = 0 : nwindow-1 % loop #subset
-        % pair-wised resampling
-        subset_start = subset_dist*k + 1;
-        subset_end = subset_start+windownsample-1;
-        subdat = dat(:,subset_start:subset_end);
-        udat = resample(subdat', n, d)'; % upsample
-        ddat = resample(subdat', d, n)'; % downsample
-        
-        % compute auto-power of resampled data
-        % upsampled
-        postpad = ceil(round(pad * fsample) - size(udat,2));
-        if postpad<0
-          ft_error('the requested amount of zero-padding is < 0, this is not possible');
-        end
-        tmp = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}), padtype, 0, postpad), endnsample, 2);
-        tmp = tmp(:,freqboi);
-        tmp = tmp .* sqrt(2 ./ endnsample);
-        tmp = abs(tmp).^2;
-        upow = upow + tmp;
-        % downsampled
-        postpad = ceil(round(pad * fsample) - size(ddat,2));
-        tmp = fft(ft_preproc_padding(bsxfun(@times,ddat,tap{ih+nhset,1}), padtype, 0, postpad), endnsample, 2);
-        tmp = tmp(:,freqboi);
-        tmp = tmp .* sqrt(2 ./ endnsample);
-        tmp = abs(tmp).^2;
-        dpow = dpow + tmp;
-      end % loop #subset
-      
-      % average across subsets for noise filtering
-      upow = upow / nwindow;
-      dpow = dpow / nwindow;
-      
-      % geometric mean for relocating oscillatory component
-      pow(:,:,ih) = sqrt(upow.*dpow);
-    end % loop resampling ratios hset
-    
-    switch mfunc
-      case 'median'
-        % median across resampling factors
-        spectrum{itap} = median(pow,3);
-      case 'trimmean'
-        spectrum{itap} = trimmean(pow, 0.1, 3);
-    end
-
-    
-  elseif strcmp(output,'original')
-    %%%%%%%% FFT %%%%%%%%%%
-
-    pow  = zeros(nchan,nfreqboi);
+  end
+  for ih = 1:nhset % loop resampling ratios hset
+    upow = zeros(nchan,nfreqboi);
+    dpow = zeros(nchan,nfreqboi);
+    [n, d] = rat(hset(ih)); % n > d
     for k = 0 : nwindow-1 % loop #subset
       % pair-wised resampling
       subset_start = subset_dist*k + 1;
       subset_end = subset_start+windownsample-1;
       subdat = dat(:,subset_start:subset_end);
-      % compute auto-power
-      postpad = ceil(round(pad * fsample) - size(subdat,2));
-      tmp = fft(ft_preproc_padding(bsxfun(@times,subdat,tap(itap,:)), padtype, 0, postpad), endnsample, 2);
+      udat = resample(subdat', n, d)'; % upsample
+      ddat = resample(subdat', d, n)'; % downsample
+
+      % compute auto-power of resampled data
+      % upsampled
+      postpad = ceil(round(pad * fsample) - size(udat,2));
+      if postpad<0
+        ft_error('the requested amount of zero-padding is < 0, this is not possible');
+      end
+      siz = [size(dat,1) endnsample ntaper];
+      tmp = complex(zeros(siz), zeros(siz));
+      for itap = 1:ntaper
+        % fft of zero-padded tapered data segment
+        tmp(:,:,itap) = fft(ft_preproc_padding(bsxfun(@times,udat,tap{ih,1}(itap,:)), padtype, 0, postpad), endnsample, 2);
+      end
+      if ntaper>1 && ~isequal(mfunc, 'median_dpss')
+        tmp = adaptspec_dpss(tmp, lambda{ih,1}, adaptflag);
+        tmp = tmp(:,freqboi) .* (2 ./ endnsample);
+      else
+        tmp = tmp(:,freqboi,:);
+        tmp = tmp .* sqrt(2 ./ endnsample);
+        tmp = abs(tmp).^2;
+      end
+      upow = upow + tmp;
+      % downsampled
+      postpad = ceil(round(pad * fsample) - size(ddat,2));
+      tmp = complex(zeros(siz), zeros(siz));
+      for itap = 1:ntaper
+        % fft of zero-padded tapered data segment
+        tmp(:,:,itap) = fft(ft_preproc_padding(bsxfun(@times,ddat,tap{ih+nhset,1}(itap,:)), padtype, 0, postpad), endnsample, 2);
+      end
+      if ntaper>1 && ~isequal(mfunc, 'median_dpss')
+        tmp = adaptspec_dpss(tmp, lambda{ih+nhset,1}, adaptflag);
+        tmp = tmp(:,freqboi) .* (2 ./ endnsample);
+      else
+        tmp = tmp(:,freqboi,:);
+        tmp = tmp .* sqrt(2 ./ endnsample);
+        tmp = abs(tmp).^2;
+      end
+      dpow = dpow + tmp;
+    end % loop #subset
+
+    % average across subsets for noise filtering
+    upow = upow / nwindow;
+    dpow = dpow / nwindow;
+
+    if isequal(mfunc, 'none_individual') || isequal(mfunc, 'median_nomean')
+      % keep the individual stretched/compressed spectra
+      pow(:,:,ih)       = upow;
+      pow(:,:,ih+nhset) = dpow;
+    else
+      % meanetric mean for relocating oscillatory component
+      pow(:,:,ih) = sqrt(upow(:,:).*dpow(:,:));
+    end
+  end % loop resampling ratios hset
+
+  switch mfunc
+    case 'median'
+      % median across resampling factors, discard the frequencies that are beyond the bandwidth after upsampling
+      freqnan = freqoi(:)*hset>fsample/2;
+      pow(repmat(shiftdim(freqnan, -1), [size(pow,1) 1 1])) = nan;  
+      spectrum = median(pow,3,'omitnan');
+    case 'median_nomean'
+      % this has been suggested by Andrew Quinn in his talk at cuttingEEG,
+      % with 'simple' spectra it may be effective in reducing the sidelobe
+      % leakage in the residuals. Note JM: it comes at the price that the
+      % cancellation of the scaling operation the stretch/compress (with
+      % h and 1/h may be less effective.
+      freqnan = freqoi(:)*[hset 1./hset]>fsample/2;
+      pow(repmat(shiftdim(freqnan, -1), [size(pow,1) 1 1])) = nan;  
+      spectrum = median(pow,3,'omitnan');
+    case 'median_dpss'
+      % try this: do a median for each Slepian, and then average across tapers
+      freqnan = freqoi(:)*hset>fsample/2;
+      freqnan = repmat(freqnan, [ntaper 1]);
+      pow(repmat(shiftdim(freqnan, -1), [size(pow,1) 1 1])) = nan;  
+      pow = reshape(pow, [nchan nfreqoi ntaper nhset]);
+      spectrum = mean(median(pow,4,'omitnan'),3);
+    case 'trimmean'
+      spectrum = trimmean(pow, 0.1, 3);
+    case {'none_mean' 'none_individual'}
+      spectrum = permute(pow, [3 1 2]);
+      hset     = [hset 1./hset];
+  end
+
+
+elseif strcmp(output,'original')
+  %%%%%%%% FFT %%%%%%%%%%
+
+  pow  = zeros(nchan,nfreqboi);
+  for k = 0 : nwindow-1 % loop #subset
+    % pair-wised resampling
+    subset_start = subset_dist*k + 1;
+    subset_end = subset_start+windownsample-1;
+    subdat = dat(:,subset_start:subset_end);
+    % compute auto-power
+    postpad = ceil(round(pad * fsample) - size(subdat,2));
+
+    siz = [size(dat,1) endnsample ntaper];
+    tmp = complex(zeros(siz), zeros(siz));
+    for itap = 1:ntaper
+      % fft of zero-padded tapered data segment
+      tmp(:,:,itap) = fft(ft_preproc_padding(bsxfun(@times,subdat,tap{1}(itap,:)), padtype, 0, postpad), endnsample, 2);
+    end
+    if ntaper>1
+      tmp = adaptspec_dpss(tmp, lambda{ih+nhset,1}, adaptflag);
+      tmp = tmp(:,freqboi) .* (2 ./ endnsample);
+    else
       tmp = tmp(:,freqboi);
       tmp = tmp .* sqrt(2 ./ endnsample);
       tmp = abs(tmp).^2;
-      pow = pow + tmp;
-    end % loop #subset
-    
-    % average across subsets for noise filtering
-    spectrum{itap} = pow / nwindow;
-    
-  end % if output
-end % for taper
+    end
+    pow = pow + tmp;
+  end % loop #subset
 
-spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper(1) nfreqboi]); % collecting in a cell-array and later reshaping provides significant speedups
-spectrum = permute(spectrum, [2 1 3]);
+  % average across subsets for noise filtering
+  spectrum = pow / nwindow;
+
+end % if output
+
+%spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper nfreqboi]); % collecting in a cell-array and later reshaping provides significant speedups
+if ndims(spectrum)==2
+  spectrum = shiftdim(spectrum, -1);
+  ntaper   = ones(1, numel(freqboi));
+else
+  ntaper   = ones(1, numel(freqboi)).*size(spectrum,1);
+end
 
 % remember the current input arguments, so that they can be
 % reused on a subsequent call in case the same input argument is given
 previous_argin = current_argin;
 previous_tap   = tap;
+previous_lambda = lambda;
