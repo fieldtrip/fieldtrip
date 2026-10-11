@@ -95,7 +95,7 @@ if strcmp(cfg.computestat,'yes')
     else
       designmat=zeros((nblocks+1),length(indvar));
       for blockindx=1:nblocks
-        blockselvec=find(design(cfg.cvar,unitselved)==condlabels(blockindx));
+        blockselvec=find(design(cfg.cvar,unitselvec)==condlabels(blockindx));
         designmat(blockindx,blockselvec)=1;
       end
       designmat((nblocks+1),:)=indvar;
