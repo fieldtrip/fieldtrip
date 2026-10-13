@@ -518,10 +518,10 @@ if istrue(cfg.showlegend) && Ndata>1
     if ischar(linecolor)
       colorLabels{end+1} = [dataname{i} '='         linecolor(i)     ];
     elseif isnumeric(linecolor)
-      colorLabels{end+1} = [dataname{i} '=' num2str(linecolor(1, :, i)) ];
+      colorLabels{end+1} = dataname{i};
     end
   end
-  legend(colorLabels)
+  legend(colorLabels, 'interpreter', 'none')
 end
 
 % set xlim and ylim

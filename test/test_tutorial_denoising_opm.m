@@ -176,6 +176,7 @@ tlck_ssp2 = ft_timelockanalysis(cfg, data_ssp2);
 cfg        = [];
 cfg.layout = 'fieldlinebeta2bz_helmet.mat';
 cfg.figure = 'subplot';
+cfg.showlegend = 'yes';
 ft_topoplotER(cfg, tlck, tlck_ssp1, tlck_ssp2);
 
 %
