@@ -107,7 +107,7 @@ if isempty(cfg.parameter)
 end
 
 % ensure that the data in all inputs has the same channels, time-axis, etc.
-tmpcfg = keepfields(cfg, {'latency', 'avgovertime', 'channel', 'avgoverchan', 'parameter', 'select', 'nanmean', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
+tmpcfg = keepfields(cfg, {'latency', 'avgovertime', 'channel', 'avgoverchan', 'parameter', 'select', 'nanmean', 'skiptime', 'showcallinfo', 'trackcallinfo', 'trackusage', 'trackdatainfo', 'trackmeminfo', 'tracktimeinfo', 'checksize'});
 [varargin{:}] = ft_selectdata(tmpcfg, varargin{:});
 % restore the provenance information
 [cfg, varargin{:}] = rollback_provenance(cfg, varargin{:});
@@ -174,6 +174,11 @@ else
     % ensure that the data has been correctly oriented
     dat{1} = dat{1}.';
     dat{2} = dat{2}.';
+
+    % also adjust the dim because it's not a guarantee that both arguments
+    % are the same in size
+    dimsiz2 = getdimsiz(varargin{2}, cfg.parameter, numel(dimtok));
+    cfg.dim = {dimsiz(datdim) dimsiz2(datdim)};
 
     % the validity check needs to be performed here
     assert(numel(cfg.design{1})==size(dat{1},2), 'mismatch between data and design');
@@ -250,9 +255,11 @@ end
 % the statistical output contains multiple elements, e.g. F-value, beta-weights and probability
 fn = fieldnames(stat);
 for i=1:length(fn)
-  if numel(stat.(fn{i}))==prod(datsiz)
-    % reformat into the same dimensions as the input data
-    stat.(fn{i}) = reshape(stat.(fn{i}), [datsiz 1]);
+  try
+    if numel(stat.(fn{i}))==prod(datsiz)
+      % reformat into the same dimensions as the input data
+      stat.(fn{i}) = reshape(stat.(fn{i}), [datsiz 1]);
+    end
   end
 end
 

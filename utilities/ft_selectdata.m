@@ -57,6 +57,8 @@ function [varargout] = ft_selectdata(cfg, varargin)
 %   cfg.keepposdim     = 'yes' or 'no' (default = 'yes')
 %   cfg.avgmethod      = name of a function that has the same API as matlab's mean which can be used as alternative 'averaging'
 %                        method, e.g. median, or sum. only works if cfg.nanmean = 'no'
+%   cfg.skipfreq       = 'yes' or 'no' (default = 'no'), skip adjustment of the frequency axes across multiple inputs 
+%   cfg.skiptime       = 'yes' or 'no' (default = 'no'), skip adjustment of the time axes across multiple inputs
 
 % Copyright (C) 2012-2022, Robert Oostenveld & Jan-Mathijs Schoffelen
 %
@@ -118,6 +120,10 @@ cfg = ft_checkconfig(cfg, 'renamedval', {'parameter', 'trial.nai', 'nai'});
 
 cfg.tolerance = ft_getopt(cfg, 'tolerance', 1e-5);        % default tolerance for checking equality of time/freq axes
 cfg.select    = ft_getopt(cfg, 'select',   'intersect');  % default is to take intersection, alternative 'union'
+cfg.skiptime  = ft_getopt(cfg, 'skiptime', 'no');
+cfg.skipfreq  = ft_getopt(cfg, 'skipfreq', 'no');
+skiptime = istrue(cfg.skiptime);
+skipfreq = istrue(cfg.skipfreq);
 if isequal(dtype, 'raw') && isequal(cfg.select, 'union')
   ft_error('using cfg.select=''union'' in combination with ''raw'' datatype is not supported');
 end
@@ -290,6 +296,9 @@ if haschancmb, [selchancmb, cfg] = getselection_chancmb(cfg, varargin{:}, cfg.se
 if hasfreq,    [selfreq,    cfg] = getselection_freq   (cfg, varargin{:}, cfg.tolerance, cfg.select); end
 if hastime,    [seltime,    cfg] = getselection_time   (cfg, varargin{:}, cfg.tolerance, cfg.select); end
 
+if hastime && skiptime, for i=1:numel(varargin), seltime{i} = nan; end; end
+if hasfreq && skipfreq, for i=1:numel(varargin), selfreq{i} = nan; end; end
+
 % this is to keep track of all fields that should be retained in the output
 keepfield = datfield;
 
@@ -405,7 +414,7 @@ if strcmp(cfg.select, 'union')
   if haspos,      varargin = makeunion(varargin, 'pos'); end
   if haschan,     varargin = makeunion(varargin, 'label'); end
   if haschancmb,  varargin = makeunion(varargin, 'labelcmb'); end
-  if hastime,     varargin = makeunion(varargin, 'time'); end
+  if hastime && ~skiptime, varargin = makeunion(varargin, 'time'); end
   if hasfreq,     varargin = makeunion(varargin, 'freq'); end
 end
 
