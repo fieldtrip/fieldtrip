@@ -116,11 +116,11 @@ if ~isequal(topostyle, false)
       set(hs, 'EdgeColor', 'none');
       set(hs, 'FaceLighting', 'none');
 
-      % if facealpha is an array with number of elements equal to the number of vertices
       if size(pos,1)==numel(facealpha)
+        % it is an array with a value for each vertex
         set(hs, 'FaceVertexAlphaData', facealpha);
         set(hs, 'FaceAlpha', 'interp');
-      elseif ~isempty(pos) && numel(facealpha)==1 && facealpha~=1
+      elseif ~isempty(pos) && isscalar(facealpha) && facealpha~=1
         % the default is 1, so that does not have to be set
         set(hs, 'FaceAlpha', facealpha);
       end
