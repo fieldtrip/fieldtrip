@@ -62,6 +62,9 @@ end
 if ~ischar(s) && ~iscellstr(s)
   error('the input should be either a char-array or a cell-array with chars');
 end
+if ~ischar(pattern) && ~iscellstr(pattern)
+  error('the pattern should be either a char-array or a cell-array with chars');
+end
 if nargin<4
   boolean = false;
 end
@@ -75,10 +78,20 @@ if ~islogical(boolean)
   error('fourth input argument should be a logical scalar');
 end
 
-if boolean
-  tf = strncmpi(s, pattern, numel(pattern));
-else
-  tf = strncmp(s, pattern, numel(pattern));
+% true if the string starts with any of the patterns
+if ~iscell(pattern)
+  pattern = {pattern};
+end
+tf = false(size(s));
+if ischar(s)
+  tf = false;
+end
+for i=1:numel(pattern)
+  if boolean
+    tf = tf | strncmpi(s, pattern{i}, numel(pattern{i}));
+  else
+    tf = tf | strncmp(s, pattern{i}, numel(pattern{i}));
+  end
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
