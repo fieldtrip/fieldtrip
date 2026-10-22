@@ -28,8 +28,7 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 %
 % HEADSHAPE - Match the head surface from the MRI with a measured head surface using
 % an iterative closest point procedure. The MRI will be updated to match the measured
-% head surface. You can optionally do an initial manual coregistration of the two head
-% surfaces.
+% head surface. You can optionally do an initial manual coregistration.
 %
 % SPM - Align the individual MRI to the coordinate system of a target or template MRI
 % by matching the two volumes.
@@ -122,14 +121,12 @@ function [realign, snap] = ft_volumerealign(cfg, mri, target)
 % on the left-right axis, i.e.', a point on the right of the head.
 %
 % When cfg.method = 'headshape', the function extracts the scalp surface from the
-% anatomical MRI, and aligns this surface with the user-supplied headshape.
-% Additional options pertaining to this method should be defined in the subcfg
-% cfg.headshape. The following option is required:
-%   cfg.headshape.headshape      = string pointing to a headshape structure or a
-%                                  file containing headshape, see FT_READ_HEADSHAPE
+% anatomical MRI, and aligns this surface with the user-supplied headshape. The
+% following option is required:
+%   cfg.headshape.headshape      = structure with a headshape or string pointing to a
+%                                  file containing the headshape, see FT_READ_HEADSHAPE
 %
-% Additional options pertaining to the headshape method should be specified in
-% the sub-structure cfg.headshape and can include:
+% Additional options pertaining to the headshape method can include:
 %   cfg.headshape.scalpsmooth    = scalar, smoothing parameter for the scalp
 %                                  extraction (default = 2)
 %   cfg.headshape.scalpthreshold = scalar, threshold parameter for the scalp
@@ -723,12 +720,13 @@ switch cfg.method
       tmpcfg.template.headshapestyle   = 'vertex';
       tmpcfg.individual.headshape      = scalp;     % this is the headshape extracted from the anatomical MRI
       tmpcfg.individual.headshapestyle = 'surface';
+      tmpcfg.unit                      = scalp.unit;
       tmpcfg = ft_interactiverealign(tmpcfg);
-      M      = tmpcfg.m;
-      cfg.transform_interactive = M;
+      M1     = tmpcfg.m;
+      cfg.transform_interactive = M1;
 
       % update the relevant geometrical info
-      scalp  = ft_transform_geometry(M, scalp);
+      scalp  = ft_transform_geometry(M1, scalp);
     end % dointeractive
 
     % always perform an icp-step, because this will give an estimate of the
@@ -764,7 +762,7 @@ switch cfg.method
       % distance between the corresponding points, both prior and after icp
 
       % this one transforms from scalp 'headspace' to shape 'headspace'
-      M2 = inv([R t;0 0 0 1]);
+      M2 = inv([R t; 0 0 0 1]);
 
       % warp the extracted scalp points to the new positions
       scalp.pos = ft_warp_apply(M2, scalp.pos);
@@ -830,11 +828,11 @@ switch cfg.method
     cfg.headshape.headshapemri = scalp;
 
     if doicp && dointeractive
-      transform = M2*M;
+      transform = M2*M1;
     elseif doicp
       transform = M2;
     elseif dointeractive
-      transform = M;
+      transform = M1;
     end
 
   case 'fsl'
@@ -1344,7 +1342,6 @@ ft_postamble savevar    realign
 % SUBFUNCTION
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function y = assignweights(x, w)
-
 % x is an indexing vector with the same number of arguments as w
 y = w(:)';
 
