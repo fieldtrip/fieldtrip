@@ -14,12 +14,16 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 % configuration, you will have to click them in an interactive display of the mesh
 % surface.
 %
+% HEADSHAPE - Match the mesh with a head surface that was measured or extractec from
+% an MRI using an iterative closest point procedure. The mesh will be updated to match
+% the head surface. You can optionally do an initial manual coregistration.
+%
 % Use as
 %   mesh = ft_meshrealign(cfg, mesh)
 % where the mesh input argument comes from FT_READ_HEADSHAPE or FT_PREPARE_MESH.
-% 
+%
 % The configuration can contain the following options
-%   cfg.method         = string, can be 'interactive' or fiducial' (default = 'interactive')
+%   cfg.method         = string, can be 'interactive', 'fiducial' or 'headshape' (default = 'interactive')
 %   cfg.coordsys       = string specifying the origin and the axes of the coordinate
 %                        system. Supported coordinate systems are 'ctf', '4d', 'bti',
 %                        'eeglab', 'eeglab-hj', 'neuromag', 'itab', 'yokogawa', 'asa', 'acpc',
@@ -36,13 +40,25 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 % configuration, the mesh is displayed and you have to click on the fiducials or
 % anatomical landmarks.
 %
-% When cfg.method = 'fiducial' you can specify
+% When cfg.method = 'interactive' you can specify
 %   cfg.mri            = structure, see FT_READ_MRI
 %   cfg.headmodel      = structure, see FT_PREPARE_HEADMODEL
 %   cfg.elec           = structure, see FT_READ_SENS
 %   cfg.grad           = structure, see FT_READ_SENS
 %   cfg.opto           = structure, see FT_READ_SENS
-% If none of these is specified, the x-, y- and z-axes will be shown.
+% If none of these is specified, only the x-, y- and z-axes will be shown.
+%
+% When cfg.method = 'headshape', the following option is required:
+%   cfg.headshape.headshape      = structure with a headshape or string pointing to a
+%                                  file containing the headshape, see FT_READ_HEADSHAPE
+%
+% Additional options pertaining to the headshape method can include:
+%   cfg.headshape.interactive    = 'yes' or 'no', use interactive realignment to
+%                                  align headshape with scalp surface (default = 'yes')
+%   cfg.headshape.icp            = 'yes' or 'no', use automatic realignment
+%                                  based on the icp-algorithm. If both 'interactive'
+%                                  and 'icp' are executed, the icp step follows the
+%                                  interactive realignment step (default = 'yes')
 %
 % To facilitate data-handling and distributed computing you can use
 %   cfg.inputfile   =  ...
@@ -54,7 +70,7 @@ function [mesh_realigned] = ft_meshrealign(cfg, mesh)
 %
 % See also FT_READ_HEADSHAPE, FT_PREPARE_MESH, FT_ELECTRODEREALIGN, FT_VOLUMEREALIGN
 
-% Copyrights (C) 2017-2024, Robert Oostenveld
+% Copyrights (C) 2017-2026, Robert Oostenveld
 %
 % This file is part of FieldTrip, see http://www.fieldtriptoolbox.org
 % for the documentation and details.
@@ -127,7 +143,7 @@ mesh_realigned = ft_determine_units(mesh_realigned);
 
 switch cfg.method
   case 'interactive'
-
+    % this makes use of FT_INTERACTIVEREALIGN
     tmpcfg = [];
     tmpcfg.unit = mesh_realigned.unit;
     tmpcfg.template = [];
@@ -141,13 +157,13 @@ switch cfg.method
     end
     if ~isempty(cfg.headmodel)
       tmpcfg.template.headmodel = cfg.headmodel;
-    end      
+    end
     if ~isempty(cfg.elec)
       tmpcfg.template.elec = cfg.elec;
-    end      
+    end
     if ~isempty(cfg.grad)
       tmpcfg.template.grad = cfg.grad;
-    end      
+    end
     if ~isempty(cfg.opto)
       tmpcfg.template.opto = cfg.opto;
     end
@@ -175,27 +191,27 @@ switch cfg.method
     tmpcfg = ft_interactiverealign(tmpcfg);
     % keep the homogenous transformation
     transform = tmpcfg.m;
-    
+
   case 'fiducial'
     % it must be present and it must be a string
     ft_checkopt(cfg, 'coordsys', {'char'});
-    
+
     hasnas = ~isempty(cfg.fiducial.nas);
     haslpa = ~isempty(cfg.fiducial.lpa);
     hasrpa = ~isempty(cfg.fiducial.rpa);
-    
+
     if ~hasnas || ~haslpa || ~hasrpa
       % do something interactive to get them
       % this is shared with ft_volumerealign
-      
+
       cfg.fiducial.nas    = [nan nan nan];
       cfg.fiducial.lpa    = [nan nan nan];
       cfg.fiducial.rpa    = [nan nan nan];
       cfg.fiducial.zpoint = [nan nan nan];
-      
+
       scalp = mesh;
       mri = [];
-      
+
       switch cfg.coordsys
         case {'ctf', '4d', 'bti', 'eeglab', 'eeglab-hj', 'neuromag', 'itab', 'yokogawa', 'asa'}
           fidlabel  = {'nas', 'lpa', 'rpa', 'zpoint'};
@@ -215,7 +231,7 @@ switch cfg.method
         otherwise
           ft_error('unknown coordinate system "%s"', cfg.coordsys);
       end % switch coordsys
-      
+
       fprintf('\n');
       fprintf(strcat(...
         '1. To change the orientation of the head surface, use the\n',...
@@ -225,7 +241,7 @@ switch cfg.method
         '   b. specify it by pressing the letter corresponding to the fiducial/landmark:\n', fidexplanation1, fidexplanation2, ...
         '   You can mark the fiducials or anatomical landmarks multiple times, until you are satisfied with the positions.\n',...
         '3. To finalize markers and quit interactive mode, press q on keyboard\n'));
-      
+
       % start building the figure
       h = figure;
       set(h, 'color', [1 1 1]);
@@ -233,10 +249,10 @@ switch cfg.method
       % add callbacks
       set(h, 'windowkeypressfcn',   @cb_keyboard_surface);
       set(h, 'CloseRequestFcn',     @cb_quit);
-      
+
       % create figure handles
       h1 = axes;
-      
+
       % create structure to be passed to gui
       opt                 = [];
       opt.viewresult      = false; % flag to use for certain keyboard/redraw calls
@@ -259,25 +275,99 @@ switch cfg.method
       else
         opt.unit = '';        % this is not shown
       end
-      
+
       setappdata(h, 'opt', opt);
       cb_redraw_surface(h);
-      
+
       while(opt.quit==0)
         uiwait(h);
         opt = getappdata(h, 'opt');
       end
       delete(h);
-      
+
       % store the interactively determined fiducials in the configuration
       % the actual coordinate transformation will be done further down
       cfg.fiducial = opt.fiducial;
-      
+
     end
-    
+
     % compute the homogenous transformation
     transform = ft_headcoordinates(cfg.fiducial.nas, cfg.fiducial.lpa, cfg.fiducial.rpa, cfg.coordsys);
-    
+
+  case 'headshape'
+    if ischar(cfg.headshape.headshape)
+      shape = ft_read_headshape(cfg.headshape.headshape);
+    else
+      shape = cfg.headshape.headshape;
+    end
+    shape = ft_convert_units(shape, mesh.unit); % make the units of the headshape consistent with the mesh
+
+    cfg.headshape.interactive    = ft_getopt(cfg.headshape, 'interactive', true);
+    cfg.headshape.icp            = ft_getopt(cfg.headshape, 'icp',         true);
+
+    dointeractive = istrue(cfg.headshape.interactive);
+    doicp         = istrue(cfg.headshape.icp);
+
+    if dointeractive
+      fprintf('doing interactive realignment with headshape\n');
+      tmpcfg                           = [];
+      tmpcfg.template.headshape        = shape;
+      tmpcfg.template.headshapestyle   = 'surface';
+      tmpcfg.individual.headshape      = mesh;
+      tmpcfg.individual.headshapestyle = 'surface';
+      tmpcfg.unit                      = mesh.unit;
+      tmpcfg = ft_interactiverealign(tmpcfg);
+      M1     = tmpcfg.m;
+      cfg.transform_interactive = M1;
+
+      % update the relevant geometrical info
+      mesh = ft_transform_geometry(M1, mesh);
+    end % dointeractive
+
+    if doicp
+      fprintf('doing iterative closest points realignment with headshape\n');
+      ft_hastoolbox('fileexchange', 1);
+
+      numiter = 50;
+
+      if ~isfield(cfg, 'weights')
+        w = ones(size(shape.pos,1),1);
+      else
+        w = cfg.weights(:);
+        if numel(w)~=size(shape.pos,1)
+          ft_error('number of weights should be equal to the number of points in the headshape');
+        end
+      end
+
+      % the icp function wants this as a function handle.
+      weights = @(x)assignweights(x,w);
+
+      % construct the coregistration matrix
+      nrm = surface_normals(shape.pos, shape.tri, 'vertex');
+      [R, t, err, dummy, info] = icp(mesh.pos', shape.pos', numiter, 'Minimize', 'plane', 'Normals', nrm', 'Weight', weights, 'Extrapolation', true, 'WorstRejection', 0.05);
+
+      % this one transforms from mesh 'headspace' to shape 'headspace'
+      M2 = inv([R t; 0 0 0 1]);
+
+      cfg.icpinfo = info;
+      cfg.transform_icp = M2;
+
+    else
+      M2 = eye(4);
+    end % doicp
+
+    if isfield(shape, 'coordsys')
+      mesh.coordsys = shape.coordsys;
+    end
+
+    if doicp && dointeractive
+      transform = M2*M1;
+    elseif doicp
+      transform = M2;
+    elseif dointeractive
+      transform = M1;
+    end
+
   otherwise
     ft_error('unsupported method "%s"', cfg.method);
 end
@@ -286,7 +376,7 @@ end
 mesh_realigned = ft_transform_geometry(transform, mesh_realigned);
 
 % store the transformation in the cfg, if it is to be used elsewhere
-cfg.transform = transform; 
+cfg.transform = transform;
 
 % assign the coordinate system
 if ~isempty(cfg.coordsys)
@@ -458,7 +548,7 @@ if opt.init
       end
     end
   end % if ~opt.viewresult
-  
+
   % fetch surf objects, set ana tag, and put in surfhandles
   if ~opt.viewresult || (opt.viewresult && ~opt.twovol)
     opt.anahandles = findobj(opt.handlesfigure, 'type', 'surface')';
@@ -506,13 +596,13 @@ else
       end
     end
   end % if ~opt.viewresult
-  
+
   % display current location
   if ~opt.viewresult
     % if realigning, plotting is done in voxel space
     if all(round([xi yi zi])<=mri.dim) && all(round([xi yi zi])>0)
       fprintf('==================================================================================\n');
-      
+
       lab = 'crosshair';
       vox = [xi yi zi];
       if all(isfinite(vox))
@@ -532,7 +622,7 @@ else
           fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
       end
     end
-    
+
     for i=1:length(opt.fidlabel)
       lab = opt.fidlabel{i};
       vox = opt.fiducial.(lab);
@@ -553,7 +643,7 @@ else
           fprintf('%10s: voxel %9d, index = [%3d %3d %3d], head = [%f %f %f] %s\n', lab, ind, vox, pos, opt.unit);
       end
     end
-    
+
   else
     % if viewing result, plotting is done in head coordinate system space
     lab = 'crosshair';
@@ -569,7 +659,7 @@ else
         fprintf('%10s: head = [%f %f %f] %s\n', lab, pos, opt.unit);
     end
   end % if ~opt.viewresult
-  
+
 end % if opt.init
 
 set(opt.handlesaxes(1), 'Visible', 'on');
@@ -648,21 +738,21 @@ if ~opt.viewresult
     %   if any(isnan(pos))
     %     continue
     %   end
-    
+
     posi = pos(1);
     posj = pos(2);
     posk = pos(3);
-    
+
     subplot(h1);
     hold on
     opt.handlesmarker(i,1) = plot3(posi, 1, posk, 'marker', 'o', 'color', markercolor{i});
     hold off
-    
+
     subplot(h2);
     hold on
     opt.handlesmarker(i,2) = plot3(opt.dim(1), posj, posk, 'marker', 'o', 'color', markercolor{i});
     hold off
-    
+
     subplot(h3);
     hold on
     opt.handlesmarker(i,3) = plot3(posi, posj, opt.dim(3), 'marker', 'o', 'color', markercolor{i});
@@ -717,16 +807,16 @@ end
 switch key
   case {'' 'shift+shift' 'alt-alt' 'control+control' 'command-0'}
     % do nothing
-    
+
   case '1'
     subplot(opt.handlesaxes(1));
-    
+
   case '2'
     subplot(opt.handlesaxes(2));
-    
+
   case '3'
     subplot(opt.handlesaxes(3));
-    
+
   case opt.fidletter
     if ~opt.viewresult
       sel = strcmp(key, opt.fidletter);
@@ -736,11 +826,11 @@ switch key
       setappdata(h, 'opt', opt);
       cb_redraw(h);
     end
-    
+
   case 'q'
     setappdata(h, 'opt', opt);
     cb_quit(h);
-    
+
   case {'i' 'j' 'k' 'm' 28 29 30 31 'leftarrow' 'rightarrow' 'uparrow' 'downarrow'} % TODO FIXME use leftarrow rightarrow uparrow downarrow
     % update the view to a new position
     if     strcmp(tag,'ik') && (strcmp(key,'i') || strcmp(key,'uparrow')    || isequal(key, 30)), opt.ijk(3) = opt.ijk(3)+1; opt.update = [0 0 1];
@@ -758,10 +848,10 @@ switch key
     else
       % do nothing
     end
-    
+
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-    
+
   case {43 'add' 'shift+equal'}  % + or numpad +
     % contrast scaling
     % disable if viewresult
@@ -776,7 +866,7 @@ switch key
       setappdata(h, 'opt', opt);
       cb_redraw(h);
     end
-    
+
   case {45 'subtract' 'hyphen' 'shift+hyphen'} % - or numpad -
     % contrast scaling
     % disable if viewresult
@@ -791,19 +881,19 @@ switch key
       setappdata(h, 'opt', opt);
       cb_redraw(h);
     end
-    
+
   case 99  % 'c'
     opt.showcrosshair = ~opt.showcrosshair;
     setappdata(h, 'opt', opt);
     cb_redraw(h);
-    
+
   case 102 % 'f'
     if ~opt.viewresult
       opt.showmarkers = ~opt.showmarkers;
       setappdata(h, 'opt', opt);
       cb_redraw(h);
     end
-    
+
   case 3 % right mouse click
     % add point to a list
     l1 = get(get(gca, 'xlabel'), 'string');
@@ -825,16 +915,16 @@ switch key
         zc = d2;
     end
     pnt = [pnt; xc yc zc];
-    
+
   case 2 % middle mouse click
     l1 = get(get(gca, 'xlabel'), 'string');
     l2 = get(get(gca, 'ylabel'), 'string');
-    
+
     % remove the previous point
     if size(pnt,1)>0
       pnt(end,:) = [];
     end
-    
+
     if l1=='i' && l2=='j'
       updatepanel = [1 2 3];
     elseif l1=='i' && l2=='k'
@@ -842,10 +932,10 @@ switch key
     elseif l1=='j' && l2=='k'
       updatepanel = [3 1 2];
     end
-    
+
   otherwise
     % do nothing
-    
+
 end % switch key
 if ~opt.viewresult
   uiresume(h)
@@ -948,3 +1038,10 @@ while p~=0
   h = p;
   p = get(h, 'parent');
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SUBFUNCTION
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function y = assignweights(x, w)
+% x is an indexing vector with the same number of arguments as w
+y = w(:)';
