@@ -1,6 +1,6 @@
 function [cfg, sensor] = ft_sensorplacement(cfg, headshape)
 
-% FT_SENSORPLACEMENT positions sensor sensor holders over the surface of the scalp (when
+% FT_SENSORPLACEMENT positions OPM sensor holders over the surface of the scalp (when
 % wearing a flexible cap) or over the surface of a rigid 3D-printed helmet. It uses
 % a model of the sensor sensor and sensor holder, copies this repeatedly, and positions
 % and orients it for each desired sensor position. The sensor positions are automatically
