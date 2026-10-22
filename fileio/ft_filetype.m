@@ -163,7 +163,7 @@ if isempty(filename)
 end
 
 % some of the code does not work well on matlab strings, (i.e. "" vs ''),
-% specifically ["a" "b"] yields something different than ['a' 'b']. 
+% specifically ["a" "b"] yields something different than ['a' 'b'].
 if isstring(filename)
   filename = char(filename);
 end
@@ -1651,11 +1651,11 @@ elseif filetype_check_extension(filename, '.vtk') && filetype_check_header(filen
   type = 'vtk';
   manufacturer = 'Visualization Toolkit';
   content = 'geometrical meshes';
-elseif filetype_check_extension(filename, '.bin') && exist(fullfile(p, [f '.meta']), 'file') 
+elseif filetype_check_extension(filename, '.bin') && exist(fullfile(p, [f '.meta']), 'file')
   type = 'spikeglx_bin';
   manufacturer = 'SpikeGLX';
   content = 'neuropixel data';
-elseif filetype_check_extension(filename, '.meta') && exist(fullfile(p, [f '.bin']), 'file') 
+elseif filetype_check_extension(filename, '.meta') && exist(fullfile(p, [f '.bin']), 'file')
   type = 'spikeglx_bin';
   manufacturer = 'SpikeGLX';
   content = 'neuropixel data';
@@ -1665,7 +1665,7 @@ elseif filetype_check_extension(filename, '.lvm') && filetype_check_header(filen
   content = 'OPM MEG data';
 elseif (filetype_check_extension(filename, '.bin') && exist(fullfile(p, [f '.json']), 'file')) || ...
     (filetype_check_extension(filename, '.json') && exist(fullfile(p, [f '.bin']), 'file'))
-  % this could be a opm_fil dataset, in BIDS-like folder organisation, with also a channel tsv file. 
+  % this could be a opm_fil dataset, in BIDS-like folder organisation, with also a channel tsv file.
   % If of a later date, the channels.tsv has the same f-stem as the datafile, but this is not a guarantee,
   % so FIXME this is a bit of a HACK here
   if exist(fullfile(p, [strrep(f, '_meg', '_channels') '.tsv']), 'file')
@@ -1677,7 +1677,14 @@ elseif (filetype_check_extension(filename, '.bin') && exist(fullfile(p, [f '.jso
     type = 'opm_fil';
     manufacturer = 'QuSpin';
     content = 'OPM MEG data';
-  end  
+  end
+elseif filetype_check_extension(filename, '.cMEG')
+  % this is the raw file format of the Cerca acqiusition software prior to
+  % conversion to fif. The cMEG file is accompanied by a JSON file and some TSV
+  % files.
+  type = 'cerca_cmeg';
+  manufacturer = 'CercaMagnetics';
+  content = 'OPM MEG data';
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
