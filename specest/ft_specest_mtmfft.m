@@ -1,4 +1,4 @@
-function [spectrum, ntaper, freqoi, se] = ft_specest_mtmfft(dat, time, varargin)
+function [spectrum, ntaper, freqoi, se, spec, qispec, slope, quad] = ft_specest_mtmfft(dat, time, varargin)
 
 % FT_SPECEST_MTMFFT computes a fast Fourier transform using multitapering with
 % multiple tapers from the DPSS sequence or using a variety of single tapers.
@@ -13,6 +13,13 @@ function [spectrum, ntaper, freqoi, se] = ft_specest_mtmfft(dat, time, varargin)
 %   ntaper     = vector containing number of tapers per element of freqoi
 %   freqoi     = vector of frequencies in spectrum
 %   se         = (only with dpss-tapers) effective degrees of freedom
+%   spec       = (only with dpss-tapers, and weightopt='adapt' or 'qiinv') 
+%   qispec     = (only with dpss-tapers, and weightopt='qiinv') adaptively 
+%                weighted multitaper spectrum with local curvature correction
+%   slope      = (only with dpss-tapers, and weightopt='qiinv') non-parametric
+%                estimate of the slope of the spectrum
+%   quad       = (only with dpss-tapers, and weightopt='qiinv') non-parametric
+%                estimate of the local curvature of the spectrum
 %
 % Optional arguments should be specified in key-value pairs and can include
 %   freqoi     = vector, containing frequencies of interest
@@ -84,6 +91,8 @@ if strcmp(taper, 'dpss')
       adaptflag = 1;
     case 'adapt'
       adaptflag = 2;
+    case 'qiinv'
+      adaptflag = 3;
     otherwise
       ft_error('unknown weightopt specified for dpss-tapering');
   end
@@ -133,7 +142,6 @@ elseif strcmp(freqoi,'all') % if input was 'all'
   freqboi    = freqboilim(1):1:freqboilim(2);
   freqoi     = (freqboi-1) ./ endtime;
 end
-nfreqboi = length(freqboi);
 nfreqoi  = length(freqoi);
 if (strcmp(taper, 'dpss') || strcmp(taper, 'sine')) && numel(tapsmofrq)~=1 && (numel(tapsmofrq)~=nfreqoi)
   ft_error('tapsmofrq needs to contain a smoothing parameter for every frequency when requesting variable number of slepian tapers')
@@ -302,8 +310,19 @@ if ~(ismember(taper, {'dpss' 'sine'}) && numel(tapsmofrq)>1)  && ~isequal(taper,
   end 
   
   if strcmp(taper, 'dpss')
-    % compute taper weights
-    [spec, se, wt] = adaptspec_dpss(dum, w, adaptflag);
+    if adaptflag<=2
+      % compute taper weights
+      [spec, se, wt] = adaptspec_dpss(dum, w, adaptflag);
+      spec = spec(:,freqboi).*  (2 ./ endnsample);
+    else
+      % quadratic inverse is requested + slope/curvature estimates
+      nw = ndatsample*(tapsmofrq./fsample);
+      [spec, se, wt, qispec, slope, quad] = adaptspec_dpss(dum, w, adaptflag, tap, nw);
+      spec   = spec(:,freqboi) .*   (2 ./ endnsample);
+      qispec = qispec(:,freqboi) .* (2 ./ endnsample);
+      slope  = slope(:,freqboi);
+      quad   = quad(:,freqboi);
+    end
     wt  = wt(:,freqboi,:);
     se  = se(:,freqboi);
     if all(se==se(1))
@@ -326,11 +345,7 @@ if ~(ismember(taper, {'dpss' 'sine'}) && numel(tapsmofrq)>1)  && ~isequal(taper,
   spectrum = permute(dum, [3 1 2]);
   wt       = permute(wt,  [3 1 2]);
   
-  %spectrum{itap} = dum;
-  %spectrum = reshape(vertcat(spectrum{:}),[nchan ntaper(1) nfreqboi]); % collecting in a cell-array and later reshaping provides significant speedups
-  %spectrum = permute(spectrum, [2 1 3]);
-  
-else % variable number of slepian tapers requested
+else % variable number of Slepian tapers requested
   switch dimord
     
     case 'tap_chan_freq' % default
@@ -352,8 +367,10 @@ else % variable number of slepian tapers requested
         end
 
         if strcmp(taper, 'dpss')
-          if adaptflag~=0
+          if adaptflag>0 && adaptflag<3
             ft_warning('adaptively weighted multitapering with variable numbers of tapers across frequencies is performed at your own risk');
+          elseif adaptflag==3
+            ft_error('adaptively weighted multitapering with curvature correction is not allowed with variable number of tapers across frequencies');
           end
           [spec, se, wt] = adaptspec_dpss(dum, w, adaptflag);
           wt  = wt(:,freqboi(ifreqoi),:);
@@ -394,7 +411,7 @@ else % variable number of slepian tapers requested
       for ifreqoi = 1:nfreqoi
         str = sprintf('nfft: %d samples, datalength: %d samples, frequency %d (%.2f Hz), %d tapers',endnsample,ndatsample,ifreqoi,freqoi(ifreqoi),ntaper(ifreqoi));
         if length(st)>1 && strcmp(st(2).name, 'ft_freqanalysis') && verbose
-          % specest_mtmconvol has been called by ft_freqanalysis, meaning that ft_progress has been initialised
+          % ft_specest_mtmfft has been called by ft_freqanalysis, meaning that ft_progress has been initialised
           ft_progress(fbopt.i./fbopt.n, ['processing trial %d, ',str,'\n'], fbopt.i);
         elseif verbose
           fprintf([str, '\n']);
