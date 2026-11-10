@@ -653,7 +653,6 @@ for itrial = 1:ntrials
       
     case 'irasa'
       [spectrum,ntaper,foi, hset] = ft_specest_irasa(dat, time, 'taper', cfg.taper, 'taperopt', cfg.taperopt, 'hset', cfg.hset, 'nwindow', cfg.nwindow, 'windowlength', cfg.windowlength, 'mfunc', cfg.mfunc, options{:}, 'feedback', fbopt, 'verbose', verbose);
-      cfg.hset = hset;
       hastime  = false;
       
     case 'wavelet'
@@ -1150,6 +1149,11 @@ if ~isempty(cfg.foilim)
   cfg = rmfield(cfg, 'foi');
 else
   cfg = rmfield(cfg, 'foilim');
+end
+
+if strcmp(cfg.method, 'irasa')
+  % keep track of this
+  cfg.hset = hset(hset>=1);
 end
 
 % some fields from the input should always be copied over in the output
