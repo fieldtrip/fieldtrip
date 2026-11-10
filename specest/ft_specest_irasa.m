@@ -272,6 +272,11 @@ else
       case 'dpss'
         nw  = windownsample*(tapsmofrq./fsample);
         [tmp, lambda] = dpss(windownsample, nw);
+        if isempty(ntaper)
+          ntaper = size(tmp,2)-1;
+        else
+          ntaper = min(ntaper, size(tmp,2)-1);
+        end
         tap = tmp(:,1:ntaper)';
         lambda = lambda(1:ntaper);
       case {'sine' 'sine_old' 'alpha'}
@@ -432,7 +437,7 @@ elseif strcmp(output,'original')
       tmp(:,:,itap) = fft(ft_preproc_padding(bsxfun(@times,subdat,tap{1}(itap,:)), padtype, 0, postpad), endnsample, 2);
     end
     if ntaper>1
-      tmp = adaptspec_dpss(tmp, lambda{ih+nhset,1}, adaptflag);
+      tmp = adaptspec_dpss(tmp, lambda{1}, adaptflag);
       tmp = tmp(:,freqboi) .* (2 ./ endnsample);
     else
       tmp = tmp(:,freqboi);
