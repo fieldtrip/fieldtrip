@@ -375,14 +375,14 @@ for i = 1:Nrand
     % stat.statkeep(:,i) = statrand;
     if strcmp(cfg.correctm, 'max') || strcmp(cfg.correctm, 'tfce')
       % compare each data element with the maximum statistic
-      prb_pos = prb_pos + (statobs<max(statrand(:)));
-      prb_neg = prb_neg + (statobs>min(statrand(:)));
+      prb_pos = prb_pos + (statobs<=max(statrand(:)));
+      prb_neg = prb_neg + (statobs>=min(statrand(:)));
       posdistribution(i) = max(statrand(:));
       negdistribution(i) = min(statrand(:));
     else
       % compare each data element with its own statistic
-      prb_pos = prb_pos + (statobs<statrand);
-      prb_neg = prb_neg + (statobs>statrand);
+      prb_pos = prb_pos + (statobs<=statrand);
+      prb_neg = prb_neg + (statobs>=statrand);
     end
   end
 end
