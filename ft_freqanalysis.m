@@ -309,6 +309,7 @@ switch cfg.method
   case 'mtmconvol'
     cfg.taper    = ft_getopt(cfg, 'taper', 'dpss');
     cfg.taperopt = ft_getopt(cfg, 'taperopt');
+    cfg.mtmadapt = ft_getopt(cfg, 'mtmadapt', 'mean');
     if isequal(cfg.taper, 'dpss') && ~isfield(cfg, 'tapsmofrq')
       ft_error('you must specify a smoothing parameter with taper = dpss');
     end
@@ -778,7 +779,7 @@ for itrial = 1:ntrials
       if csdflg, crsspctrm     = complex(zeros(nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(zeros(nchan,nfoi,ntoi,cfg.precision));    end
 
-      if powflg && isequal(cfg.taper, 'dpss') && isequal(cfg.mtmadapt, 'qiinv')
+      if powflg && startsWith(cfg.method, 'mtm') && isequal(cfg.taper, 'dpss') && isequal(cfg.mtmadapt, 'qiinv')
         slopespctrm = zeros(nchan,nfoi,ntoi,cfg.precision);
         quadspctrm  = zeros(nchan,nfoi,ntoi,cfg.precision);
       end
@@ -788,7 +789,7 @@ for itrial = 1:ntrials
       if csdflg, crsspctrm     = complex(nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision),nan(ntrials,nchancmb,nfoi,ntoi,cfg.precision)); end
       if fftflg, fourierspctrm = complex(nan(ntrials,nchan,nfoi,ntoi,cfg.precision),nan(ntrials,nchan,nfoi,ntoi,cfg.precision));       end
 
-      if powflg && isequal(cfg.taper, 'dpss') && isequal(cfg.mtmadapt, 'qiinv')
+      if powflg && startsWith(cfg.method, 'mtm') && isequal(cfg.taper, 'dpss') && isequal(cfg.mtmadapt, 'qiinv')
         slopespctrm = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);
         quadspctrm  = nan(ntrials,nchan,nfoi,ntoi,cfg.precision);
       end
