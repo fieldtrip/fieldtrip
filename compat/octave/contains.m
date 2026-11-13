@@ -76,8 +76,15 @@ if ~islogical(boolean)
   error('fourth input argument should be a logical scalar');
 end
 
+if ~ischar(pattern) && ~iscellstr(pattern)
+  error('the pattern should be either a char-array or a cell-array with chars');
+end
+
 if ~iscellstr(s)
   s = {s};
+end
+if ~iscell(pattern)
+  pattern = {pattern};
 end
 
 if boolean
@@ -85,7 +92,11 @@ if boolean
   pattern = lower(pattern);
 end
 
-tf = ~cellfun(@isempty, strfind(s, pattern));
+% true if the string contains any of the patterns
+tf = false(size(s));
+for i=1:numel(pattern)
+  tf = tf | ~cellfun(@isempty, strfind(s, pattern{i}));
+end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % deal with the output arguments
