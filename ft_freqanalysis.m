@@ -1074,7 +1074,7 @@ if powflg
     % Fetch user settings, this is a chunk of code copied over from process_fooof, to bypass the whole database etc handling.
     opt = ft_getopt(cfg, 'fooof', []);
     
-    [fs, fg, opt] = ft_specest_fitparametric(powspctrm, freq.freq, opt, 'fooof');
+    [fg, fs, opt] = ft_specest_fitparametric(powspctrm, freq.freq, 'opt', opt, 'method', 'fooof');
 
     % add the options back to the cfg
     cfg.fooof = opt;
