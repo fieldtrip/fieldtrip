@@ -556,7 +556,7 @@ for mm = 1:numel(cfg.mvpa.metric)
 
   else
     
-    if iscell(result.perf_dimension_names)
+    if isscalar(cfg.mvpa.metric) %iscell(result.perf_dimension_names)
       dimnames  = strrep(result.perf_dimension_names{mm}, ' ', '');
     else
       dimnames  = strrep(result.perf_dimension_names, ' ', '');
