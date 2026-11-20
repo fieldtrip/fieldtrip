@@ -1074,7 +1074,7 @@ if powflg
     % Fetch user settings, this is a chunk of code copied over from process_fooof, to bypass the whole database etc handling.
     opt = ft_getopt(cfg, 'fooof', []);
     
-    [fs, fg, opt] = ft_specest_fitparametric(powspctrm, freq.freq, opt, 'fooof');
+    [fg, fs, opt] = ft_specest_fitparametric(powspctrm, freq.freq, 'opt', opt, 'method', 'fooof');
 
     % add the options back to the cfg
     cfg.fooof = opt;
@@ -1091,6 +1091,9 @@ if powflg
     
     for m = 1:size(powspctrm_f,1)
       for k = 1:size(powspctrm_f,2)
+        % this is specific to the MATLAB implementation of FOOOF (in
+        % Brainstorm), which allows for masking of the line noise + the
+        % harmonics. Below the gaps in the spectrum are interpolated 
         powspctrm(m,k,:) = interp1(fs, shiftdim(powspctrm_f(m,k,:), 1), freq.freq, 'linear', nan);
         fg(k).label = freq.label{k};
       end    
