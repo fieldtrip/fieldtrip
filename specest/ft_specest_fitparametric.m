@@ -18,7 +18,8 @@ function [F, fs, opt] = ft_specest_fitparametric(powspctrm, freqs, varargin)
 %
 % Output arguments:
 %   F         = structure-array with output of the fitting procedure
-%   fs        = frequency axis
+%   fs        = frequency axis, this may be a discontinuous one in case
+%                 fooof_matlab is used in combination with a power_line option 
 %   opt       = struct with the options as applied during fitting
 
 opt    = ft_getopt(varargin, 'opt',    []);

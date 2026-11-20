@@ -1091,6 +1091,9 @@ if powflg
     
     for m = 1:size(powspctrm_f,1)
       for k = 1:size(powspctrm_f,2)
+        % this is specific to the MATLAB implementation of FOOOF (in
+        % Brainstorm), which allows for masking of the line noise + the
+        % harmonics. Below the gaps in the spectrum are interpolated 
         powspctrm(m,k,:) = interp1(fs, shiftdim(powspctrm_f(m,k,:), 1), freq.freq, 'linear', nan);
         fg(k).label = freq.label{k};
       end    
