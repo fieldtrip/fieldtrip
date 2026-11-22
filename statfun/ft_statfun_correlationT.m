@@ -68,7 +68,7 @@ if strcmp(cfg.computeprob, 'yes') && strcmp(cfg.computestat, 'no')
 end
 
 [nsmpl, nrepl] = size(dat);
-df = nrepl - 1;
+df = nrepl - 2;
 if df<1
   ft_error('Insufficient degrees of freedom for this analysis.')
 end
