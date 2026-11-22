@@ -67,6 +67,14 @@ function [source] = ft_dipolefitting(cfg, data)
 %   cfg.dipfit.optimfun     = function to use, can be 'fminsearch' or 'fminunc' (default is determined automatic)
 %   cfg.dipfit.maxiter      = maximum number of function evaluations allowed (default depends on the optimfun)
 %   cfg.dipfit.checkinside  = boolean, check that the dipole remains in the source compartment (default = false)
+%   cfg.dipfit.compartment  = string or cell-array, the head model compartment(s) that dipoles should be inside,
+%                             either 'brain' (default) or 'scalp', see FT_INSIDE_HEADMODEL and FT_PREPARE_SOURCEMODEL
+%   cfg.dipfit.hartmut      = 'yes' or 'no' (default = 'no'), use the HArtMuT extension to also fit sources in the
+%                             scalp compartment, e.g. muscle artefacts, and the eyes as symmetric dipole pairs
+%   cfg.dipfit.eye          = structure controlling the ocular sources of the HArtMuT extension, with fields
+%                             radius (default 22), interocular (default 70) and offset (default [72 -25], the
+%                             [anterior superior] offset), all in mm, and an optional field pos with the centre
+%                             of one eye in head coordinates, see also private/hartmut_eyemodel.m
 %
 % Optionally, you can modify the leadfields by reducing the rank, i.e. remove the weakest orientation
 %   cfg.reducerank    = 'no', or number (default = 3 for EEG, 2 for MEG)
@@ -233,6 +241,27 @@ if ft_getopt(cfg.dipfit.constr, 'sequential', false) && strcmp(cfg.model, 'movin
   % see http://bugzilla.fieldtriptoolbox.org/show_bug.cgi?id=3119
 end
 
+% the HArtMuT extension allows fitting sources outside the brain, such as muscle artefacts in the scalp
+cfg.dipfit.hartmut     = ft_getopt(cfg.dipfit, 'hartmut', 'no');
+cfg.dipfit.compartment = ft_getopt(cfg.dipfit, 'compartment', 'brain');
+if istrue(cfg.dipfit.hartmut)
+  if isequal(cfg.dipfit.compartment, 'brain')
+    % by default HArtMuT scans both the brain and the scalp compartment
+    cfg.dipfit.compartment = {'brain', 'scalp'};
+  end
+  % the ocular sources are seeded with the default eye geometry from the HArtMuT NYhead
+  % (MNI ICBM152) head, in mm; the ICBM152 eyes sit higher than the Colin27 ones, so transforming
+  % these defaults to an individual head is less likely to land inside the skull, see also
+  % private/hartmut_eyemodel.m
+  cfg.dipfit.eye             = ft_getopt(cfg.dipfit, 'eye', []);
+  cfg.dipfit.eye.radius      = ft_getopt(cfg.dipfit.eye, 'radius', 22);
+  cfg.dipfit.eye.interocular = ft_getopt(cfg.dipfit.eye, 'interocular', 70);
+  cfg.dipfit.eye.offset      = ft_getopt(cfg.dipfit.eye, 'offset', [72 -25]);
+  if strcmp(cfg.model, 'regional')
+    ft_warning('the HArtMuT extension fits symmetric ocular dipoles only in the moving model, the eyes are fit as single dipoles in the regional model');
+  end
+end
+
 if iscomp
   % transform the data into a representation on which the timelocked dipole fit can perform its trick
   data = comp2timelock(cfg, data);
@@ -251,6 +280,10 @@ end
 % collect and preprocess the electrodes/gradiometer and head model
 % this will also update cfg.channel to match the electrodes/gradiometers
 [headmodel, sens, cfg] = prepare_headmodel(cfg, data);
+
+if istrue(cfg.dipfit.hartmut) && ~ft_senstype(sens, 'eeg')
+  ft_error('the HArtMuT extension is only supported for EEG');
+end
 
 % construct the low-level options for the leadfield computation as key-value pairs, these are passed to FT_COMPUTE_LEADFIELD and FT_INVERSE_DIPOLEFIT
 leadfieldopt = {};
@@ -399,8 +432,14 @@ if strcmp(cfg.gridsearch, 'yes')
     elseif ft_senstype(sens, 'meg')
       tmpcfg.grad = sens;
     end
+    tmpcfg.compartment = cfg.dipfit.compartment;
     sourcemodel = ft_prepare_sourcemodel(tmpcfg);
-    
+
+    if istrue(cfg.dipfit.hartmut)
+      % add ocular source candidates with precomputed fused leadfields to the grid
+      sourcemodel = hartmut_add_eyes(sourcemodel, cfg, sens, headmodel, leadfieldopt);
+    end
+
   end % if precomputed leadfield or not
 
   ngrid = size(sourcemodel.pos,1);
@@ -415,14 +454,32 @@ if strcmp(cfg.gridsearch, 'yes')
   end
   
   insideindx = find(sourcemodel.inside);
+
+  if istrue(cfg.dipfit.hartmut) && size(sourcemodel.pos,2)==3
+    % HArtMuT mixes precomputed eye leadfields with empty brain and scalp entries, so
+    % batch-compute the missing ones up front; the ordinary fit keeps its lazy per-point
+    % computation in the scan loop below to preserve its memory footprint
+    if ~isfield(sourcemodel, 'leadfield')
+      sourcemodel.leadfield = cell(size(sourcemodel.pos,1), 1);
+    end
+    needindx = insideindx(cellfun(@isempty, sourcemodel.leadfield(insideindx)));
+    if ~isempty(needindx)
+      lfall = ft_compute_leadfield(sourcemodel.pos(needindx,:), sens, headmodel, leadfieldopt{:});
+      for i=1:numel(needindx)
+        sourcemodel.leadfield{needindx(i)} = lfall(:, (3*i-2):(3*i));
+      end
+    end
+  end
+
   ft_progress('init', cfg.feedback, 'scanning grid');
   for i=1:length(insideindx)
     ft_progress(i/length(insideindx), 'scanning grid location %d/%d\n', i, length(insideindx));
     thisindx = insideindx(i);
-    if isfield(sourcemodel, 'leadfield')
+    if isfield(sourcemodel, 'leadfield') && ~isempty(sourcemodel.leadfield{thisindx})
       % reuse the previously computed leadfield
       lf = sourcemodel.leadfield{thisindx};
     else
+      % compute the leadfield on the fly, also for positions without a precomputed leadfield
       lf = ft_compute_leadfield(sourcemodel.pos(thisindx,:), sens, headmodel, leadfieldopt{:});
     end
     % the model is V=lf*mom+noise, therefore mom=pinv(lf)*V estimates the
@@ -513,6 +570,11 @@ switch cfg.model
     ft_error('unsupported cfg.model');
 end % switch model
 
+% track which moving-model topographies are fit as a HArtMuT symmetric ocular pair, so the
+% final moment estimate keeps the pair linked (mom2 = mommap*mom1) the same way the fit did
+eyelinkmom = false(1, ntime);
+eyemommap  = eye(3);
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % perform the non-linear fit
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -539,14 +601,44 @@ if strcmp(cfg.nonlinear, 'yes')
       % instead of using dip(t) = ft_inverse_dipolefit(dip(t),...), I am using temporary variables dipin and dipout
       % to prevent errors like "Subscripted assignment between dissimilar structures"
       dipin = dip;
+      % in HArtMuT mode, prepare to refine an ocular source as a symmetric, linked-moment
+      % dipole pair; this is only possible per topography, hence for the moving model
+      eyeconstr = [];
+      if istrue(cfg.dipfit.hartmut)
+        coordsys = ft_getopt(headmodel, 'coordsys', ft_getopt(sens, 'coordsys', 'unknown'));
+        unit     = ft_getopt(headmodel, 'unit',     ft_getopt(sens, 'unit', 'mm'));
+        [dum, eyeaxis, eyecentre, eyeradius] = hartmut_eyemodel(cfg.dipfit.eye, coordsys, unit);
+        if ~isempty(eyeaxis) && ~isempty(eyecentre)
+          axisindx  = find(strcmp({'x', 'y', 'z'}, eyeaxis));
+          eyemirror = ones(1,3); eyemirror(axisindx) = -1;
+          eyeconstr = ft_getopt(cfg.dipfit, 'constr', []);
+          eyeconstr.reduce  = [1 2 3];
+          eyeconstr.expand  = [1 2 3 1 2 3];
+          eyeconstr.mirror  = ones(1,6); eyeconstr.mirror(3+axisindx) = -1;
+          eyeconstr.linkmom = true;
+          eyemommap         = ft_getopt(eyeconstr, 'mommap', eye(3));
+        else
+          ft_warning('the HArtMuT ocular source positions could not be determined, the eyes are fit as single dipoles; provide cfg.dipfit.eye.pos or use an MNI-like coordinate system');
+        end
+      end
       for t=1:ntime
+        thisdip       = dipin(t);
+        thisdipfitopt = dipfitopt;
+        if ~isempty(eyeconstr) && (sum((thisdip.pos(1,:)-eyecentre).^2)<=eyeradius^2 || sum((thisdip.pos(1,:)-eyecentre.*eyemirror).^2)<=eyeradius^2)
+          % the start position lies in an eye, refine it as a symmetric, linked-moment pair
+          thisdip.pos   = [thisdip.pos(1,:); thisdip.pos(1,:).*eyemirror];
+          thisdip.mom   = zeros(6,1);
+          thisdipfitopt = ft_setopt(thisdipfitopt, 'constr', eyeconstr);
+          thisdipfitopt = ft_setopt(thisdipfitopt, 'checkinside', false); % the eye is outside the brain
+          eyelinkmom(t) = true;
+        end
         % catch errors due to non-convergence
         try
-          dipout(t) = ft_inverse_dipolefit(dipin(t), sens, headmodel, Vdata(:,t), dipfitopt{:}, leadfieldopt{:});
+          dipout(t) = ft_inverse_dipolefit(thisdip, sens, headmodel, Vdata(:,t), thisdipfitopt{:}, leadfieldopt{:});
           success(t) = 1;
-          if cfg.numdipoles==1
+          if size(dipout(t).pos,1)==1
             ft_info('found minimum after non-linear optimization for topography %d on [%g %g %g]\n', t, dipout(t).pos(1), dipout(t).pos(2), dipout(t).pos(3));
-          elseif cfg.numdipoles==2
+          else
             ft_info('found minimum after non-linear optimization for topography %d on [%g %g %g; %g %g %g]\n', t, dipout(t).pos(1,1), dipout(t).pos(1,2), dipout(t).pos(1,3), dipout(t).pos(2,1), dipout(t).pos(2,2), dipout(t).pos(2,3));
           end
         catch
@@ -611,7 +703,15 @@ switch cfg.model
           lf = dip(t).lf;
         end
         % compute all details of the final dipole model
-        dip(t).mom = pinv(lf)*Vdata(:,t);
+        if eyelinkmom(t)
+          % a HArtMuT ocular pair shares one moment, mom2 = mommap*mom1, so estimate the
+          % shared moment against the fused leadfield instead of fitting the two independently
+          lfc = lf(:,1:3) + lf(:,4:6)*eyemommap;
+          mc  = pinv(lfc)*Vdata(:,t);
+          dip(t).mom = [mc; eyemommap*mc];
+        else
+          dip(t).mom = pinv(lf)*Vdata(:,t);
+        end
         dip(t).pot = lf*dip(t).mom;
         dip(t).rv  = rv(Vdata(:,t), dip(t).pot);
         Vmodel(:,t) = dip(t).pot;
