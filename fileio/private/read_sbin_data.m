@@ -163,6 +163,10 @@ else
     end
 end
 trialData=trialData(chanindx, :,:);
+% convert to uV if needed
+if hdr.orig.header_array(12) ~= 0 && hdr.orig.header_array(13) ~= 0
+	trialData = (hdr.orig.header_array(13)/2^hdr.orig.header_array(12))*(trialData);
+end;
 status = fclose(fh);
 if status==-1
     ft_error('Failure to close simple binary file.')
