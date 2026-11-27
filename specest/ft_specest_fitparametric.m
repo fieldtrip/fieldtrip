@@ -13,14 +13,17 @@ function [F, fs, opt] = ft_specest_fitparametric(powspctrm, freqs, varargin)
 %   freqs     = 1 x nfreq vector, frequency axis
 %   opt       = struct with user defined options, optional
 %   method    = string, (default = 'fooof_matlab'), can also be 'fooof_py',
-%                 the latter needs matlab to be able to contact a python interpreter that
-%                 has access to fooof
+%                 or 'specparam_py' the latter two need matlab to be able to 
+%                 use a python interpreter that has access to
+%                 fooof/specparam
 %
 % Output arguments:
 %   F         = structure-array with output of the fitting procedure
 %   fs        = frequency axis, this may be a discontinuous one in case
 %                 fooof_matlab is used in combination with a power_line option 
 %   opt       = struct with the options as applied during fitting
+%   pythonversion = path to python with specparam/fooof available, can be
+%                empty if pyenv has already been called in the current matlab session 
 
 opt           = ft_getopt(varargin, 'opt',    []);
 method        = ft_getopt(varargin, 'method', 'fooof_matlab');
@@ -46,25 +49,18 @@ else
 end
 hasbaseline = ~isempty(powspctrm_baseline) && all(size(powspctrm)==size(powspctrm_baseline));
 
-% the options below are taken from the Brainstorm defaults
+% if undefined, ensure that 0 is not in the freq range
 opt.freq_range          = ft_getopt(opt, 'freq_range',        [freqs(find(freqs>0,1,'first')) freqs(end)]);
-opt.peak_width_limits   = ft_getopt(opt, 'peak_width_limits', [0.5 12]);
-opt.max_peaks           = ft_getopt(opt, 'max_peaks',         3);
-opt.min_peak_height     = ft_getopt(opt, 'min_peak_height',   3/10);    % convert from dB to B
-opt.aperiodic_mode      = ft_getopt(opt, 'aperiodic_mode',    'fixed'); % or fixed
-opt.peak_threshold      = ft_getopt(opt, 'peak_threshold',    2);       % 2 std dev: parameter for interface simplification
-opt.return_spectrum     = ft_getopt(opt, 'return_spectrum',   1);       % SPM/FT: set to 1
-opt.border_threshold    = ft_getopt(opt, 'border_threshold',  1);       % 1 std dev: proximity to edge of spectrum, static in Python
 
-% Matlab-only options, i.e. the python version does not have these options 
-opt.power_line          = ft_getopt(opt, 'power_line',        '50');       % for some reason it should be a string, if you don't want notches (which results in a discontinuous frequency axis in the ouptut), use 'inf'. Brainstorm's default is '60'
-opt.peak_type           = ft_getopt(opt, 'peak_type',         'gaussian'); % or cauchy, or best for brainstorm
-opt.proximity_threshold = ft_getopt(opt, 'proximity_threshold', 2);
-opt.guess_weight        = ft_getopt(opt, 'guess_weight',      'none'); % or weak, or strong
-opt.thresh_after        = ft_getopt(opt, 'thresh_after',      true);   % Threshold after fitting always selected for Matlab (mirrors the Python FOOOF closest by removing peaks that do not satisfy a user's predetermined conditions)    
+% these are shared between methods
+opt.peak_width_limits   = ft_getopt(opt, 'peak_width_limits', [0.5 12]);
+opt.max_n_peaks         = ft_getopt(opt, 'max_n_peaks',       3);
+opt.min_peak_height     = ft_getopt(opt, 'min_peak_height',   3/10);    % convert from dB to B
+opt.peak_threshold      = ft_getopt(opt, 'peak_threshold',    2);       % 2 std dev: parameter for interface simplification
+opt.aperiodic_mode      = ft_getopt(opt, 'aperiodic_mode',    'fixed'); % or fixed
 opt.verbose             = ft_getopt(opt, 'verbose',           true);
 
-% Output options
+% Output options, not sure where these are used, probably in fooof_matlab 
 opt.sort_type  = ft_getopt(opt, 'sort_type', 'param'); % or 'band'
 opt.sort_param = ft_getopt(opt, 'sort_param', 'frequency'); % or amplitude, or std
 opt.sort_bands = ft_getopt(opt, 'sort_bands', {'delta' '2, 4'; 'theta' '5, 7'; 'alpha' '8, 12'; 'beta' '15, 20'; 'gamma1' '30, 59'; 'gamma2' '60, 90'});
@@ -74,9 +70,19 @@ if (any(opt.freq_range <= 0) || opt.freq_range(1) >= opt.freq_range(2))
   ft_error('invalid frequency range for fooof');
 end
 
-% First do some basic checks
+% add the method specific options, check whether python or brainstorm code is available (if needed), and create the relevant object
 switch method
   case {'fooof_matlab' 'fooof'}
+    % method specific options adjusted from the Brainstorm defaults
+    opt.max_peaks           = opt.max_n_peaks; opt = rmfield(opt, 'max_n_peaks'); % inconsistent naming scheme
+    opt.power_line          = ft_getopt(opt, 'power_line',        '50');       % for some reason it should be a string, if you don't want notches (which results in a discontinuous frequency axis in the ouptut), use 'inf'. Brainstorm's default is '60'
+    opt.peak_type           = ft_getopt(opt, 'peak_type',         'gaussian'); % or cauchy, or best for brainstorm
+    opt.proximity_threshold = ft_getopt(opt, 'proximity_threshold', 2);
+    opt.guess_weight        = ft_getopt(opt, 'guess_weight',      'none'); % or weak, or strong
+    opt.thresh_after        = ft_getopt(opt, 'thresh_after',      true);   % Threshold after fitting always selected for Matlab (mirrors the Python FOOOF closest by removing peaks that do not satisfy a user's predetermined conditions)    
+    opt.return_spectrum     = ft_getopt(opt, 'return_spectrum',   1);       % SPM/FT: set to 1
+    opt.border_threshold    = ft_getopt(opt, 'border_threshold',  1);       % 1 std dev: proximity to edge of spectrum, static in Python
+
     % check for brainstorm functions on the path, and add if needed
     ft_hastoolbox('brainstorm', 1);
     if exist('fmincon', 'file')
@@ -100,16 +106,31 @@ switch method
     % initialize FOOOF object
     fobj = py.fooof.FOOOF(pyargs( ...
       'peak_width_limits', py.list(num2cell(double(opt.peak_width_limits))), ...
-      'max_n_peaks',       double(opt.max_peaks), ...
+      'max_n_peaks',       double(opt.max_n_peaks), ...
       'min_peak_height',   double(opt.min_peak_height), ...
       'peak_threshold',    double(opt.peak_threshold), ...
       'aperiodic_mode',    char(opt.aperiodic_mode), ...
       'verbose',           logical(opt.verbose)));
 
   case 'specparam_py'
+    % method specific options
     opt.periodic_mode = ft_getopt(opt, 'periodic_mode', 'gaussian'); %or cauchy/skewed_gaussian
     opt.debug         = ft_getopt(opt, 'debug', false);
     opt.verbose       = ft_getopt(opt, 'verbose', true);
+
+    % these are private options for the SpectralFitAlgorithm and may change
+    % in future versions: the current code has been written using release
+    % candidate 7 of specparam
+    opt.ap_percentile_thresh = ft_getopt(opt, 'ap_percentile_thresh', 0.025);
+    %opt.ap_guess -> Claude told me this is buggy in rc7, JM hasn't verified this
+    opt.ap_bounds            = ft_getopt(opt, 'ap_bounds'); % 2x2 ('fixed'), or 2x3 ('knee'), with lower and upper bounds for the parameters
+    opt.cf_bound             = ft_getopt(opt, 'cf_bound', 1.5);
+    opt.bw_std_edge          = ft_getopt(opt, 'bw_std_edge', 1);
+    opt.gauss_overlap_thresh = ft_getopt(opt, 'gauss_overlap_thresh', 0.75);
+
+    % further options for the curve fitting
+    opt.maxfev               = ft_getopt(opt, 'maxfev', 5000);
+    opt.tol                  = ft_getopt(opt, 'maxtol', 1e-5);
 
     % check whether a pyenv call has already been executed
     if ~isequal(pyenv().Status, 'Loaded') && isempty(pythonversion)
@@ -125,17 +146,27 @@ switch method
       ft_error('specparam cannot be imported in this MATLAB session; use ''pyenv'' to point MATLAB to a Python installation that has specparam (pip install specparam), see ''doc pyenv''');
     end
 
-    % initialize the specparam object, in contrast to FOOOF, the 'aperiodic_mode' 
-    % and 'periodic_mode' are arguments of the model object, and 'verbose' and 'debug' too.
-    fobj = py.specparam.SpectralModel(pyargs( ...
-      'aperiodic_mode',    char(opt.aperiodic_mode), ...
+    args = {'aperiodic_mode',    char(opt.aperiodic_mode), ...
       'periodic_mode',     char(opt.periodic_mode), ...
       'peak_width_limits', py.list(num2cell(double(opt.peak_width_limits))), ...
-      'max_n_peaks',       double(opt.max_peaks), ...
+      'max_n_peaks',       double(opt.max_n_peaks), ...
       'min_peak_height',   double(opt.min_peak_height), ...
       'peak_threshold',    double(opt.peak_threshold), ...
+      'ap_percentile_thresh', double(opt.ap_percentile_thresh), ...
+      'cf_bound',          double(opt.cf_bound), ...
+      'bw_std_edge',       double(opt.bw_std_edge), ...
+      'gauss_overlap_thresh', double(opt.gauss_overlap_thresh), ...
       'debug',             logical(opt.debug), ...
-      'verbose',           logical(opt.verbose)));
+      'verbose',           logical(opt.verbose)};
+ 
+    if ~isempty(opt.ap_bounds)
+      ap_bounds = py.list({py.list(num2cell(opt.ap_bounds(1,:))), py.list(num2cell(opt.ap_bounds(2,:)))});
+      args = [args {'ap_bounds' ap_bounds}];
+    end
+    % initialize the specparam object, in contrast to FOOOF, the 'aperiodic_mode' 
+    % and 'periodic_mode' are arguments of the model object, and 'verbose' and 'debug' too.
+    fobj = py.specparam.SpectralModel(pyargs(args{:}));
+      
 
 end
 
